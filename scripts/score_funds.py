@@ -274,7 +274,7 @@ $(document).ready(function() {{
 
 def main():
     df = pd.read_parquet(DATA_PATH)
-    df['Tarih'] = pd.to_datetime(df['Tarih'])
+    df['Tarih'] = pd.to_datetime(df['Tarih']).dt.normalize()
     # Veri hatası temizliği: bazı günlerde Fiyat=0 kaydedilmiş (TEFAS kesintisi).
     # Bu satırlar günlük getiri hesaplarını sonsuza (inf) sıçratıp Sharpe/StdDev'i bozuyor.
     onceki_satir = len(df)
