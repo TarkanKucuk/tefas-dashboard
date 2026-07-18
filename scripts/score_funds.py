@@ -142,17 +142,16 @@ def compute_scores(res):
 def write_html(res, anchor):
     cols = ['Alt Kategori', 'Kategori_Sırası', 'Fon Kodu', 'Fon Adı', 'TEFAS_Skoru',
             'Skor_Momentum', 'Skor_Getiri', 'Skor_ParaAkışı', 'Skor_Sharpe', 'Skor_StdDev',
-            'Kullanılan_Bileşenler', 'Fon Toplam Değer', 'Son Tarih']
+            'Kullanılan_Bileşenler', 'Fon Toplam Değer']
     headers = ['Alt Kategori', 'Kat. Sıra', 'Fon Kodu', 'Fon Adı', 'TEFAS Skoru',
                'Momentum', 'Getiri', 'Para Akışı', 'Sharpe', 'StdDev',
-               'Kullanılan Bileşenler', 'Fon Toplam Değer', 'Son Tarih']
+               'Kullanılan Bileşenler', 'Fon Toplam Değer']
 
     table = res[res['TEFAS_Skoru'].notna()].sort_values(
         ['Alt Kategori', 'TEFAS_Skoru'], ascending=[True, False])[cols].copy()
 
     for c in ['TEFAS_Skoru', 'Skor_Momentum', 'Skor_Getiri', 'Skor_ParaAkışı', 'Skor_Sharpe', 'Skor_StdDev']:
         table[c] = table[c].round(1)
-    table['Son Tarih'] = table['Son Tarih'].dt.strftime('%Y-%m-%d')
     table['Fon Toplam Değer'] = table['Fon Toplam Değer'].apply(lambda x: f"{x:,.0f}".replace(",", "."))
     table.columns = headers
 
@@ -232,6 +231,7 @@ footer {{ text-align: center; color: #93a0b0; font-size: 12px; margin-top: 24px;
         <span>Son güncelleme: {anchor.date()}</span>
         <span>Risksiz oran (TLREF): %{RISK_FREE_RATE*100:.2f}</span>
         <span>Toplam fon: {len(table)}</span>
+        <span><a href="kategori-ozeti.html" style="color:white; text-decoration: underline;">Kategori Özeti →</a></span>
     </div>
 </div>
 <div class="card">
@@ -272,6 +272,94 @@ $(document).ready(function() {{
     print("HTML raporu oluşturuldu:", OUTPUT_HTML)
 
 
+def write_category_summary(res, anchor):
+    plot_df = res[res['TEFAS_Skoru'].notna()]
+    sections = []
+    for kat, g in plot_df.groupby('Alt Kategori', sort=True):
+        if len(g) < 3:
+            continue
+        g_sorted = g.sort_values('TEFAS_Skoru', ascending=False)
+        top5 = g_sorted.head(5)
+        bottom5 = g_sorted.tail(5).sort_values('TEFAS_Skoru')
+
+        def rows(sub, cls):
+            out = ""
+            for _, r in sub.iterrows():
+                out += (f"<tr><td>{r['Fon Kodu']}</td><td>{r['Fon Adı']}</td>"
+                        f"<td><span class='score-badge {cls}'>{r['TEFAS_Skoru']:.1f}</span></td></tr>")
+            return out
+
+        sections.append(f"""
+<div class="card kat-card">
+    <h2>{kat} <span class="kat-count">({len(g)} fon)</span></h2>
+    <div class="kat-cols">
+        <div>
+            <h3 class="up">▲ En İyi 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr>{rows(top5, 'good')}</table>
+        </div>
+        <div>
+            <h3 class="down">▼ En Kötü 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr>{rows(bottom5, 'bad')}</table>
+        </div>
+    </div>
+</div>""")
+
+    html = f"""<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TEFAS Kategori Özeti</title>
+<style>
+* {{ box-sizing: border-box; }}
+body {{
+    font-family: -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    margin: 0; padding: 32px 40px 60px; background: #f4f6f9; color: #1a1a1a;
+}}
+.header {{
+    background: linear-gradient(135deg, #1F4E78 0%, #2c6ba0 100%);
+    color: white; padding: 28px 32px; border-radius: 12px; margin-bottom: 24px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+}}
+.header h1 {{ margin: 0 0 8px 0; font-size: 26px; font-weight: 600; }}
+.header .meta span {{ background: rgba(255,255,255,0.15); padding: 4px 12px; border-radius: 20px; font-size: 13px; }}
+.header a {{ color: white; text-decoration: underline; }}
+.card {{
+    background: white; border-radius: 12px; padding: 20px 24px 24px; margin-bottom: 18px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+}}
+.kat-card h2 {{ margin: 0 0 14px 0; color: #1F4E78; font-size: 18px; }}
+.kat-count {{ color: #93a0b0; font-size: 13px; font-weight: 400; }}
+.kat-cols {{ display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }}
+@media (max-width: 800px) {{ .kat-cols {{ grid-template-columns: 1fr; }} }}
+h3 {{ font-size: 13px; margin: 0 0 8px 0; }}
+h3.up {{ color: #1a7a37; }}
+h3.down {{ color: #b3261e; }}
+table.mini {{ width: 100%; border-collapse: collapse; font-size: 13px; }}
+table.mini th {{ text-align: left; color: #93a0b0; font-weight: 500; padding: 4px 6px; border-bottom: 1px solid #eef2f7; }}
+table.mini td {{ padding: 5px 6px; border-bottom: 1px solid #f4f6f9; }}
+.score-badge {{ display: inline-block; min-width: 36px; padding: 2px 7px; border-radius: 6px; font-weight: 600; text-align: center; }}
+.score-badge.good {{ background: #c6efce; color: #14361f; }}
+.score-badge.bad {{ background: #ffc7ce; color: #5c1a1f; }}
+</style>
+</head>
+<body>
+<div class="header">
+    <h1>Kategori Özeti</h1>
+    <div class="meta">
+        <span>Son güncelleme: {anchor.date()}</span>
+        <a href="index.html">← Tüm Fonlar Tablosuna Dön</a>
+    </div>
+</div>
+{''.join(sections)}
+</body>
+</html>"""
+
+    with open("docs/kategori-ozeti.html", "w", encoding="utf-8") as f:
+        f.write(html)
+    print("Kategori özeti oluşturuldu: docs/kategori-ozeti.html")
+
+
 def main():
     df = pd.read_parquet(DATA_PATH)
     df['Tarih'] = pd.to_datetime(df['Tarih']).dt.normalize()
@@ -292,6 +380,7 @@ def main():
 
     res = compute_scores(res)
     write_html(res, anchor)
+    write_category_summary(res, anchor)
 
 
 if __name__ == "__main__":
