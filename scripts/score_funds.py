@@ -143,38 +143,124 @@ def write_html(res, anchor):
     cols = ['Alt Kategori', 'Kategori_Sırası', 'Fon Kodu', 'Fon Adı', 'TEFAS_Skoru',
             'Skor_Momentum', 'Skor_Getiri', 'Skor_ParaAkışı', 'Skor_Sharpe', 'Skor_StdDev',
             'Kullanılan_Bileşenler', 'Fon Toplam Değer', 'Son Tarih']
+    headers = ['Alt Kategori', 'Kat. Sıra', 'Fon Kodu', 'Fon Adı', 'TEFAS Skoru',
+               'Momentum', 'Getiri', 'Para Akışı', 'Sharpe', 'StdDev',
+               'Kullanılan Bileşenler', 'Fon Toplam Değer', 'Son Tarih']
+
     table = res[res['TEFAS_Skoru'].notna()].sort_values(
         ['Alt Kategori', 'TEFAS_Skoru'], ascending=[True, False])[cols].copy()
 
     for c in ['TEFAS_Skoru', 'Skor_Momentum', 'Skor_Getiri', 'Skor_ParaAkışı', 'Skor_Sharpe', 'Skor_StdDev']:
         table[c] = table[c].round(1)
     table['Son Tarih'] = table['Son Tarih'].dt.strftime('%Y-%m-%d')
+    table['Fon Toplam Değer'] = table['Fon Toplam Değer'].apply(lambda x: f"{x:,.0f}".replace(",", "."))
+    table.columns = headers
 
-    html_table = table.to_html(index=False, table_id="tefasTable", classes="display", escape=True)
+    html_table = table.to_html(index=False, table_id="tefasTable", classes="display", escape=True, na_rep="—")
 
     html = f"""<!DOCTYPE html>
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>TEFAS Puanlama Sistemi</title>
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
 <style>
-body {{ font-family: Arial, sans-serif; margin: 20px; }}
-h1 {{ color: #1F4E78; }}
-.updated {{ color: #666; font-size: 0.9em; margin-bottom: 15px; }}
-table.dataTable {{ font-size: 0.85em; }}
+* {{ box-sizing: border-box; }}
+body {{
+    font-family: -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    margin: 0;
+    padding: 32px 40px 60px;
+    background: #f4f6f9;
+    color: #1a1a1a;
+}}
+.header {{
+    background: linear-gradient(135deg, #1F4E78 0%, #2c6ba0 100%);
+    color: white;
+    padding: 28px 32px;
+    border-radius: 12px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+}}
+.header h1 {{ margin: 0 0 8px 0; font-size: 26px; font-weight: 600; }}
+.header .meta {{ font-size: 13px; opacity: 0.9; display: flex; gap: 20px; flex-wrap: wrap; }}
+.header .meta span {{ background: rgba(255,255,255,0.15); padding: 4px 12px; border-radius: 20px; }}
+.card {{
+    background: white;
+    border-radius: 12px;
+    padding: 20px 24px 28px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    overflow-x: auto;
+}}
+table.dataTable {{
+    font-size: 13px;
+    border-collapse: collapse !important;
+    width: 100% !important;
+}}
+table.dataTable thead th {{
+    background: #eef2f7;
+    color: #1F4E78;
+    font-weight: 600;
+    border-bottom: 2px solid #d7e0ea !important;
+    padding: 10px 8px !important;
+}}
+table.dataTable tbody td {{ padding: 8px !important; vertical-align: middle; }}
+table.dataTable tbody tr:hover {{ background: #f0f6fc !important; }}
+.score-badge {{
+    display: inline-block;
+    min-width: 42px;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-weight: 600;
+    text-align: center;
+    color: #14361f;
+}}
+.dataTables_wrapper .dataTables_filter input,
+.dataTables_wrapper .dataTables_length select {{
+    border: 1px solid #d7e0ea;
+    border-radius: 6px;
+    padding: 4px 8px;
+}}
+footer {{ text-align: center; color: #93a0b0; font-size: 12px; margin-top: 24px; }}
 </style>
 </head>
 <body>
-<h1>TEFAS Puanlama Sistemi</h1>
-<p class="updated">Son güncelleme: {anchor.date()} | Risksiz oran (TLREF): %{RISK_FREE_RATE*100:.2f}
-| Toplam fon: {len(table)}</p>
+<div class="header">
+    <h1>TEFAS Puanlama Sistemi</h1>
+    <div class="meta">
+        <span>Son güncelleme: {anchor.date()}</span>
+        <span>Risksiz oran (TLREF): %{RISK_FREE_RATE*100:.2f}</span>
+        <span>Toplam fon: {len(table)}</span>
+    </div>
+</div>
+<div class="card">
 {html_table}
+</div>
+<footer>Kategori içi percentile bazlı puanlama · Momentum %35 · Getiri %25 · Para Akışı %15 · Sharpe %15 · StdDev %10</footer>
+
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script>
+function scoreColor(v) {{
+    if (v === null || v === "" || v === "—" || isNaN(v)) return null;
+    v = parseFloat(v);
+    if (v >= 75) return "#c6efce";
+    if (v >= 50) return "#ffeb9c";
+    return "#ffc7ce";
+}}
 $(document).ready(function() {{
-    $('#tefasTable').DataTable({{ pageLength: 25, order: [[4, 'desc']] }});
+    $('#tefasTable').DataTable({{
+        pageLength: 25,
+        order: [[4, 'desc']],
+        language: {{ url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/tr.json' }},
+        columnDefs: [
+            {{ targets: [4,5,6,7,8,9], createdCell: function(td, cellData) {{
+                var bg = scoreColor(cellData);
+                if (bg) {{ $(td).html('<span class="score-badge" style="background:' + bg + '">' + cellData + '</span>'); }}
+            }} }}
+        ]
+    }});
 }});
 </script>
 </body>
@@ -189,6 +275,13 @@ $(document).ready(function() {{
 def main():
     df = pd.read_parquet(DATA_PATH)
     df['Tarih'] = pd.to_datetime(df['Tarih'])
+    # Veri hatası temizliği: bazı günlerde Fiyat=0 kaydedilmiş (TEFAS kesintisi).
+    # Bu satırlar günlük getiri hesaplarını sonsuza (inf) sıçratıp Sharpe/StdDev'i bozuyor.
+    onceki_satir = len(df)
+    df = df[df['Fiyat'] > 0]
+    temizlenen = onceki_satir - len(df)
+    if temizlenen:
+        print(f"Veri temizliği: {temizlenen} satır (Fiyat<=0) veriden çıkarıldı.")
     df = df.sort_values(['Fon Kodu', 'Tarih'])
 
     mapping = pd.read_excel(MAPPING_PATH)
