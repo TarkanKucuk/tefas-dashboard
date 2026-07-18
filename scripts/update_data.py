@@ -7,9 +7,12 @@ DATA_PATH = "tefas_gecmis_veri.parquet"
 
 def main():
     hist = pd.read_parquet(DATA_PATH)
-    hist['Tarih'] = pd.to_datetime(hist['Tarih'])
+    hist['Tarih'] = pd.to_datetime(hist['Tarih']).dt.normalize()  # saat bileşenini at, sadece tarih kalsın
     last_date = hist['Tarih'].max()
-    start = last_date + timedelta(days=1)
+
+    # Son tarihi de dahil ederek tekrar çekiyoruz: TEFAS bazen aynı günün verisini
+    # gün içinde günceller/düzeltir, en taze halini almak istiyoruz.
+    start = last_date
     end = datetime.today()
 
     if start.date() > end.date():
@@ -38,13 +41,22 @@ def main():
     })
     df = df[['Fon Kodu', 'Tarih', 'Fiyat', 'Tedavüldeki Pay Sayısı',
               'Fon Toplam Değer', 'Kişi Sayısı']]
-    df['Tarih'] = pd.to_datetime(df['Tarih'])
+    df['Tarih'] = pd.to_datetime(df['Tarih']).dt.normalize()
 
-    combined = pd.concat([hist, df], ignore_index=True)
+    yeni_son_tarih = df['Tarih'].max()
+
+    # Veritabanındaki last_date VE sonrasına ait ne varsa çıkar (mükerrer/eskimiş kayıt bırakmamak için),
+    # yeni çekilen veriyle değiştir. Böylece "aynı tarih iki kez" ya da "eski/güncellenmemiş satır" kalmaz.
+    hist_temiz = hist[hist['Tarih'] < start]
+
+    combined = pd.concat([hist_temiz, df], ignore_index=True)
     combined = combined.drop_duplicates(subset=['Fon Kodu', 'Tarih'], keep='last')
     combined = combined.sort_values(['Fon Kodu', 'Tarih'])
     combined.to_parquet(DATA_PATH, index=False)
-    print(f"{len(df)} yeni satır eklendi. Toplam satır: {len(combined)}")
+
+    yeni_gun_sayisi = df['Tarih'].nunique()
+    print(f"{start.date()} - {yeni_son_tarih.date()} arası yeniden çekildi "
+          f"({yeni_gun_sayisi} gün, {len(df)} satır). Toplam satır: {len(combined)}")
 
 
 if __name__ == "__main__":
