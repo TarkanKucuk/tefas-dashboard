@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TEFAS Kategori Özeti</title>
+<style>
+* { box-sizing: border-box; }
+body {
+    font-family: -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    margin: 0; padding: 32px 40px 60px; background: #f4f6f9; color: #1a1a1a;
+}
+.header {
+    background: linear-gradient(135deg, #1F4E78 0%, #2c6ba0 100%);
+    color: white; padding: 28px 32px; border-radius: 12px; margin-bottom: 24px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+}
+.header h1 { margin: 0 0 8px 0; font-size: 26px; font-weight: 600; }
+.header .meta span { background: rgba(255,255,255,0.15); padding: 4px 12px; border-radius: 20px; font-size: 13px; }
+.header a { color: white; text-decoration: underline; }
+.card {
+    background: white; border-radius: 12px; padding: 20px 24px 24px; margin-bottom: 18px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+}
+.kat-card h2 { margin: 0 0 14px 0; color: #1F4E78; font-size: 18px; }
+.kat-count { color: #93a0b0; font-size: 13px; font-weight: 400; }
+.kat-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+@media (max-width: 800px) { .kat-cols { grid-template-columns: 1fr; } }
+h3 { font-size: 13px; margin: 0 0 8px 0; }
+h3.up { color: #1a7a37; }
+h3.down { color: #b3261e; }
+table.mini { width: 100%; border-collapse: collapse; font-size: 13px; }
+table.mini th { text-align: left; color: #93a0b0; font-weight: 500; padding: 4px 6px; border-bottom: 1px solid #eef2f7; }
+table.mini td { padding: 5px 6px; border-bottom: 1px solid #f4f6f9; }
+.score-badge { display: inline-block; min-width: 36px; padding: 2px 7px; border-radius: 6px; font-weight: 600; text-align: center; }
+.score-badge.good { background: #c6efce; color: #14361f; }
+.score-badge.bad { background: #ffc7ce; color: #5c1a1f; }
+</style>
+</head>
+<body>
+<div class="header">
+    <h1>Kategori Özeti</h1>
+    <div class="meta">
+        <span>Son güncelleme: 2026-07-17</span>
+        <a href="index.html">← Tüm Fonlar Tablosuna Dön</a>
+    </div>
+</div>
+
+<div class="card kat-card">
+    <h2>Altın <span class="kat-count">(43 fon)</span></h2>
+    <div class="kat-cols">
+        <div>
+            <h3 class="up">▲ En İyi 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td>HAI</td><td>AHLATCI PORTFÖY ALTIN FONU</td><td><span class='score-badge good'>91.6</span></td></tr><tr><td>NJF</td><td>NUROL PORTFÖY ALTIN KATILIM FONU</td><td><span class='score-badge good'>88.4</span></td></tr><tr><td>UP1</td><td>ÜNLÜ PORTFÖY ALTIN FONU</td><td><span class='score-badge good'>87.2</span></td></tr><tr><td>LKF</td><td>İŞ PORTFÖY ALTIN KATILIM FONU</td><td><span class='score-badge good'>86.3</span></td></tr><tr><td>VLT</td><td>VAKIF KATILIM PORTFÖY ALTIN KATILIM FONU</td><td><span class='score-badge good'>85.8</span></td></tr></table>
+        </div>
+        <div>
+            <h3 class="down">▼ En Kötü 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td>TCA</td><td>ZİRAAT PORTFÖY ALTIN KATILIM FONU</td><td><span class='score-badge bad'>11.4</span></td></tr><tr><td>FAK</td><td>FONMAP PORTFÖY ALTIN KATILIM FONU</td><td><span class='score-badge bad'>15.1</span></td></tr><tr><td>TTA</td><td>İŞ PORTFÖY ALTIN FONU</td><td><span class='score-badge bad'>17.8</span></td></tr><tr><td>TAL</td><td>ATLAS PORTFÖY ALTIN KATILIM FONU</td><td><span class='score-badge bad'>21.2</span></td></tr><tr><td>FIB</td><td>FİBA PORTFÖY ALTIN FONU</td><td><span class='score-badge bad'>25.0</span></td></tr></table>
+        </div>
+    </div>
+</div>
+<div class="card kat-card">
+    <h2>BIST Endeks <span class="kat-count">(41 fon)</span></h2>
+    <div class="kat-cols">
+        <div>
+            <h3 class="up">▲ En İyi 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td>MHF</td><td>MT PORTFÖY BIST HALKA ARZ ŞİRKETLERİ HİSSE SENEDİ FONU (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge good'>94.8</span></td></tr><tr><td>BIY</td><td>AZİMUT PORTFÖY BIST 100 DIŞI ŞİRKETLER HİSSE SENEDİ FONU (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge good'>89.7</span></td></tr><tr><td>KHB</td><td>KARE PORTFÖY BIST 100 DIŞI ŞİRKETLER HİSSE SENEDİ FONU (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge good'>89.3</span></td></tr><tr><td>AKU</td><td>AK PORTFÖY BIST 30 ENDEKSİ HİSSE SENEDİ (TL) FONU (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge good'>75.2</span></td></tr><tr><td>ZJL</td><td>ZİRAAT PORTFÖY BIST 100 DIŞI ŞİRKETLER HİSSE SENEDİ FONU (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge good'>74.4</span></td></tr></table>
+        </div>
+        <div>
+            <h3 class="down">▼ En Kötü 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td>YCP</td><td>YAPI KREDİ PORTFÖY BANKACILIK SEKTÖRÜ HİSSE SENEDİ SERBEST FON (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge bad'>10.1</span></td></tr><tr><td>YZH</td><td>TEB PORTFÖY BIST BANKA ENDEKSİ HİSSE SENEDİ FONU (HİSSE SENEDİ YOĞUN)</td><td><span class='score-badge bad'>11.8</span></td></tr><tr><td>DDA</td><td>DENİZ PORTFÖY BANKACILIK SEKTÖRÜ HİSSE SENEDİ SERBEST FON (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge bad'>14.8</span></td></tr><tr><td>GBJ</td><td>GARANTİ PORTFÖY BANKACILIK SEKTÖRÜ HİSSE SENEDİ SERBEST FON (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge bad'>15.1</span></td></tr><tr><td>SAS</td><td>AK PORTFÖY SABANCI TOPLULUĞU ŞİRKETLERİ ENDEKSİ HİSSE SENEDİ (TL) FONU (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge bad'>15.4</span></td></tr></table>
+        </div>
+    </div>
+</div>
+<div class="card kat-card">
+    <h2>Borçlanma Araçları <span class="kat-count">(45 fon)</span></h2>
+    <div class="kat-cols">
+        <div>
+            <h3 class="up">▲ En İyi 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td>TRJ</td><td>TERA PORTFÖY BİRİNCİ BORÇLANMA ARAÇLARI (TL) FONU</td><td><span class='score-badge good'>92.5</span></td></tr><tr><td>MBR</td><td>MT PORTFÖY BİRİNCİ BORÇLANMA ARAÇLARI FONU</td><td><span class='score-badge good'>87.3</span></td></tr><tr><td>BRR</td><td>AK PORTFÖY İKİNCİ KISA VADELİ BORÇLANMA ARAÇLARI (TL) FONU</td><td><span class='score-badge good'>86.2</span></td></tr><tr><td>OSL</td><td>OSMANLI PORTFÖY KISA VADELİ BORÇLANMA ARAÇLARI (TL) FONU</td><td><span class='score-badge good'>81.5</span></td></tr><tr><td>HVK</td><td>HEDEF PORTFÖY BİRİNCİ BORÇLANMA ARAÇLARI (TL) FONU</td><td><span class='score-badge good'>81.4</span></td></tr></table>
+        </div>
+        <div>
+            <h3 class="down">▼ En Kötü 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td>TBT</td><td>TEB PORTFÖY BORÇLANMA ARAÇLARI FONU</td><td><span class='score-badge bad'>10.4</span></td></tr><tr><td>DUV</td><td>DENİZ PORTFÖY UZUN VADELİ BORÇLANMA ARAÇLARI FONU</td><td><span class='score-badge bad'>14.8</span></td></tr><tr><td>FIT</td><td>FİBA PORTFÖY BORÇLANMA ARAÇLARI (TL) FONU</td><td><span class='score-badge bad'>15.3</span></td></tr><tr><td>AK2</td><td>AK PORTFÖY UZUN VADELİ BORÇLANMA ARAÇLARI FONU</td><td><span class='score-badge bad'>16.1</span></td></tr><tr><td>GUV</td><td>GARANTİ PORTFÖY UZUN VADELİ BORÇLANMA ARAÇLARI FONU</td><td><span class='score-badge bad'>16.2</span></td></tr></table>
+        </div>
+    </div>
+</div>
+<div class="card kat-card">
+    <h2>Değişken <span class="kat-count">(76 fon)</span></h2>
+    <div class="kat-cols">
+        <div>
+            <h3 class="up">▲ En İyi 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td>PBR</td><td>PUSULA PORTFÖY BİRİNCİ DEĞİŞKEN FON</td><td><span class='score-badge good'>92.6</span></td></tr><tr><td>EIB</td><td>ASTRA PORTFÖY DEĞİŞKEN FON</td><td><span class='score-badge good'>90.9</span></td></tr><tr><td>MD2</td><td>MT PORTFÖY İKİNCİ DEĞİŞKEN FON</td><td><span class='score-badge good'>89.4</span></td></tr><tr><td>ICH</td><td>PARDUS PORTFÖY İKİNCİ DEĞİŞKEN FON</td><td><span class='score-badge good'>88.4</span></td></tr><tr><td>TE4</td><td>TEB PORTFÖY BİRİNCİ DEĞİŞKEN FON</td><td><span class='score-badge good'>85.3</span></td></tr></table>
+        </div>
+        <div>
+            <h3 class="down">▼ En Kötü 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td>DGF</td><td>A1 CAPİTAL PORTFÖY DEĞİŞKEN FON</td><td><span class='score-badge bad'>14.0</span></td></tr><tr><td>MAD</td><td>MEKSA PORTFÖY BİRİNCİ DEĞİŞKEN FON</td><td><span class='score-badge bad'>15.7</span></td></tr><tr><td>ZDZ</td><td>ZİRAAT PORTFÖY AGRESİF DEĞİŞKEN FON</td><td><span class='score-badge bad'>17.6</span></td></tr><tr><td>ATJ</td><td>AZİMUT PORTFÖY İKİNCİ DEĞİŞKEN FON</td><td><span class='score-badge bad'>22.8</span></td></tr><tr><td>HSA</td><td>HSBC PORTFÖY DEĞİŞKEN (TL) FON</td><td><span class='score-badge bad'>22.9</span></td></tr></table>
+        </div>
+    </div>
+</div>
+<div class="card kat-card">
+    <h2>Diğer Katılım <span class="kat-count">(14 fon)</span></h2>
+    <div class="kat-cols">
+        <div>
+            <h3 class="up">▲ En İyi 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td>BVK</td><td>BULLS PORTFÖY VOLTRAN KATILIM SERBEST (TL) FON</td><td><span class='score-badge good'>95.7</span></td></tr><tr><td>KDE</td><td>KUVEYT TÜRK PORTFÖY DENGELİ KATILIM FONU</td><td><span class='score-badge good'>89.1</span></td></tr><tr><td>NJY</td><td>NUROL PORTFÖY BİRİNCİ KATILIM FONU</td><td><span class='score-badge good'>82.3</span></td></tr><tr><td>KUD</td><td>KUVEYT TÜRK PORTFÖY DİNAMİK KATILIM FONU</td><td><span class='score-badge good'>65.6</span></td></tr><tr><td>KTM</td><td>KUVEYT TÜRK PORTFÖY BİRİNCİ KATILIM (TL) FONU</td><td><span class='score-badge good'>61.8</span></td></tr></table>
+        </div>
+        <div>
+            <h3 class="down">▼ En Kötü 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td>GKF</td><td>GLOBAL MD PORTFÖY KATILIM FONU</td><td><span class='score-badge bad'>21.0</span></td></tr><tr><td>KUA</td><td>KUVEYT TÜRK PORTFÖY AGRESİF KATILIM FONU</td><td><span class='score-badge bad'>27.9</span></td></tr><tr><td>PP1</td><td>PARDUS PORTFÖY BİRİNCİ KATILIM FONU</td><td><span class='score-badge bad'>35.6</span></td></tr><tr><td>KIK</td><td>KUVEYT TÜRK PORTFÖY İKİNCİ KATILIM FONU</td><td><span class='score-badge bad'>36.7</span></td></tr><tr><td>RBK</td><td>ALBARAKA PORTFÖY KATILIM FONU</td><td><span class='score-badge bad'>44.8</span></td></tr></table>
+        </div>
+    </div>
+</div>
+<div class="card kat-card">
+    <h2>Diğer Serbest <span class="kat-count">(91 fon)</span></h2>
+    <div class="kat-cols">
+        <div>
+            <h3 class="up">▲ En İyi 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td>TLY</td><td>TERA PORTFÖY BİRİNCİ SERBEST FON</td><td><span class='score-badge good'>90.4</span></td></tr><tr><td>BSM</td><td>GLOBAL MD PORTFÖY BERRAK SERBEST FON</td><td><span class='score-badge good'>89.9</span></td></tr><tr><td>DFI</td><td>ATLAS PORTFÖY SERBEST FON</td><td><span class='score-badge good'>89.1</span></td></tr><tr><td>BBS</td><td>BULLS PORTFÖY BİRİNCİ SERBEST (TL) FON</td><td><span class='score-badge good'>87.4</span></td></tr><tr><td>VMV</td><td>VEGA PORTFÖY MAVİ SERBEST FON</td><td><span class='score-badge good'>87.1</span></td></tr></table>
+        </div>
+        <div>
+            <h3 class="down">▼ En Kötü 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td>DKC</td><td>DENİZ PORTFÖY İKİNCİ SERBEST FON</td><td><span class='score-badge bad'>14.3</span></td></tr><tr><td>HIF</td><td>HEDEF PORTFÖY İKİNCİ SERBEST FON</td><td><span class='score-badge bad'>16.1</span></td></tr><tr><td>HGV</td><td>HEDEF PORTFÖY BİRİNCİ SERBEST FON</td><td><span class='score-badge bad'>17.0</span></td></tr><tr><td>BUV</td><td>BULLS PORTFÖY VOLTRAN SERBEST (TL) FON</td><td><span class='score-badge bad'>17.2</span></td></tr><tr><td>DRA</td><td>NEO PORTFÖY DORA SERBEST FON</td><td><span class='score-badge bad'>17.4</span></td></tr></table>
+        </div>
+    </div>
+</div>
+<div class="card kat-card">
+    <h2>Döviz <span class="kat-count">(107 fon)</span></h2>
+    <div class="kat-cols">
+        <div>
+            <h3 class="up">▲ En İyi 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td>VPP</td><td>VEGA PORTFÖY PARLA SERBEST (DÖVİZ) FON</td><td><span class='score-badge good'>95.1</span></td></tr><tr><td>BKY</td><td>YAPI KREDİ PORTFÖY BİRİNCİ KATILIM SERBEST (DÖVİZ) FON</td><td><span class='score-badge good'>91.3</span></td></tr><tr><td>BSD</td><td>BV PORTFÖY SERBEST (DÖVİZ) FON</td><td><span class='score-badge good'>91.2</span></td></tr><tr><td>YOZ</td><td>DENİZ PORTFÖY YAKAMOZ SERBEST (DÖVİZ) FON</td><td><span class='score-badge good'>87.2</span></td></tr><tr><td>YBR</td><td>İŞ PORTFÖY YİRMİBİRİNCİ SERBEST (DÖVİZ) FON</td><td><span class='score-badge good'>85.6</span></td></tr></table>
+        </div>
+        <div>
+            <h3 class="down">▼ En Kötü 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td>FSP</td><td>FONMAP PORTFÖY SERBEST (DÖVİZ) FON</td><td><span class='score-badge bad'>14.2</span></td></tr><tr><td>KLS</td><td>ALLBATROSS PORTFÖY KATILIM SERBEST (DÖVİZ) FON</td><td><span class='score-badge bad'>21.2</span></td></tr><tr><td>AHN</td><td>ATLAS PORTFÖY SERBEST(DÖVİZ)FON</td><td><span class='score-badge bad'>23.1</span></td></tr><tr><td>ICS</td><td>ICBC TURKEY PORTFÖY SERBEST (DÖVİZ) FON</td><td><span class='score-badge bad'>23.1</span></td></tr><tr><td>KAV</td><td>KUVEYT TÜRK PORTFÖY ALTINCI KATILIM SERBEST (DÖVİZ-AVRO) FON</td><td><span class='score-badge bad'>23.1</span></td></tr></table>
+        </div>
+    </div>
+</div>
+<div class="card kat-card">
+    <h2>Emtia <span class="kat-count">(11 fon)</span></h2>
+    <div class="kat-cols">
+        <div>
+            <h3 class="up">▲ En İyi 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td>AES</td><td>AK PORTFÖY PETROL YABANCI BYF FON SEPETİ FONU</td><td><span class='score-badge good'>92.2</span></td></tr><tr><td>OVD</td><td>QNB PORTFÖY EMTİA FON SEPETİ FONU</td><td><span class='score-badge good'>76.5</span></td></tr><tr><td>TGE</td><td>İŞ PORTFÖY EMTİA YABANCI BYF FON SEPETİ FONU</td><td><span class='score-badge good'>60.9</span></td></tr><tr><td>GZE</td><td>GARANTİ PORTFÖY EMTİA SERBEST FON</td><td><span class='score-badge good'>60.0</span></td></tr><tr><td>DFD</td><td>DENİZ PORTFÖY EMTİA SERBEST FON</td><td><span class='score-badge good'>58.5</span></td></tr></table>
+        </div>
+        <div>
+            <h3 class="down">▼ En Kötü 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td>ESP</td><td>AURA PORTFÖY EMTİA SERBEST FON</td><td><span class='score-badge bad'>20.8</span></td></tr><tr><td>BFS</td><td>BULLS PORTFÖY EMTİA FON SEPETİ FONU</td><td><span class='score-badge bad'>32.7</span></td></tr><tr><td>GBZ</td><td>AZİMUT PORTFÖY EMTİA FON SEPETİ FONU</td><td><span class='score-badge bad'>34.4</span></td></tr><tr><td>YGM</td><td>YAPI KREDİ PORTFÖY EMTİA SERBEST FON</td><td><span class='score-badge bad'>41.7</span></td></tr><tr><td>ZCN</td><td>ZİRAAT PORTFÖY EMTİA FON SEPETİ FONU</td><td><span class='score-badge bad'>52.8</span></td></tr></table>
+        </div>
+    </div>
+</div>
+<div class="card kat-card">
+    <h2>Eurobond <span class="kat-count">(8 fon)</span></h2>
+    <div class="kat-cols">
+        <div>
+            <h3 class="up">▲ En İyi 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td>YBE</td><td>YAPI KREDİ PORTFÖY EUROBOND (DOLAR) BORÇLANMA ARAÇLARI FONU</td><td><span class='score-badge good'>76.2</span></td></tr><tr><td>DBH</td><td>DENİZ PORTFÖY EUROBOND (DÖVİZ) BORÇLANMA ARAÇLARI FONU</td><td><span class='score-badge good'>72.7</span></td></tr><tr><td>IPV</td><td>İŞ PORTFÖY EUROBOND BORÇLANMA ARAÇLARI (DÖVİZ) FONU</td><td><span class='score-badge good'>65.8</span></td></tr><tr><td>GPA</td><td>GARANTİ PORTFÖY EUROBOND BORÇLANMA ARAÇLARI (DÖVİZ) FONU</td><td><span class='score-badge good'>64.3</span></td></tr><tr><td>FPE</td><td>FİBA PORTFÖY EUROBOND BORÇLANMA ARAÇLARI (DÖVİZ) FONU</td><td><span class='score-badge good'>61.9</span></td></tr></table>
+        </div>
+        <div>
+            <h3 class="down">▼ En Kötü 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td>TPL</td><td>TEB PORTFÖY EUROBOND (DÖVİZ) BORÇLANMA ARAÇLARI FONU</td><td><span class='score-badge bad'>29.7</span></td></tr><tr><td>FUB</td><td>QNB PORTFÖY EUROBOND (DÖVİZ) BORÇLANMA ARAÇLARI FONU</td><td><span class='score-badge bad'>30.9</span></td></tr><tr><td>AKE</td><td>AK PORTFÖY EUROBOND (AMERİKAN DOLARI) BORÇLANMA ARAÇLARI FONU</td><td><span class='score-badge bad'>44.8</span></td></tr><tr><td>FPE</td><td>FİBA PORTFÖY EUROBOND BORÇLANMA ARAÇLARI (DÖVİZ) FONU</td><td><span class='score-badge bad'>61.9</span></td></tr><tr><td>GPA</td><td>GARANTİ PORTFÖY EUROBOND BORÇLANMA ARAÇLARI (DÖVİZ) FONU</td><td><span class='score-badge bad'>64.3</span></td></tr></table>
+        </div>
+    </div>
+</div>
+<div class="card kat-card">
+    <h2>Fon Sepeti <span class="kat-count">(55 fon)</span></h2>
+    <div class="kat-cols">
+        <div>
+            <h3 class="up">▲ En İyi 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td>BUB</td><td>BULLS PORTFÖY BİRİNCİ FON SEPETİ FONU</td><td><span class='score-badge good'>97.9</span></td></tr><tr><td>NBO</td><td>NEO PORTFÖY BORÇLANMA ARACI FONLARI FON SEPETİ FONU</td><td><span class='score-badge good'>96.6</span></td></tr><tr><td>IRF</td><td>İSTANBUL PORTFÖY BİRİNCİ FON SEPETİ FONU</td><td><span class='score-badge good'>93.4</span></td></tr><tr><td>YCY</td><td>İSTANBUL PORTFÖY KATILIM FON SEPETİ FONU</td><td><span class='score-badge good'>87.4</span></td></tr><tr><td>OLE</td><td>OSMANLI PORTFÖY BİRİNCİ FON SEPETİ FONU</td><td><span class='score-badge good'>84.9</span></td></tr></table>
+        </div>
+        <div>
+            <h3 class="down">▼ En Kötü 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td>TPC</td><td>TEB PORTFÖY BİRİNCİ FON SEPETİ FONU</td><td><span class='score-badge bad'>9.7</span></td></tr><tr><td>FSU</td><td>TERA PORTFÖY FON SEPETİ FONU</td><td><span class='score-badge bad'>12.4</span></td></tr><tr><td>YPV</td><td>YAPI KREDİ PORTFÖY ÜÇÜNCÜ FON SEPETİ FONU</td><td><span class='score-badge bad'>12.8</span></td></tr><tr><td>ODV</td><td>AK PORTFÖY ÜÇÜNCÜ FON SEPETİ FONU</td><td><span class='score-badge bad'>17.1</span></td></tr><tr><td>ZPC</td><td>ZİRAAT PORTFÖY FON SEPETİ FONU</td><td><span class='score-badge bad'>20.3</span></td></tr></table>
+        </div>
+    </div>
+</div>
+<div class="card kat-card">
+    <h2>Gümüş <span class="kat-count">(13 fon)</span></h2>
+    <div class="kat-cols">
+        <div>
+            <h3 class="up">▲ En İyi 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td>MJG</td><td>AKTİF PORTFÖY GÜMÜŞ FON SEPETİ FONU</td><td><span class='score-badge good'>76.9</span></td></tr><tr><td>DMG</td><td>DENİZ PORTFÖY GÜMÜŞ FON SEPETİ FONU</td><td><span class='score-badge good'>76.8</span></td></tr><tr><td>GUF</td><td>İŞ PORTFÖY GÜMÜŞ FON SEPETİ FONU</td><td><span class='score-badge good'>73.1</span></td></tr><tr><td>KGM</td><td>KUVEYT TÜRK PORTFÖY GÜMÜŞ KATILIM FON SEPETİ FONU</td><td><span class='score-badge good'>69.0</span></td></tr><tr><td>IOG</td><td>İŞ PORTFÖY GÜMÜŞ SERBEST FON</td><td><span class='score-badge good'>67.1</span></td></tr></table>
+        </div>
+        <div>
+            <h3 class="down">▼ En Kötü 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td>GMC</td><td>TEB PORTFÖY GÜMÜŞ FON SEPETİ FONU</td><td><span class='score-badge bad'>20.4</span></td></tr><tr><td>GTZ</td><td>GARANTİ PORTFÖY GÜMÜŞ FON SEPETİ FONU</td><td><span class='score-badge bad'>21.6</span></td></tr><tr><td>YZG</td><td>YAPI KREDİ PORTFÖY GÜMÜŞ FON SEPETİ FONU</td><td><span class='score-badge bad'>37.9</span></td></tr><tr><td>GUM</td><td>AK PORTFÖY GÜMÜŞ FON SEPETI FONU</td><td><span class='score-badge bad'>40.3</span></td></tr><tr><td>FPG</td><td>FİBA PORTFÖY GÜMÜŞ SERBEST FON</td><td><span class='score-badge bad'>41.5</span></td></tr></table>
+        </div>
+    </div>
+</div>
+<div class="card kat-card">
+    <h2>Hisse Senedi <span class="kat-count">(137 fon)</span></h2>
+    <div class="kat-cols">
+        <div>
+            <h3 class="up">▲ En İyi 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td>LTL</td><td>AHLATCI PORTFÖY HİSSE SENEDİ (TL) FONU (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge good'>98.5</span></td></tr><tr><td>PHE</td><td>PUSULA PORTFÖY HİSSE SENEDİ FONU (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge good'>98.0</span></td></tr><tr><td>PUK</td><td>PUSULA PORTFÖY KATILIM HİSSE SENEDİ (TL) FONU (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge good'>94.5</span></td></tr><tr><td>SRL</td><td>PARDUS PORTFÖY SÜRDÜRÜLEBİLİRLİK HİSSE SENEDİ (TL) FONU (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge good'>93.8</span></td></tr><tr><td>KHA</td><td>PARDUS PORTFÖY İKİNCİ HİSSE SENEDİ (TL) FONU (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge good'>93.5</span></td></tr></table>
+        </div>
+        <div>
+            <h3 class="down">▼ En Kötü 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td>LLA</td><td>ALLBATROSS PORTFÖY AYDIN HİSSE SENEDİ SERBEST (TL) FON (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge bad'>10.4</span></td></tr><tr><td>BRT</td><td>PARDUS PORTFÖY BEREKET HİSSE SENEDİ SERBEST FON (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge bad'>11.8</span></td></tr><tr><td>PMP</td><td>PARDUS PORTFÖY MODEL PORTFÖY HİSSE SENEDİ SERBEST FON (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge bad'>12.7</span></td></tr><tr><td>PBN</td><td>PİRAMİT PORTFÖY BİRİNCİ HİSSE SENEDİ SERBEST FON (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge bad'>14.1</span></td></tr><tr><td>IHZ</td><td>ALLBATROSS PORTFÖY İKİNCİ HİSSE SENEDİ SERBEST FON (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge bad'>15.3</span></td></tr></table>
+        </div>
+    </div>
+</div>
+<div class="card kat-card">
+    <h2>Kar Payı Ödeyen <span class="kat-count">(12 fon)</span></h2>
+    <div class="kat-cols">
+        <div>
+            <h3 class="up">▲ En İyi 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td>KPA</td><td>KUVEYT TÜRK PORTFÖY KAR PAYI ÖDEYEN KATILIM HİSSE SENEDİ FONU (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge good'>88.7</span></td></tr><tr><td>YNK</td><td>YAPI KREDİ PORTFÖY NİŞANTAŞI KAR PAYI ÖDEYEN SERBEST (DÖVİZ) FON</td><td><span class='score-badge good'>70.5</span></td></tr><tr><td>KPD</td><td>KUVEYT TÜRK PORTFÖY KAR PAYI ÖDEYEN KATILIM SERBEST (DÖVİZ) FON</td><td><span class='score-badge good'>65.7</span></td></tr><tr><td>GKG</td><td>GARANTİ PORTFÖY KAR PAYI ÖDEYEN HİSSE SENEDİ (TL) FONU (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge good'>65.5</span></td></tr><tr><td>GSP</td><td>AZİMUT PYŞ KAR PAYI ÖDEYEN HİSSE SENEDİ FONU (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge good'>65.4</span></td></tr></table>
+        </div>
+        <div>
+            <h3 class="down">▼ En Kötü 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td>KPH</td><td>İŞ PORTFÖY KAR PAYI ÖDEYEN HİSSE SENEDİ (TL) FONU (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge bad'>31.3</span></td></tr><tr><td>YLY</td><td>YAPI KREDİ PORTFÖY KAR PAYI ÖDEYEN HİSSE SENEDİ (TL) FON (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge bad'>33.2</span></td></tr><tr><td>NKP</td><td>NEO PORTFÖY KAR PAYI ÖDEYEN DEĞİŞKEN FON</td><td><span class='score-badge bad'>37.2</span></td></tr><tr><td>YSL</td><td>YAPI KREDİ PORTFÖY KAR PAYI ÖDEYEN KİRA SERTİFİKALARI KATILIM SERBEST (DÖVİZ) FON</td><td><span class='score-badge bad'>40.5</span></td></tr><tr><td>FBC</td><td>ONE PORTFÖY KAR PAYI ÖDEYEN KATILIM FONU</td><td><span class='score-badge bad'>43.4</span></td></tr></table>
+        </div>
+    </div>
+</div>
+<div class="card kat-card">
+    <h2>Kira Sertifikası <span class="kat-count">(21 fon)</span></h2>
+    <div class="kat-cols">
+        <div>
+            <h3 class="up">▲ En İyi 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td>AIS</td><td>AK PORTFÖY PARA PİYASASI KATILIM FONU</td><td><span class='score-badge good'>91.3</span></td></tr><tr><td>RBT</td><td>ALBARAKA PORTFÖY KİRA SERTİFİKALARI  KATILIM FONU</td><td><span class='score-badge good'>89.8</span></td></tr><tr><td>KSK</td><td>AZİMUT PORTFÖY İKİNCİ PARA PİYASASI KATILIM FONU</td><td><span class='score-badge good'>88.4</span></td></tr><tr><td>VKV</td><td>VAKIF KATILIM PORTFÖY KISA VADELİ KİRA SERTİFİKALARI KATILIM FONU</td><td><span class='score-badge good'>85.7</span></td></tr><tr><td>MPF</td><td>AKTİF PORTFÖY KISA VADELİ KİRA SERTİFİKASI KATILIM (TL) FONU</td><td><span class='score-badge good'>67.5</span></td></tr></table>
+        </div>
+        <div>
+            <h3 class="down">▼ En Kötü 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td>KTN</td><td>KUVEYT TÜRK PORTFÖY KİRA SERTİFİKALARI KATILIM (TL) FONU</td><td><span class='score-badge bad'>17.3</span></td></tr><tr><td>KIS</td><td>ASTRA PORTFÖY KİRA SERTİFİKASI KATILIM (DÖVİZ) FONU</td><td><span class='score-badge bad'>18.1</span></td></tr><tr><td>YFV</td><td>YAPI KREDİ PORTFÖY KİRA SERTİFİKALARI KATILIM FONU</td><td><span class='score-badge bad'>23.3</span></td></tr><tr><td>EKF</td><td>ASTRA PORTFÖY KİRA SERTİFİKASI KATILIM (TL) FONU</td><td><span class='score-badge bad'>26.9</span></td></tr><tr><td>TPZ</td><td>TEB PORTFÖY KİRA SERTİFİKALARI (DÖVİZ) KATILIM FONU</td><td><span class='score-badge bad'>29.4</span></td></tr></table>
+        </div>
+    </div>
+</div>
+<div class="card kat-card">
+    <h2>Kısa Vade <span class="kat-count">(16 fon)</span></h2>
+    <div class="kat-cols">
+        <div>
+            <h3 class="up">▲ En İyi 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td>PRU</td><td>ALLBATROSS PORTFÖY KISA VADELİ SERBEST (TL) FON</td><td><span class='score-badge good'>78.5</span></td></tr><tr><td>KKL</td><td>ALLBATROSS PORTFÖY KISA VADELİ KATILIM SERBEST (TL) FON</td><td><span class='score-badge good'>74.1</span></td></tr><tr><td>KSA</td><td>HEDEF PORTFÖY KISA VADELİ SERBEST (TL) FON</td><td><span class='score-badge good'>73.1</span></td></tr><tr><td>PIS</td><td>PARDUS PORTFÖY İKİNCİ KISA VADELİ SERBEST (TL) FON</td><td><span class='score-badge good'>72.5</span></td></tr><tr><td>PKV</td><td>PARDUS PORTFÖY KISA VADELİ SERBEST (TL) FON</td><td><span class='score-badge good'>70.2</span></td></tr></table>
+        </div>
+        <div>
+            <h3 class="down">▼ En Kötü 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td>KSV</td><td>KUVEYT TÜRK PORTFÖY KISA VADELİ KATILIM SERBEST (TL) FON</td><td><span class='score-badge bad'>29.0</span></td></tr><tr><td>PVK</td><td>ALBARAKA PORTFÖY KISA VADELİ KATILIM SERBEST (TL) FON</td><td><span class='score-badge bad'>30.4</span></td></tr><tr><td>HYU</td><td>HSBC PORTFÖY KISA VADELİ SERBEST (TL) FON</td><td><span class='score-badge bad'>31.8</span></td></tr><tr><td>RKV</td><td>RE-PIE PORTFÖY KISA VADELİ KATILIM SERBEST (TL) FON</td><td><span class='score-badge bad'>38.0</span></td></tr><tr><td>DVS</td><td>DENİZ PORTFÖY KISA VADELİ SERBEST (TL) FON</td><td><span class='score-badge bad'>39.4</span></td></tr></table>
+        </div>
+    </div>
+</div>
+<div class="card kat-card">
+    <h2>Kıymetli Madenler <span class="kat-count">(4 fon)</span></h2>
+    <div class="kat-cols">
+        <div>
+            <h3 class="up">▲ En İyi 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td>KUT</td><td>KUVEYT TÜRK PORTFÖY KIYMETLİ MADENLER KATILIM FONU</td><td><span class='score-badge good'>88.8</span></td></tr><tr><td>EPK</td><td>EMAA BLUE PORTFÖY KIYMETLİ MADENLER KATILIM FON SEPETİ FONU</td><td><span class='score-badge good'>59.5</span></td></tr><tr><td>OTJ</td><td>OYAK PORTFÖY KIYMETLİ MADENLER FON SEPETİ FONU</td><td><span class='score-badge good'>57.9</span></td></tr><tr><td>KMN</td><td>YAPI KREDİ PORTFÖY KIYMETLİ MADENLER KATILIM FONU</td><td><span class='score-badge good'>43.3</span></td></tr></table>
+        </div>
+        <div>
+            <h3 class="down">▼ En Kötü 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td>KMN</td><td>YAPI KREDİ PORTFÖY KIYMETLİ MADENLER KATILIM FONU</td><td><span class='score-badge bad'>43.3</span></td></tr><tr><td>OTJ</td><td>OYAK PORTFÖY KIYMETLİ MADENLER FON SEPETİ FONU</td><td><span class='score-badge bad'>57.9</span></td></tr><tr><td>EPK</td><td>EMAA BLUE PORTFÖY KIYMETLİ MADENLER KATILIM FON SEPETİ FONU</td><td><span class='score-badge bad'>59.5</span></td></tr><tr><td>KUT</td><td>KUVEYT TÜRK PORTFÖY KIYMETLİ MADENLER KATILIM FONU</td><td><span class='score-badge bad'>88.8</span></td></tr></table>
+        </div>
+    </div>
+</div>
+<div class="card kat-card">
+    <h2>Para Piyasası <span class="kat-count">(98 fon)</span></h2>
+    <div class="kat-cols">
+        <div>
+            <h3 class="up">▲ En İyi 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td>PNU</td><td>PUSULA PORTFÖY İKİNCİ PARA PİYASASI (TL) FONU</td><td><span class='score-badge good'>99.1</span></td></tr><tr><td>PRY</td><td>PUSULA PORTFÖY PARA PİYASASI (TL) FONU</td><td><span class='score-badge good'>89.7</span></td></tr><tr><td>TP2</td><td>TERA PORTFÖY PARA PİYASASI (TL) FONU</td><td><span class='score-badge good'>87.5</span></td></tr><tr><td>PSE</td><td>ATLAS PORTFÖY PARA PİYASASI SERBEST FON</td><td><span class='score-badge good'>87.3</span></td></tr><tr><td>PPT</td><td>ATLAS PORTFÖY PARA PİYASASI (TL) FONU</td><td><span class='score-badge good'>80.8</span></td></tr></table>
+        </div>
+        <div>
+            <h3 class="down">▼ En Kötü 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td>KNI</td><td>AZİMUT PORTFÖY İKİNCİ PARA PİYASASI SERBEST (TL) FON</td><td><span class='score-badge bad'>4.4</span></td></tr><tr><td>AAL</td><td>ATA PORTFÖY PARA PİYASASI (TL) FONU</td><td><span class='score-badge bad'>5.4</span></td></tr><tr><td>LKT</td><td>AKTİF PORTFÖY İKİNCİ PARA PİYASASI (TL) FONU</td><td><span class='score-badge bad'>17.0</span></td></tr><tr><td>ICE</td><td>ICBC TURKEY PORTFÖY PARA PİYASASI (TL) FONU</td><td><span class='score-badge bad'>21.1</span></td></tr><tr><td>FSK</td><td>QNB PORTFÖY İKİNCİ PARA PİYASASI (TL) FONU</td><td><span class='score-badge bad'>22.5</span></td></tr></table>
+        </div>
+    </div>
+</div>
+<div class="card kat-card">
+    <h2>Teknoloji Temalı <span class="kat-count">(64 fon)</span></h2>
+    <div class="kat-cols">
+        <div>
+            <h3 class="up">▲ En İyi 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td>RPM</td><td>ROTA PORTFÖY İLAÇ VE MEDİKAL TEKNOLOJİLERİ DEĞİŞKEN FON</td><td><span class='score-badge good'>80.2</span></td></tr><tr><td>HTK</td><td>QNB PORTFÖY HAVACILIK VE SAVUNMA TEKNOLOJİLERİ FON SEPETİ FONU</td><td><span class='score-badge good'>77.2</span></td></tr><tr><td>KTJ</td><td>KUVEYT TÜRK PORTFÖY TEKNOLOJİ KATILIM FONU</td><td><span class='score-badge good'>74.7</span></td></tr><tr><td>GZG</td><td>GARANTİ PORTFÖY SAĞLIK VE GENETİK TEKNOLOJİLERİ DEĞİŞKEN FON</td><td><span class='score-badge good'>74.3</span></td></tr><tr><td>DVT</td><td>DENİZ PORTFÖY METAVERSE VE DİJİTAL YAŞAM TEKNOLOJİLERİ DEĞİŞKEN FON</td><td><span class='score-badge good'>70.6</span></td></tr></table>
+        </div>
+        <div>
+            <h3 class="down">▼ En Kötü 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td>MTD</td><td>BV PORTFÖY MALZEME TEKNOLOJİLERİ DEĞİŞKEN FON</td><td><span class='score-badge bad'>12.6</span></td></tr><tr><td>DHJ</td><td>DENİZ PORTFÖY TEKNOLOJİ ŞİRKETLERİ HİSSE SENEDİ FONU (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge bad'>20.4</span></td></tr><tr><td>FLY</td><td>AKTİF PORTFÖY HAVACILIK VE SAVUNMA TEKNOLOJİLERİ DEĞİŞKEN FON</td><td><span class='score-badge bad'>21.9</span></td></tr><tr><td>RBL</td><td>QNB PORTFÖY ROBOTİK VE BLOCKCHAİN TEKNOLOJİLERİ SERBEST FON</td><td><span class='score-badge bad'>23.8</span></td></tr><tr><td>GRT</td><td>GARANTİ PORTFÖY TEKNOLOJİ ŞİRKETLERİ HİSSE SENEDİ (TL) FONU (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge bad'>24.6</span></td></tr></table>
+        </div>
+    </div>
+</div>
+<div class="card kat-card">
+    <h2>Tematik <span class="kat-count">(95 fon)</span></h2>
+    <div class="kat-cols">
+        <div>
+            <h3 class="up">▲ En İyi 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td>NBH</td><td>NEO PORTFÖY ALGORİTMİK STRATEJİLER SERBEST FON</td><td><span class='score-badge good'>94.5</span></td></tr><tr><td>PTO</td><td>PARDUS PORTFÖY TEMETTÜ ÖDEYEN ŞİRKETLER HİSSE SENEDİ FONU (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge good'>94.3</span></td></tr><tr><td>BHI</td><td>BV PORTFÖY MUTLAK GETİRİ HEDEFLİ HİSSE SENEDİ SERBEST (TL) FON (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge good'>90.0</span></td></tr><tr><td>YSO</td><td>YAPI KREDİ PORTFÖY SAĞLIK SEKTÖRÜ SERBEST FON</td><td><span class='score-badge good'>86.7</span></td></tr><tr><td>GTH</td><td>GARANTİ PORTFÖY İHRACATÇI ŞİRKETLER HİSSE SENEDİ (TL) FONU (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge good'>84.8</span></td></tr></table>
+        </div>
+        <div>
+            <h3 class="down">▼ En Kötü 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td>BNH</td><td>İSTANBUL PORTFÖY BANKACILIK SEKTÖRÜ HİSSE SENEDİ SERBEST (TL) FON (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge bad'>8.8</span></td></tr><tr><td>BFT</td><td>AZİMUT PORTFÖY BANKA VE FİNANS SEKTÖRÜ HİSSE SENEDİ FONU (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge bad'>8.8</span></td></tr><tr><td>IHK</td><td>İŞ PORTFÖY İŞ'TE KADIN HİSSE SENEDİ (TL) FONU (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge bad'>15.0</span></td></tr><tr><td>KOD</td><td>YAPI KREDİ PORTFÖY KÜÇÜK ÖLÇEKLİ ŞİRKETLER DEĞİŞKEN FON</td><td><span class='score-badge bad'>15.5</span></td></tr><tr><td>BIO</td><td>İŞ PORTFÖY SÜRDÜRÜLEBİLİRLİK HİSSE SENEDİ (TL) FONU (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge bad'>17.3</span></td></tr></table>
+        </div>
+    </div>
+</div>
+<div class="card kat-card">
+    <h2>Çoklu Varlık <span class="kat-count">(18 fon)</span></h2>
+    <div class="kat-cols">
+        <div>
+            <h3 class="up">▲ En İyi 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td>ZBI</td><td>ZİRAAT PORTFÖY TEMKİNLİ KATILIM FONU</td><td><span class='score-badge good'>81.3</span></td></tr><tr><td>CVL</td><td>A1 CAPİTAL PORTFÖY ÇOKLU VARLIK KATILIM FONU</td><td><span class='score-badge good'>76.0</span></td></tr><tr><td>KCV</td><td>KUVEYT TÜRK PORTFÖY ÇOKLU VARLIK KATILIM FONU</td><td><span class='score-badge good'>70.7</span></td></tr><tr><td>GMA</td><td>AZİMUT PORTFÖY BİRİNCİ DEĞİŞKEN FON</td><td><span class='score-badge good'>69.9</span></td></tr><tr><td>BCO</td><td>BULLS PORTFÖY ÇOKLU VARLIK KATILIM FONU</td><td><span class='score-badge good'>66.3</span></td></tr></table>
+        </div>
+        <div>
+            <h3 class="down">▼ En Kötü 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td>HCV</td><td>HEDEF PORTFÖY ATAK ÇOKLU VARLIK KATILIM FONU</td><td><span class='score-badge bad'>16.7</span></td></tr><tr><td>FID</td><td>FİBA PORTFÖY ÇOKLU VARLIK İKİNCİ DEĞİŞKEN FON</td><td><span class='score-badge bad'>28.3</span></td></tr><tr><td>CKL</td><td>YAPI KREDİ PORTFÖY ÇOKLU VARLIK DEĞİŞKEN FON</td><td><span class='score-badge bad'>33.0</span></td></tr><tr><td>HPD</td><td>HSBC PORTFÖY İKİNCİ DEĞİŞKEN FON</td><td><span class='score-badge bad'>34.5</span></td></tr><tr><td>FCK</td><td>ONE PORTFÖY ÇOKLU VARLIK KATILIM FONU</td><td><span class='score-badge bad'>40.1</span></td></tr></table>
+        </div>
+    </div>
+</div>
+<div class="card kat-card">
+    <h2>Özel Sektör Borçlanma Araçları <span class="kat-count">(9 fon)</span></h2>
+    <div class="kat-cols">
+        <div>
+            <h3 class="up">▲ En İyi 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td>OSD</td><td>OSMANLI PORTFÖY ÖZEL SEKTÖR BORÇLANMA ARAÇLARI FONU</td><td><span class='score-badge good'>81.7</span></td></tr><tr><td>FYO</td><td>QNB PORTFÖY ÖZEL SEKTÖR BORÇLANMA ARAÇLARI FONU</td><td><span class='score-badge good'>72.2</span></td></tr><tr><td>YBS</td><td>YAPI KREDİ PORTFÖY ÖZEL SEKTÖR BORÇLANMA ARAÇLARI FONU</td><td><span class='score-badge good'>64.9</span></td></tr><tr><td>GUB</td><td>GARANTİ PORTFÖY ÖZEL SEKTÖR BORÇLANMA ARAÇLARI FONU</td><td><span class='score-badge good'>63.8</span></td></tr><tr><td>AYR</td><td>AK PORTFÖY ÖZEL SEKTÖR BORÇLANMA ARAÇLARI (TL) FONU</td><td><span class='score-badge good'>58.8</span></td></tr></table>
+        </div>
+        <div>
+            <h3 class="down">▼ En Kötü 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td>AHU</td><td>ATLAS PORTFÖY BİRİNCİ ÖZEL SEKTÖR BORÇLANMA ARAÇLARI FONU</td><td><span class='score-badge bad'>14.4</span></td></tr><tr><td>TOT</td><td>TEB PORTFÖY ÖZEL SEKTÖR BORÇLANMA ARAÇLARI FONU</td><td><span class='score-badge bad'>31.3</span></td></tr><tr><td>TBV</td><td>İŞ PORTFÖY ÖZEL SEKTÖR BORÇLANMA ARAÇLARI (TL) FONU</td><td><span class='score-badge bad'>53.8</span></td></tr><tr><td>DBZ</td><td>DENİZ PORTFÖY ÖZEL SEKTÖR BORÇLANMA ARAÇLARI FONU</td><td><span class='score-badge bad'>56.8</span></td></tr><tr><td>AYR</td><td>AK PORTFÖY ÖZEL SEKTÖR BORÇLANMA ARAÇLARI (TL) FONU</td><td><span class='score-badge bad'>58.8</span></td></tr></table>
+        </div>
+    </div>
+</div>
+<div class="card kat-card">
+    <h2>İstatiksel Arbitraj <span class="kat-count">(43 fon)</span></h2>
+    <div class="kat-cols">
+        <div>
+            <h3 class="up">▲ En İyi 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td>LPH</td><td>STATECH PORTFÖY İSTATİSTİKSEL ARBİTRAJ HİSSE SENEDİ SERBEST (TL) FON (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge good'>88.8</span></td></tr><tr><td>NMU</td><td>NUROL PORTFÖY MUTLAK GETİRİ HEDEFLİ HİSSE SENEDİ SERBEST FON (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge good'>85.4</span></td></tr><tr><td>AP7</td><td>PARDUS PORTFÖY ALGO ETNA İSTATİSTİKSEL ARBİTRAJ SERBEST FON</td><td><span class='score-badge good'>85.1</span></td></tr><tr><td>HIA</td><td>HEDEF PORTFÖY İSTATİSTİKSEL ARBİTRAJ SERBEST FON</td><td><span class='score-badge good'>83.2</span></td></tr><tr><td>IRB</td><td>İSTANBUL PORTFÖY İSTATİSTİKSEL ARBİTRAJ HİSSE SENEDİ SERBEST FON (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge good'>82.6</span></td></tr></table>
+        </div>
+        <div>
+            <h3 class="down">▼ En Kötü 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td>ADE</td><td>AK PORTFÖY MUTLAK GETİRİ HEDEFLİ DEĞİŞKEN FON</td><td><span class='score-badge bad'>12.1</span></td></tr><tr><td>FS5</td><td>ONE PORTFÖY BİRİNCİ İSTATİSTİKSEL ARBİTRAJ HİSSE SENEDİ SERBEST FON (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge bad'>15.4</span></td></tr><tr><td>MGB</td><td>İŞ PORTFÖY MUTLAK GETİRİ HEDEFLİ HİSSE SENEDİ SERBEST FON (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge bad'>18.0</span></td></tr><tr><td>KIA</td><td>TRIVE PORTFÖY MUTLAK GETİRİ HEDEFLİ DEĞİŞKEN FON</td><td><span class='score-badge bad'>19.0</span></td></tr><tr><td>MGH</td><td>TEB PORTFÖY MUTLAK GETİRİ HEDEFLİ HİSSE SENEDİ SERBEST FON (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge bad'>20.6</span></td></tr></table>
+        </div>
+    </div>
+</div>
+</body>
+</html>
