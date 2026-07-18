@@ -1,0 +1,4 @@
+pytefas
+pandas
+openpyxl
+pyarrow
