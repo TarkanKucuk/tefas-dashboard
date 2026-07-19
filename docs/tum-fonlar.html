@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>TEFAS Puanlama Sistemi</title>
+<title>FONLARCA Puanlama Sistemi — Tüm Fonlar</title>
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <style>
@@ -46,8 +46,8 @@ table.dataTable thead th {
     padding: 10px 8px !important;
 }
 table.dataTable tbody td { padding: 8px !important; vertical-align: middle; }
-table.dataTable tbody td a { color: #1F4E78; font-weight: 600; text-decoration: none; }
-table.dataTable tbody td a:hover { text-decoration: underline; }
+table.dataTable tbody td a { color: #1F4E78; font-weight: 600; text-decoration: underline; text-decoration-color: #a9c3da; }
+table.dataTable tbody td a:hover { color: #14345a; text-decoration-color: #14345a; }
 table.dataTable tbody tr:hover { background: #f0f6fc !important; }
 .score-badge {
     display: inline-block;
@@ -69,7 +69,10 @@ footer { text-align: center; color: #93a0b0; font-size: 12px; margin-top: 24px; 
 </head>
 <body>
 <div class="header">
-    <h1>TEFAS Puanlama Sistemi</h1>
+    <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
+        <img src="logo.jpg" alt="Fonlarca" style="height:36px; width:36px; border-radius:8px; object-fit:cover;">
+        <h1 style="margin:0;">FONLARCA Puanlama Sistemi <span style="font-weight:400; opacity:0.75; font-size:16px;">— Tüm Fonlar</span></h1>
+    </div>
     <div class="meta">
         <span>Son güncelleme: 2026-07-17</span>
         <span>Risksiz oran (TLREF): %39.99</span>
