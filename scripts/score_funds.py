@@ -10,7 +10,7 @@ RISK_FREE_RATE = 0.3999  # 17 Temmuz 2026 itibarıyla %39,99
 
 DATA_PATH = "tefas_gecmis_veri.parquet"
 MAPPING_PATH = "fon_kategori_eslestirme.xlsx"
-OUTPUT_HTML = "docs/index.html"
+OUTPUT_HTML = "docs/tum-fonlar.html"
 
 WEIGHTS = {
     'Skor_Momentum': 0.35,
@@ -162,7 +162,7 @@ def write_html(res, anchor):
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>FONLARCA Puanlama Sistemi</title>
+<title>TEFAS Puanlama Sistemi</title>
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <style>
@@ -226,12 +226,12 @@ footer {{ text-align: center; color: #93a0b0; font-size: 12px; margin-top: 24px;
 </head>
 <body>
 <div class="header">
-    <h1>FONLARCA Puanlama Sistemi</h1>
+    <h1>TEFAS Puanlama Sistemi</h1>
     <div class="meta">
         <span>Son güncelleme: {anchor.date()}</span>
         <span>Risksiz oran (TLREF): %{RISK_FREE_RATE*100:.2f}</span>
         <span>Toplam fon: {len(table)}</span>
-        <span><a href="kategori-ozeti.html" style="color:white; text-decoration: underline;">Kategori Özeti →</a></span>
+        <span><a href="index.html" style="color:white; text-decoration: underline;">← Kategori Özeti</a></span>
     </div>
 </div>
 <div class="card">
@@ -348,16 +348,16 @@ table.mini td {{ padding: 5px 6px; border-bottom: 1px solid #f4f6f9; }}
     <h1>Kategori Özeti</h1>
     <div class="meta">
         <span>Son güncelleme: {anchor.date()}</span>
-        <a href="index.html">← Tüm Fonlar Tablosuna Dön</a>
+        <a href="tum-fonlar.html">Tüm Fonlar Tablosu →</a>
     </div>
 </div>
 {''.join(sections)}
 </body>
 </html>"""
 
-    with open("docs/kategori-ozeti.html", "w", encoding="utf-8") as f:
+    with open("docs/index.html", "w", encoding="utf-8") as f:
         f.write(html)
-    print("Kategori özeti oluşturuldu: docs/kategori-ozeti.html")
+    print("Kategori özeti (açılış sayfası) oluşturuldu: docs/index.html")
 
 
 def main():
