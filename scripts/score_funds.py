@@ -167,7 +167,7 @@ def write_html(res, anchor):
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>TEFAS Puanlama Sistemi</title>
+<title>FONLARCA Puanlama Sistemi — Tüm Fonlar</title>
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <style>
@@ -210,8 +210,8 @@ table.dataTable thead th {{
     padding: 10px 8px !important;
 }}
 table.dataTable tbody td {{ padding: 8px !important; vertical-align: middle; }}
-table.dataTable tbody td a {{ color: #1F4E78; font-weight: 600; text-decoration: none; }}
-table.dataTable tbody td a:hover {{ text-decoration: underline; }}
+table.dataTable tbody td a {{ color: #1F4E78; font-weight: 600; text-decoration: underline; text-decoration-color: #a9c3da; }}
+table.dataTable tbody td a:hover {{ color: #14345a; text-decoration-color: #14345a; }}
 table.dataTable tbody tr:hover {{ background: #f0f6fc !important; }}
 .score-badge {{
     display: inline-block;
@@ -233,7 +233,10 @@ footer {{ text-align: center; color: #93a0b0; font-size: 12px; margin-top: 24px;
 </head>
 <body>
 <div class="header">
-    <h1>TEFAS Puanlama Sistemi</h1>
+    <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
+        <img src="logo.jpg" alt="Fonlarca" style="height:36px; width:36px; border-radius:8px; object-fit:cover;">
+        <h1 style="margin:0;">FONLARCA Puanlama Sistemi <span style="font-weight:400; opacity:0.75; font-size:16px;">— Tüm Fonlar</span></h1>
+    </div>
     <div class="meta">
         <span>Son güncelleme: {anchor.date()}</span>
         <span>Risksiz oran (TLREF): %{RISK_FREE_RATE*100:.2f}</span>
@@ -316,7 +319,7 @@ def write_category_summary(res, anchor):
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>TEFAS Kategori Özeti</title>
+<title>FONLARCA Puanlama Sistemi — Kategori Özeti</title>
 <style>
 * {{ box-sizing: border-box; }}
 body {{
@@ -345,8 +348,8 @@ h3.down {{ color: #b3261e; }}
 table.mini {{ width: 100%; border-collapse: collapse; font-size: 13px; }}
 table.mini th {{ text-align: left; color: #93a0b0; font-weight: 500; padding: 4px 6px; border-bottom: 1px solid #eef2f7; }}
 table.mini td {{ padding: 5px 6px; border-bottom: 1px solid #f4f6f9; }}
-table.mini td a {{ color: #1F4E78; font-weight: 600; text-decoration: none; }}
-table.mini td a:hover {{ text-decoration: underline; }}
+table.mini td a {{ color: #1F4E78; font-weight: 600; text-decoration: underline; text-decoration-color: #a9c3da; }}
+table.mini td a:hover {{ color: #14345a; text-decoration-color: #14345a; }}
 .score-badge {{ display: inline-block; min-width: 36px; padding: 2px 7px; border-radius: 6px; font-weight: 600; text-align: center; }}
 .score-badge.good {{ background: #c6efce; color: #14361f; }}
 .score-badge.bad {{ background: #ffc7ce; color: #5c1a1f; }}
@@ -354,7 +357,10 @@ table.mini td a:hover {{ text-decoration: underline; }}
 </head>
 <body>
 <div class="header">
-    <h1>Kategori Özeti</h1>
+    <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
+        <img src="logo.jpg" alt="Fonlarca" style="height:36px; width:36px; border-radius:8px; object-fit:cover;">
+        <h1 style="margin:0;">FONLARCA Puanlama Sistemi <span style="font-weight:400; opacity:0.75; font-size:16px;">— Kategori Özeti</span></h1>
+    </div>
     <div class="meta">
         <span>Son güncelleme: {anchor.date()}</span>
         <a href="tum-fonlar.html">Tüm Fonlar Tablosu →</a>
