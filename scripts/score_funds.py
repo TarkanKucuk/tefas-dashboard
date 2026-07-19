@@ -139,6 +139,10 @@ def compute_scores(res):
     return res
 
 
+def fonlarca_link(kod):
+    return f'<a href="https://fonlarca.com/fon/{kod.lower()}.html" target="_blank">{kod}</a>'
+
+
 def write_html(res, anchor):
     cols = ['Alt Kategori', 'Kategori_Sırası', 'Fon Kodu', 'Fon Adı', 'TEFAS_Skoru',
             'Skor_Momentum', 'Skor_Getiri', 'Skor_ParaAkışı', 'Skor_Sharpe', 'Skor_StdDev',
@@ -153,16 +157,17 @@ def write_html(res, anchor):
     for c in ['TEFAS_Skoru', 'Skor_Momentum', 'Skor_Getiri', 'Skor_ParaAkışı', 'Skor_Sharpe', 'Skor_StdDev']:
         table[c] = table[c].round(1)
     table['Fon Toplam Değer'] = table['Fon Toplam Değer'].apply(lambda x: f"{x:,.0f}".replace(",", "."))
+    table['Fon Kodu'] = table['Fon Kodu'].apply(fonlarca_link)
     table.columns = headers
 
-    html_table = table.to_html(index=False, table_id="tefasTable", classes="display", escape=True, na_rep="—")
+    html_table = table.to_html(index=False, table_id="tefasTable", classes="display", escape=False, na_rep="—")
 
     html = f"""<!DOCTYPE html>
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>FONLARCA Puanlama Sistemi</title>
+<title>TEFAS Puanlama Sistemi</title>
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <style>
@@ -205,6 +210,8 @@ table.dataTable thead th {{
     padding: 10px 8px !important;
 }}
 table.dataTable tbody td {{ padding: 8px !important; vertical-align: middle; }}
+table.dataTable tbody td a {{ color: #1F4E78; font-weight: 600; text-decoration: none; }}
+table.dataTable tbody td a:hover {{ text-decoration: underline; }}
 table.dataTable tbody tr:hover {{ background: #f0f6fc !important; }}
 .score-badge {{
     display: inline-block;
@@ -226,7 +233,7 @@ footer {{ text-align: center; color: #93a0b0; font-size: 12px; margin-top: 24px;
 </head>
 <body>
 <div class="header">
-    <h1>FONLARCA Puanlama Sistemi</h1>
+    <h1>TEFAS Puanlama Sistemi</h1>
     <div class="meta">
         <span>Son güncelleme: {anchor.date()}</span>
         <span>Risksiz oran (TLREF): %{RISK_FREE_RATE*100:.2f}</span>
@@ -285,7 +292,7 @@ def write_category_summary(res, anchor):
         def rows(sub, cls):
             out = ""
             for _, r in sub.iterrows():
-                out += (f"<tr><td>{r['Fon Kodu']}</td><td>{r['Fon Adı']}</td>"
+                out += (f"<tr><td>{fonlarca_link(r['Fon Kodu'])}</td><td>{r['Fon Adı']}</td>"
                         f"<td><span class='score-badge {cls}'>{r['TEFAS_Skoru']:.1f}</span></td></tr>")
             return out
 
@@ -338,6 +345,8 @@ h3.down {{ color: #b3261e; }}
 table.mini {{ width: 100%; border-collapse: collapse; font-size: 13px; }}
 table.mini th {{ text-align: left; color: #93a0b0; font-weight: 500; padding: 4px 6px; border-bottom: 1px solid #eef2f7; }}
 table.mini td {{ padding: 5px 6px; border-bottom: 1px solid #f4f6f9; }}
+table.mini td a {{ color: #1F4E78; font-weight: 600; text-decoration: none; }}
+table.mini td a:hover {{ text-decoration: underline; }}
 .score-badge {{ display: inline-block; min-width: 36px; padding: 2px 7px; border-radius: 6px; font-weight: 600; text-align: center; }}
 .score-badge.good {{ background: #c6efce; color: #14361f; }}
 .score-badge.bad {{ background: #ffc7ce; color: #5c1a1f; }}
