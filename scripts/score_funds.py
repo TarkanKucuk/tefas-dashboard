@@ -162,7 +162,7 @@ def write_html(res, anchor):
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>TEFAS Puanlama Sistemi</title>
+<title>FONLARCA Puanlama Sistemi</title>
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <style>
@@ -226,7 +226,7 @@ footer {{ text-align: center; color: #93a0b0; font-size: 12px; margin-top: 24px;
 </head>
 <body>
 <div class="header">
-    <h1>TEFAS Puanlama Sistemi</h1>
+    <h1>FONLARCA Puanlama Sistemi</h1>
     <div class="meta">
         <span>Son güncelleme: {anchor.date()}</span>
         <span>Risksiz oran (TLREF): %{RISK_FREE_RATE*100:.2f}</span>
