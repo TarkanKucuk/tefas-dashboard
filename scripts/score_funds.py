@@ -143,6 +143,17 @@ def fonlarca_link(kod):
     return f'<a href="https://fonlarca.com/fon/{kod.lower()}.html" target="_blank">{kod}</a>'
 
 
+def nav_bar(active):
+    pages = [('index.html', 'Kategori Özeti'), ('tum-fonlar.html', 'Tüm Fonlar'), ('hareketler.html', 'Hareketler')]
+    parts = []
+    for href, label in pages:
+        style = ("background:rgba(255,255,255,0.28); font-weight:600;" if href == active
+                 else "background:rgba(255,255,255,0.12);")
+        parts.append(f'<a href="{href}" style="color:white; text-decoration:none; padding:5px 14px; '
+                     f'border-radius:20px; font-size:13px; {style}">{label}</a>')
+    return '<div style="display:flex; gap:8px; margin-top:12px;">' + ''.join(parts) + '</div>'
+
+
 def write_html(res, anchor):
     cols = ['Alt Kategori', 'Kategori_Sırası', 'Fon Kodu', 'Fon Adı', 'TEFAS_Skoru',
             'Skor_Momentum', 'Skor_Getiri', 'Skor_ParaAkışı', 'Skor_Sharpe', 'Skor_StdDev',
@@ -241,8 +252,8 @@ footer {{ text-align: center; color: #93a0b0; font-size: 12px; margin-top: 24px;
         <span>Son güncelleme: {anchor.date()}</span>
         <span>Risksiz oran (TLREF): %{RISK_FREE_RATE*100:.2f}</span>
         <span>Toplam fon: {len(table)}</span>
-        <span><a href="index.html" style="color:white; text-decoration: underline;">← Kategori Özeti</a></span>
     </div>
+    {nav_bar('tum-fonlar.html')}
 </div>
 <div class="card">
 {html_table}
@@ -363,8 +374,8 @@ table.mini td a:hover {{ color: #14345a; text-decoration-color: #14345a; }}
     </div>
     <div class="meta">
         <span>Son güncelleme: {anchor.date()}</span>
-        <a href="tum-fonlar.html">Tüm Fonlar Tablosu →</a>
     </div>
+    {nav_bar('index.html')}
 </div>
 {''.join(sections)}
 </body>
@@ -373,6 +384,161 @@ table.mini td a:hover {{ color: #14345a; text-decoration-color: #14345a; }}
     with open("docs/index.html", "w", encoding="utf-8") as f:
         f.write(html)
     print("Kategori özeti (açılış sayfası) oluşturuldu: docs/index.html")
+
+
+def build_movers(df, mapping, days):
+    anchor = df['Tarih'].max()
+    cutoff = anchor - pd.Timedelta(days=days)
+    records = []
+    for fon_kodu, g in df.groupby('Fon Kodu'):
+        g = g.sort_values('Tarih')
+        latest = g.iloc[-1]
+        past = g[g['Tarih'] <= cutoff]
+        if past.empty:
+            continue
+        past_row = past.iloc[-1]
+        if past_row['Fiyat'] <= 0:
+            continue
+
+        rec = {
+            'Fon Kodu': fon_kodu,
+            'Fiyat_Değişim_%': (latest['Fiyat'] / past_row['Fiyat'] - 1) * 100,
+        }
+
+        kisi_start, kisi_end = past_row['Kişi Sayısı'], latest['Kişi Sayısı']
+        if pd.notna(kisi_start) and pd.notna(kisi_end):
+            rec['Kişi_Değişim'] = kisi_end - kisi_start
+            rec['Kişi_Değişim_%'] = ((kisi_end / kisi_start - 1) * 100) if kisi_start > 0 else np.nan
+
+        units_start, units_end = past_row['Tedavüldeki Pay Sayısı'], latest['Tedavüldeki Pay Sayısı']
+        if pd.notna(units_start) and units_start != 0:
+            rec['Net_Akış_TL'] = (units_end - units_start) * latest['Fiyat']
+
+        records.append(rec)
+
+    movers = pd.DataFrame(records)
+    movers = movers.merge(mapping[['Fon Kodu', 'Fon Adı', 'Alt Kategori']], on='Fon Kodu', how='left')
+    movers = movers[movers['Alt Kategori'].notna()]
+    return movers, anchor
+
+
+def _mover_rows(sub, value_col, fmt, cls):
+    out = ""
+    for _, r in sub.iterrows():
+        val = r[value_col]
+        out += (f"<tr><td>{fonlarca_link(r['Fon Kodu'])}</td><td>{r['Fon Adı']}</td>"
+                f"<td><span class='score-badge {cls}'>{fmt(val)}</span></td></tr>")
+    return out
+
+
+def _mover_block(title, movers, value_col, fmt):
+    valid = movers[movers[value_col].notna()]
+    top5 = valid.sort_values(value_col, ascending=False).head(5)
+    bottom5 = valid.sort_values(value_col, ascending=True).head(5)
+    return f"""
+<div>
+    <h3 class="up">▲ En Çok Artan 5</h3>
+    <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>{title}</th></tr>{_mover_rows(top5, value_col, fmt, 'good')}</table>
+</div>
+<div>
+    <h3 class="down">▼ En Çok Azalan 5</h3>
+    <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>{title}</th></tr>{_mover_rows(bottom5, value_col, fmt, 'bad')}</table>
+</div>"""
+
+
+def write_hareketler_page(df, mapping):
+    periods = [(1, '1 Gün'), (7, '1 Hafta'), (30, '1 Ay')]
+    movers_by_period = {days: build_movers(df, mapping, days) for days, _ in periods}
+    anchor = movers_by_period[1][1]
+
+    def pct_fmt(v):
+        return f"{v:+.1f}%"
+
+    def kisi_fmt(v):
+        return f"{v:+,.0f}".replace(",", ".")
+
+    def tl_fmt(v):
+        return f"{v:+,.0f}".replace(",", ".")
+
+    metrics = [
+        ('Fiyat Hareketleri', 'Fiyat_Değişim_%', pct_fmt),
+        ('Yatırımcı Sayısı Hareketleri', 'Kişi_Değişim', kisi_fmt),
+        ('Para Akışı Hareketleri (TL)', 'Net_Akış_TL', tl_fmt),
+    ]
+
+    sections = []
+    for metric_title, col, fmt in metrics:
+        period_blocks = []
+        for days, label in periods:
+            movers, _ = movers_by_period[days]
+            period_blocks.append(f"""
+<div class="period-block">
+    <h4>{label}</h4>
+    <div class="kat-cols">{_mover_block(label, movers, col, fmt)}</div>
+</div>""")
+        sections.append(f"""
+<div class="card kat-card">
+    <h2>{metric_title}</h2>
+    {''.join(period_blocks)}
+</div>""")
+
+    html = f"""<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FONLARCA Puanlama Sistemi — Hareketler</title>
+<style>
+* {{ box-sizing: border-box; }}
+body {{
+    font-family: -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    margin: 0; padding: 32px 40px 60px; background: #f4f6f9; color: #1a1a1a;
+}}
+.header {{
+    background: linear-gradient(135deg, #1F4E78 0%, #2c6ba0 100%);
+    color: white; padding: 28px 32px; border-radius: 12px; margin-bottom: 24px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+}}
+.header h1 {{ margin: 0; font-size: 26px; font-weight: 600; }}
+.header .meta span {{ background: rgba(255,255,255,0.15); padding: 4px 12px; border-radius: 20px; font-size: 13px; }}
+.card {{
+    background: white; border-radius: 12px; padding: 20px 24px 24px; margin-bottom: 18px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+}}
+.kat-card h2 {{ margin: 0 0 4px 0; color: #1F4E78; font-size: 18px; }}
+.period-block {{ margin-top: 18px; padding-top: 14px; border-top: 1px solid #eef2f7; }}
+.period-block h4 {{ margin: 0 0 10px 0; color: #5f6b7a; font-size: 13px; text-transform: uppercase; letter-spacing: 0.4px; }}
+.kat-cols {{ display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }}
+@media (max-width: 800px) {{ .kat-cols {{ grid-template-columns: 1fr; }} }}
+h3 {{ font-size: 13px; margin: 0 0 8px 0; }}
+h3.up {{ color: #1a7a37; }}
+h3.down {{ color: #b3261e; }}
+table.mini {{ width: 100%; border-collapse: collapse; font-size: 13px; }}
+table.mini th {{ text-align: left; color: #93a0b0; font-weight: 500; padding: 4px 6px; border-bottom: 1px solid #eef2f7; }}
+table.mini td {{ padding: 5px 6px; border-bottom: 1px solid #f4f6f9; }}
+table.mini td a {{ color: #1F4E78; font-weight: 600; text-decoration: underline; text-decoration-color: #a9c3da; }}
+table.mini td a:hover {{ color: #14345a; text-decoration-color: #14345a; }}
+.score-badge {{ display: inline-block; min-width: 50px; padding: 2px 7px; border-radius: 6px; font-weight: 600; text-align: center; }}
+.score-badge.good {{ background: #c6efce; color: #14361f; }}
+.score-badge.bad {{ background: #ffc7ce; color: #5c1a1f; }}
+</style>
+</head>
+<body>
+<div class="header">
+    <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
+        <img src="logo.jpg" alt="Fonlarca" style="height:36px; width:36px; border-radius:8px; object-fit:cover;">
+        <h1>FONLARCA Puanlama Sistemi <span style="font-weight:400; opacity:0.75; font-size:16px;">— Hareketler</span></h1>
+    </div>
+    <div class="meta"><span>Son güncelleme: {anchor.date()}</span></div>
+    {nav_bar('hareketler.html')}
+</div>
+{''.join(sections)}
+</body>
+</html>"""
+
+    with open("docs/hareketler.html", "w", encoding="utf-8") as f:
+        f.write(html)
+    print("Hareketler sayfası oluşturuldu: docs/hareketler.html")
 
 
 def main():
@@ -396,6 +562,7 @@ def main():
     res = compute_scores(res)
     write_html(res, anchor)
     write_category_summary(res, anchor)
+    write_hareketler_page(df, mapping)
 
 
 if __name__ == "__main__":
