@@ -10,7 +10,6 @@ RISK_FREE_RATE = 0.3999  # 17 Temmuz 2026 itibarıyla %39,99
 
 DATA_PATH = "tefas_gecmis_veri.parquet"
 MAPPING_PATH = "fon_kategori_eslestirme.xlsx"
-OUTPUT_HTML = "docs/tum-fonlar.html"
 
 WEIGHTS = {
     'Skor_Momentum': 0.35,
@@ -23,6 +22,100 @@ RETURN_SUBWEIGHTS = {'Getiri_3A_%': 0.20, 'Getiri_6A_%': 0.35, 'Getiri_1Y_%': 0.
 LABEL_MAP = {'Skor_Momentum': 'Momentum', 'Skor_Getiri': 'Getiri',
              'Skor_ParaAkışı': 'ParaAkışı', 'Skor_Sharpe': 'Sharpe', 'Skor_StdDev': 'StdDev'}
 
+NAV_PAGES = [
+    ('index.html', 'Hareketler'),
+    ('kategori-ozeti.html', 'Puanlama - Kategori Özeti'),
+    ('tum-fonlar.html', 'Puanlama - Tüm Fonlar'),
+    ('yeni-fonlar.html', 'En Son Eklenen Fonlar'),
+]
+
+BASE_STYLE = """
+* { box-sizing: border-box; }
+body {
+    font-family: -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    margin: 0; padding: 32px 40px 60px; background: #f4f6f9; color: #1a1a1a;
+}
+.header {
+    background: linear-gradient(135deg, #1F4E78 0%, #2c6ba0 100%);
+    color: white; padding: 28px 32px; border-radius: 12px; margin-bottom: 24px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+}
+.header h1 { margin: 0; font-size: 26px; font-weight: 600; }
+.header .meta span { background: rgba(255,255,255,0.15); padding: 4px 12px; border-radius: 20px; font-size: 13px; }
+.card {
+    background: white; border-radius: 12px; padding: 20px 24px 24px; margin-bottom: 18px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+}
+.kat-card h2 { margin: 0 0 4px 0; color: #1F4E78; font-size: 18px; }
+.kat-count { color: #93a0b0; font-size: 13px; font-weight: 400; }
+.kat-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+@media (max-width: 800px) { .kat-cols { grid-template-columns: 1fr; } }
+h3 { font-size: 13px; margin: 0 0 8px 0; }
+h3.up { color: #1a7a37; }
+h3.down { color: #b3261e; }
+table.mini { width: 100%; border-collapse: collapse; font-size: 13px; }
+table.mini th { text-align: left; color: #93a0b0; font-weight: 500; padding: 4px 6px; border-bottom: 1px solid #eef2f7; }
+table.mini td { padding: 5px 6px; border-bottom: 1px solid #f4f6f9; }
+table.mini td a { color: #1F4E78; font-weight: 600; text-decoration: underline; text-decoration-color: #a9c3da; }
+table.mini td a:hover { color: #14345a; text-decoration-color: #14345a; }
+.score-badge { display: inline-block; min-width: 50px; padding: 2px 7px; border-radius: 6px; font-weight: 600; text-align: center; }
+.score-badge.good { background: #c6efce; color: #14361f; }
+.score-badge.bad { background: #ffc7ce; color: #5c1a1f; }
+.period-tabs { display: flex; gap: 6px; margin-bottom: 18px; }
+.period-tab {
+    padding: 8px 20px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;
+    background: #eef2f7; color: #5f6b7a; border: none;
+}
+.period-tab.active { background: #1F4E78; color: white; }
+.period-panel { display: none; }
+.period-panel.active { display: block; }
+footer { text-align: center; color: #93a0b0; font-size: 12px; margin-top: 24px; }
+"""
+
+
+def fonlarca_link(kod):
+    return f'<a href="https://fonlarca.com/fon/{kod.lower()}.html" target="_blank">{kod}</a>'
+
+
+def nav_bar(active):
+    parts = []
+    for href, label in NAV_PAGES:
+        style = ("background:rgba(255,255,255,0.28); font-weight:600;" if href == active
+                 else "background:rgba(255,255,255,0.12);")
+        parts.append(f'<a href="{href}" style="color:white; text-decoration:none; padding:5px 14px; '
+                     f'border-radius:20px; font-size:13px; {style}">{label}</a>')
+    return '<div style="display:flex; gap:8px; margin-top:12px; flex-wrap:wrap;">' + ''.join(parts) + '</div>'
+
+
+def page_header(active, subtitle, anchor, extra_meta=""):
+    return f"""<div class="header">
+    <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
+        <img src="logo.jpg" alt="Fonlarca" style="height:36px; width:36px; border-radius:8px; object-fit:cover;">
+        <h1>FONLARCA Puanlama Sistemi <span style="font-weight:400; opacity:0.75; font-size:16px;">— {subtitle}</span></h1>
+    </div>
+    <div class="meta"><span>Son güncelleme: {anchor.date()}</span>{extra_meta}</div>
+    {nav_bar(active)}
+</div>"""
+
+
+def page_shell(title, active, body, extra_style=""):
+    return f"""<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{title}</title>
+<style>{BASE_STYLE}{extra_style}</style>
+</head>
+<body>
+{body}
+</body>
+</html>"""
+
+
+# ------------------------------------------------------------------
+# Puanlama hesapları
+# ------------------------------------------------------------------
 
 def pct_rank_within(df, col, ascending=True):
     """Alt Kategori içinde percentile (0-100) hesaplar."""
@@ -94,7 +187,6 @@ def build_fund_metrics(df):
 
 
 def compute_scores(res):
-    # Para Akışı: kategori içindeki toplam akış hareketine göre pay
     kat_toplam = res.groupby('Alt Kategori')['Net_Akış_TL'].apply(lambda x: x.abs().sum())
     res['Kategori_Toplam_Akış_Hareketi_TL'] = res['Alt Kategori'].map(kat_toplam)
     res['Fon_Payı_%'] = np.where(
@@ -139,22 +231,11 @@ def compute_scores(res):
     return res
 
 
-def fonlarca_link(kod):
-    return f'<a href="https://fonlarca.com/fon/{kod.lower()}.html" target="_blank">{kod}</a>'
+# ------------------------------------------------------------------
+# Sayfa 1: Tüm Fonlar (puanlama tablosu)
+# ------------------------------------------------------------------
 
-
-def nav_bar(active):
-    pages = [('index.html', 'Kategori Özeti'), ('tum-fonlar.html', 'Tüm Fonlar'), ('hareketler.html', 'Hareketler')]
-    parts = []
-    for href, label in pages:
-        style = ("background:rgba(255,255,255,0.28); font-weight:600;" if href == active
-                 else "background:rgba(255,255,255,0.12);")
-        parts.append(f'<a href="{href}" style="color:white; text-decoration:none; padding:5px 14px; '
-                     f'border-radius:20px; font-size:13px; {style}">{label}</a>')
-    return '<div style="display:flex; gap:8px; margin-top:12px;">' + ''.join(parts) + '</div>'
-
-
-def write_html(res, anchor):
+def write_tum_fonlar_page(res, anchor):
     cols = ['Alt Kategori', 'Kategori_Sırası', 'Fon Kodu', 'Fon Adı', 'TEFAS_Skoru',
             'Skor_Momentum', 'Skor_Getiri', 'Skor_ParaAkışı', 'Skor_Sharpe', 'Skor_StdDev',
             'Kullanılan_Bileşenler', 'Fon Toplam Değer']
@@ -173,93 +254,13 @@ def write_html(res, anchor):
 
     html_table = table.to_html(index=False, table_id="tefasTable", classes="display", escape=False, na_rep="—")
 
-    html = f"""<!DOCTYPE html>
-<html lang="tr">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>FONLARCA Puanlama Sistemi — Tüm Fonlar</title>
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<style>
-* {{ box-sizing: border-box; }}
-body {{
-    font-family: -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-    margin: 0;
-    padding: 32px 40px 60px;
-    background: #f4f6f9;
-    color: #1a1a1a;
-}}
-.header {{
-    background: linear-gradient(135deg, #1F4E78 0%, #2c6ba0 100%);
-    color: white;
-    padding: 28px 32px;
-    border-radius: 12px;
-    margin-bottom: 24px;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-}}
-.header h1 {{ margin: 0 0 8px 0; font-size: 26px; font-weight: 600; }}
-.header .meta {{ font-size: 13px; opacity: 0.9; display: flex; gap: 20px; flex-wrap: wrap; }}
-.header .meta span {{ background: rgba(255,255,255,0.15); padding: 4px 12px; border-radius: 20px; }}
-.card {{
-    background: white;
-    border-radius: 12px;
-    padding: 20px 24px 28px;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-    overflow-x: auto;
-}}
-table.dataTable {{
-    font-size: 13px;
-    border-collapse: collapse !important;
-    width: 100% !important;
-}}
-table.dataTable thead th {{
-    background: #eef2f7;
-    color: #1F4E78;
-    font-weight: 600;
-    border-bottom: 2px solid #d7e0ea !important;
-    padding: 10px 8px !important;
-}}
-table.dataTable tbody td {{ padding: 8px !important; vertical-align: middle; }}
-table.dataTable tbody td a {{ color: #1F4E78; font-weight: 600; text-decoration: underline; text-decoration-color: #a9c3da; }}
-table.dataTable tbody td a:hover {{ color: #14345a; text-decoration-color: #14345a; }}
-table.dataTable tbody tr:hover {{ background: #f0f6fc !important; }}
-.score-badge {{
-    display: inline-block;
-    min-width: 42px;
-    padding: 3px 8px;
-    border-radius: 6px;
-    font-weight: 600;
-    text-align: center;
-    color: #14361f;
-}}
-.dataTables_wrapper .dataTables_filter input,
-.dataTables_wrapper .dataTables_length select {{
-    border: 1px solid #d7e0ea;
-    border-radius: 6px;
-    padding: 4px 8px;
-}}
-footer {{ text-align: center; color: #93a0b0; font-size: 12px; margin-top: 24px; }}
-</style>
-</head>
-<body>
-<div class="header">
-    <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
-        <img src="logo.jpg" alt="Fonlarca" style="height:36px; width:36px; border-radius:8px; object-fit:cover;">
-        <h1 style="margin:0;">FONLARCA Puanlama Sistemi <span style="font-weight:400; opacity:0.75; font-size:16px;">— Tüm Fonlar</span></h1>
-    </div>
-    <div class="meta">
-        <span>Son güncelleme: {anchor.date()}</span>
-        <span>Risksiz oran (TLREF): %{RISK_FREE_RATE*100:.2f}</span>
-        <span>Toplam fon: {len(table)}</span>
-    </div>
-    {nav_bar('tum-fonlar.html')}
-</div>
+    extra_meta = (f'<span>Risksiz oran (TLREF): %{RISK_FREE_RATE*100:.2f}</span>'
+                  f'<span>Toplam fon: {len(table)}</span>')
+    body = f"""{page_header('tum-fonlar.html', 'Tüm Fonlar', anchor, extra_meta)}
 <div class="card">
 {html_table}
 </div>
 <footer>Kategori içi percentile bazlı puanlama · Momentum %35 · Getiri %25 · Para Akışı %15 · Sharpe %15 · StdDev %10</footer>
-
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script>
@@ -283,15 +284,24 @@ $(document).ready(function() {{
         ]
     }});
 }});
-</script>
-</body>
-</html>"""
+</script>"""
+    extra_style = """
+table.dataTable { font-size: 13px; border-collapse: collapse !important; width: 100% !important; }
+table.dataTable thead th { background: #eef2f7; color: #1F4E78; font-weight: 600; border-bottom: 2px solid #d7e0ea !important; padding: 10px 8px !important; }
+table.dataTable tbody td { padding: 8px !important; vertical-align: middle; }
+table.dataTable tbody tr:hover { background: #f0f6fc !important; }
+table.dataTable tbody td a { color: #1F4E78; font-weight: 600; text-decoration: underline; text-decoration-color: #a9c3da; }
+table.dataTable tbody td a:hover { color: #14345a; text-decoration-color: #14345a; }
+.dataTables_wrapper .dataTables_filter input, .dataTables_wrapper .dataTables_length select { border: 1px solid #d7e0ea; border-radius: 6px; padding: 4px 8px; }
+"""
+    with open("docs/tum-fonlar.html", "w", encoding="utf-8") as f:
+        f.write(page_shell("FONLARCA Puanlama Sistemi — Tüm Fonlar", "tum-fonlar.html", body, extra_style))
+    print("Tüm Fonlar sayfası oluşturuldu: docs/tum-fonlar.html")
 
-    os.makedirs("docs", exist_ok=True)
-    with open(OUTPUT_HTML, "w", encoding="utf-8") as f:
-        f.write(html)
-    print("HTML raporu oluşturuldu:", OUTPUT_HTML)
 
+# ------------------------------------------------------------------
+# Sayfa 2: Kategori Özeti
+# ------------------------------------------------------------------
 
 def write_category_summary(res, anchor):
     plot_df = res[res['TEFAS_Skoru'].notna()]
@@ -325,66 +335,17 @@ def write_category_summary(res, anchor):
     </div>
 </div>""")
 
-    html = f"""<!DOCTYPE html>
-<html lang="tr">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>FONLARCA Puanlama Sistemi — Kategori Özeti</title>
-<style>
-* {{ box-sizing: border-box; }}
-body {{
-    font-family: -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-    margin: 0; padding: 32px 40px 60px; background: #f4f6f9; color: #1a1a1a;
-}}
-.header {{
-    background: linear-gradient(135deg, #1F4E78 0%, #2c6ba0 100%);
-    color: white; padding: 28px 32px; border-radius: 12px; margin-bottom: 24px;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-}}
-.header h1 {{ margin: 0 0 8px 0; font-size: 26px; font-weight: 600; }}
-.header .meta span {{ background: rgba(255,255,255,0.15); padding: 4px 12px; border-radius: 20px; font-size: 13px; }}
-.header a {{ color: white; text-decoration: underline; }}
-.card {{
-    background: white; border-radius: 12px; padding: 20px 24px 24px; margin-bottom: 18px;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-}}
-.kat-card h2 {{ margin: 0 0 14px 0; color: #1F4E78; font-size: 18px; }}
-.kat-count {{ color: #93a0b0; font-size: 13px; font-weight: 400; }}
-.kat-cols {{ display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }}
-@media (max-width: 800px) {{ .kat-cols {{ grid-template-columns: 1fr; }} }}
-h3 {{ font-size: 13px; margin: 0 0 8px 0; }}
-h3.up {{ color: #1a7a37; }}
-h3.down {{ color: #b3261e; }}
-table.mini {{ width: 100%; border-collapse: collapse; font-size: 13px; }}
-table.mini th {{ text-align: left; color: #93a0b0; font-weight: 500; padding: 4px 6px; border-bottom: 1px solid #eef2f7; }}
-table.mini td {{ padding: 5px 6px; border-bottom: 1px solid #f4f6f9; }}
-table.mini td a {{ color: #1F4E78; font-weight: 600; text-decoration: underline; text-decoration-color: #a9c3da; }}
-table.mini td a:hover {{ color: #14345a; text-decoration-color: #14345a; }}
-.score-badge {{ display: inline-block; min-width: 36px; padding: 2px 7px; border-radius: 6px; font-weight: 600; text-align: center; }}
-.score-badge.good {{ background: #c6efce; color: #14361f; }}
-.score-badge.bad {{ background: #ffc7ce; color: #5c1a1f; }}
-</style>
-</head>
-<body>
-<div class="header">
-    <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
-        <img src="logo.jpg" alt="Fonlarca" style="height:36px; width:36px; border-radius:8px; object-fit:cover;">
-        <h1 style="margin:0;">FONLARCA Puanlama Sistemi <span style="font-weight:400; opacity:0.75; font-size:16px;">— Kategori Özeti</span></h1>
-    </div>
-    <div class="meta">
-        <span>Son güncelleme: {anchor.date()}</span>
-    </div>
-    {nav_bar('index.html')}
-</div>
-{''.join(sections)}
-</body>
-</html>"""
+    body = f"""{page_header('kategori-ozeti.html', 'Kategori Özeti', anchor)}
+{''.join(sections)}"""
 
-    with open("docs/index.html", "w", encoding="utf-8") as f:
-        f.write(html)
-    print("Kategori özeti (açılış sayfası) oluşturuldu: docs/index.html")
+    with open("docs/kategori-ozeti.html", "w", encoding="utf-8") as f:
+        f.write(page_shell("FONLARCA Puanlama Sistemi — Kategori Özeti", "kategori-ozeti.html", body))
+    print("Kategori özeti oluşturuldu: docs/kategori-ozeti.html")
 
+
+# ------------------------------------------------------------------
+# Sayfa 3: Hareketler (Günlük / Haftalık / Aylık sekmeler) — açılış sayfası
+# ------------------------------------------------------------------
 
 def build_movers(df, mapping, days):
     anchor = df['Tarih'].max()
@@ -408,7 +369,6 @@ def build_movers(df, mapping, days):
         kisi_start, kisi_end = past_row['Kişi Sayısı'], latest['Kişi Sayısı']
         if pd.notna(kisi_start) and pd.notna(kisi_end):
             rec['Kişi_Değişim'] = kisi_end - kisi_start
-            rec['Kişi_Değişim_%'] = ((kisi_end / kisi_start - 1) * 100) if kisi_start > 0 else np.nan
 
         units_start, units_end = past_row['Tedavüldeki Pay Sayısı'], latest['Tedavüldeki Pay Sayısı']
         if pd.notna(units_start) and units_start != 0:
@@ -425,13 +385,12 @@ def build_movers(df, mapping, days):
 def _mover_rows(sub, value_col, fmt, cls):
     out = ""
     for _, r in sub.iterrows():
-        val = r[value_col]
         out += (f"<tr><td>{fonlarca_link(r['Fon Kodu'])}</td><td>{r['Fon Adı']}</td>"
-                f"<td><span class='score-badge {cls}'>{fmt(val)}</span></td></tr>")
+                f"<td><span class='score-badge {cls}'>{fmt(r[value_col])}</span></td></tr>")
     return out
 
 
-def _mover_block(title, movers, value_col, fmt):
+def _mover_block(movers, value_col, fmt, title):
     valid = movers[movers[value_col].notna()]
     top5 = valid.sort_values(value_col, ascending=False).head(5)
     bottom5 = valid.sort_values(value_col, ascending=True).head(5)
@@ -447,12 +406,12 @@ def _mover_block(title, movers, value_col, fmt):
 
 
 def write_hareketler_page(df, mapping):
-    periods = [(1, '1 Gün'), (7, '1 Hafta'), (30, '1 Ay')]
-    movers_by_period = {days: build_movers(df, mapping, days) for days, _ in periods}
-    anchor = movers_by_period[1][1]
+    periods = [('gunluk', 1, 'Günlük'), ('haftalik', 7, 'Haftalık'), ('aylik', 30, 'Aylık')]
+    movers_by_key = {key: build_movers(df, mapping, days) for key, days, _ in periods}
+    anchor = movers_by_key['gunluk'][1]
 
     def pct_fmt(v):
-        return f"{v:+.1f}%"
+        return f"{v:+.2f}%"
 
     def kisi_fmt(v):
         return f"{v:+,.0f}".replace(",", ".")
@@ -461,91 +420,84 @@ def write_hareketler_page(df, mapping):
         return f"{v:+,.0f}".replace(",", ".")
 
     metrics = [
-        ('Fiyat Hareketleri', 'Fiyat_Değişim_%', pct_fmt),
-        ('Yatırımcı Sayısı Hareketleri', 'Kişi_Değişim', kisi_fmt),
-        ('Para Akışı Hareketleri (TL)', 'Net_Akış_TL', tl_fmt),
+        ('Fiyat Hareketleri', 'Fiyat_Değişim_%', pct_fmt, 'Değişim'),
+        ('Yatırımcı Sayısı Hareketleri', 'Kişi_Değişim', kisi_fmt, 'Kişi'),
+        ('Para Akışı Hareketleri (TL)', 'Net_Akış_TL', tl_fmt, 'TL'),
     ]
 
-    sections = []
-    for metric_title, col, fmt in metrics:
-        period_blocks = []
-        for days, label in periods:
-            movers, _ = movers_by_period[days]
-            period_blocks.append(f"""
-<div class="period-block">
-    <h4>{label}</h4>
-    <div class="kat-cols">{_mover_block(label, movers, col, fmt)}</div>
-</div>""")
-        sections.append(f"""
+    tab_buttons = []
+    panels = []
+    for i, (key, days, label) in enumerate(periods):
+        active_cls = "active" if i == 0 else ""
+        tab_buttons.append(f'<button class="period-tab {active_cls}" onclick="showPeriod(\'{key}\')" id="tab-{key}">{label}</button>')
+
+        movers, _ = movers_by_key[key]
+        metric_cards = []
+        for metric_title, col, fmt, unit_title in metrics:
+            metric_cards.append(f"""
 <div class="card kat-card">
     <h2>{metric_title}</h2>
-    {''.join(period_blocks)}
+    <div class="kat-cols">{_mover_block(movers, col, fmt, unit_title)}</div>
 </div>""")
+        panels.append(f'<div class="period-panel {active_cls}" id="panel-{key}">{"".join(metric_cards)}</div>')
 
-    html = f"""<!DOCTYPE html>
-<html lang="tr">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>FONLARCA Puanlama Sistemi — Hareketler</title>
-<style>
-* {{ box-sizing: border-box; }}
-body {{
-    font-family: -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-    margin: 0; padding: 32px 40px 60px; background: #f4f6f9; color: #1a1a1a;
+    body = f"""{page_header('index.html', 'Hareketler', anchor)}
+<div class="period-tabs">{''.join(tab_buttons)}</div>
+{''.join(panels)}
+<script>
+function showPeriod(key) {{
+    document.querySelectorAll('.period-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.period-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('panel-' + key).classList.add('active');
+    document.getElementById('tab-' + key).classList.add('active');
 }}
-.header {{
-    background: linear-gradient(135deg, #1F4E78 0%, #2c6ba0 100%);
-    color: white; padding: 28px 32px; border-radius: 12px; margin-bottom: 24px;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-}}
-.header h1 {{ margin: 0; font-size: 26px; font-weight: 600; }}
-.header .meta span {{ background: rgba(255,255,255,0.15); padding: 4px 12px; border-radius: 20px; font-size: 13px; }}
-.card {{
-    background: white; border-radius: 12px; padding: 20px 24px 24px; margin-bottom: 18px;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-}}
-.kat-card h2 {{ margin: 0 0 4px 0; color: #1F4E78; font-size: 18px; }}
-.period-block {{ margin-top: 18px; padding-top: 14px; border-top: 1px solid #eef2f7; }}
-.period-block h4 {{ margin: 0 0 10px 0; color: #5f6b7a; font-size: 13px; text-transform: uppercase; letter-spacing: 0.4px; }}
-.kat-cols {{ display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }}
-@media (max-width: 800px) {{ .kat-cols {{ grid-template-columns: 1fr; }} }}
-h3 {{ font-size: 13px; margin: 0 0 8px 0; }}
-h3.up {{ color: #1a7a37; }}
-h3.down {{ color: #b3261e; }}
-table.mini {{ width: 100%; border-collapse: collapse; font-size: 13px; }}
-table.mini th {{ text-align: left; color: #93a0b0; font-weight: 500; padding: 4px 6px; border-bottom: 1px solid #eef2f7; }}
-table.mini td {{ padding: 5px 6px; border-bottom: 1px solid #f4f6f9; }}
-table.mini td a {{ color: #1F4E78; font-weight: 600; text-decoration: underline; text-decoration-color: #a9c3da; }}
-table.mini td a:hover {{ color: #14345a; text-decoration-color: #14345a; }}
-.score-badge {{ display: inline-block; min-width: 50px; padding: 2px 7px; border-radius: 6px; font-weight: 600; text-align: center; }}
-.score-badge.good {{ background: #c6efce; color: #14361f; }}
-.score-badge.bad {{ background: #ffc7ce; color: #5c1a1f; }}
-</style>
-</head>
-<body>
-<div class="header">
-    <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
-        <img src="logo.jpg" alt="Fonlarca" style="height:36px; width:36px; border-radius:8px; object-fit:cover;">
-        <h1>FONLARCA Puanlama Sistemi <span style="font-weight:400; opacity:0.75; font-size:16px;">— Hareketler</span></h1>
-    </div>
-    <div class="meta"><span>Son güncelleme: {anchor.date()}</span></div>
-    {nav_bar('hareketler.html')}
-</div>
-{''.join(sections)}
-</body>
-</html>"""
+</script>"""
 
-    with open("docs/hareketler.html", "w", encoding="utf-8") as f:
-        f.write(html)
-    print("Hareketler sayfası oluşturuldu: docs/hareketler.html")
+    with open("docs/index.html", "w", encoding="utf-8") as f:
+        f.write(page_shell("FONLARCA Puanlama Sistemi — Hareketler", "index.html", body))
+    print("Hareketler sayfası (açılış sayfası) oluşturuldu: docs/index.html")
+
+
+# ------------------------------------------------------------------
+# Sayfa 4: En Son Eklenen Fonlar
+# ------------------------------------------------------------------
+
+def write_yeni_fonlar_page(df, mapping):
+    anchor = df['Tarih'].max()
+    cutoff = anchor - pd.Timedelta(days=30)
+
+    first_dates = df.groupby('Fon Kodu')['Tarih'].min().reset_index()
+    first_dates.columns = ['Fon Kodu', 'İlk İşlem Tarihi']
+    yeni = first_dates[first_dates['İlk İşlem Tarihi'] >= cutoff].copy()
+    yeni = yeni.merge(mapping[['Fon Kodu', 'Fon Adı', 'Alt Kategori']], on='Fon Kodu', how='left')
+    yeni = yeni[yeni['Alt Kategori'].notna()]
+    yeni = yeni.sort_values('İlk İşlem Tarihi', ascending=False)
+
+    rows = ""
+    for _, r in yeni.iterrows():
+        rows += (f"<tr><td>{fonlarca_link(r['Fon Kodu'])}</td><td>{r['Fon Adı']}</td>"
+                 f"<td>{r['Alt Kategori']}</td><td>{r['İlk İşlem Tarihi'].date()}</td></tr>")
+
+    table_html = f"""<table class="mini" style="font-size:14px;">
+<tr><th>Kod</th><th>Fon Adı</th><th>Alt Kategori</th><th>İlk İşlem Tarihi</th></tr>
+{rows if rows else '<tr><td colspan="4" style="color:#93a0b0; padding:16px;">Son 30 günde yeni eklenen fon bulunamadı.</td></tr>'}
+</table>"""
+
+    body = f"""{page_header('yeni-fonlar.html', 'En Son Eklenen Fonlar', anchor)}
+<div class="card">
+    <h2 style="color:#1F4E78; margin-top:0;">Son 30 Günde İlk Kez Fiyat Üreten Fonlar <span class="kat-count">({len(yeni)} fon)</span></h2>
+    {table_html}
+</div>"""
+
+    with open("docs/yeni-fonlar.html", "w", encoding="utf-8") as f:
+        f.write(page_shell("FONLARCA Puanlama Sistemi — En Son Eklenen Fonlar", "yeni-fonlar.html", body))
+    print("En Son Eklenen Fonlar sayfası oluşturuldu: docs/yeni-fonlar.html")
 
 
 def main():
     df = pd.read_parquet(DATA_PATH)
     df['Tarih'] = pd.to_datetime(df['Tarih']).dt.normalize()
     # Veri hatası temizliği: bazı günlerde Fiyat=0 kaydedilmiş (TEFAS kesintisi).
-    # Bu satırlar günlük getiri hesaplarını sonsuza (inf) sıçratıp Sharpe/StdDev'i bozuyor.
     onceki_satir = len(df)
     df = df[df['Fiyat'] > 0]
     temizlenen = onceki_satir - len(df)
@@ -558,11 +510,13 @@ def main():
     res, anchor = build_fund_metrics(df)
     res = res.merge(mapping, on='Fon Kodu', how='left')
     res = res[res['Alt Kategori'].notna()]
-
     res = compute_scores(res)
-    write_html(res, anchor)
-    write_category_summary(res, anchor)
+
+    os.makedirs("docs", exist_ok=True)
     write_hareketler_page(df, mapping)
+    write_category_summary(res, anchor)
+    write_tum_fonlar_page(res, anchor)
+    write_yeni_fonlar_page(df, mapping)
 
 
 if __name__ == "__main__":
