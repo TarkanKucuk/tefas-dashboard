@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FONLARCA Puanlama Sistemi — Kategori Özeti</title>
+<style>
+* { box-sizing: border-box; }
+body {
+    font-family: -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    margin: 0; padding: 32px 40px 60px; background: #f4f6f9; color: #1a1a1a;
+}
+.header {
+    background: linear-gradient(135deg, #1F4E78 0%, #2c6ba0 100%);
+    color: white; padding: 28px 32px; border-radius: 12px; margin-bottom: 24px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+}
+.header h1 { margin: 0; font-size: 26px; font-weight: 600; }
+.header .meta span { background: rgba(255,255,255,0.15); padding: 4px 12px; border-radius: 20px; font-size: 13px; }
+.card {
+    background: white; border-radius: 12px; padding: 20px 24px 24px; margin-bottom: 18px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+}
+.kat-card h2 { margin: 0 0 4px 0; color: #1F4E78; font-size: 18px; }
+.kat-count { color: #93a0b0; font-size: 13px; font-weight: 400; }
+.kat-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+@media (max-width: 800px) { .kat-cols { grid-template-columns: 1fr; } }
+h3 { font-size: 13px; margin: 0 0 8px 0; }
+h3.up { color: #1a7a37; }
+h3.down { color: #b3261e; }
+table.mini { width: 100%; border-collapse: collapse; font-size: 13px; }
+table.mini th { text-align: left; color: #93a0b0; font-weight: 500; padding: 4px 6px; border-bottom: 1px solid #eef2f7; }
+table.mini td { padding: 5px 6px; border-bottom: 1px solid #f4f6f9; }
+table.mini td a { color: #1F4E78; font-weight: 600; text-decoration: underline; text-decoration-color: #a9c3da; }
+table.mini td a:hover { color: #14345a; text-decoration-color: #14345a; }
+.score-badge { display: inline-block; min-width: 50px; padding: 2px 7px; border-radius: 6px; font-weight: 600; text-align: center; }
+.score-badge.good { background: #c6efce; color: #14361f; }
+.score-badge.bad { background: #ffc7ce; color: #5c1a1f; }
+.period-tabs { display: flex; gap: 6px; margin-bottom: 18px; }
+.period-tab {
+    padding: 8px 20px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;
+    background: #eef2f7; color: #5f6b7a; border: none;
+}
+.period-tab.active { background: #1F4E78; color: white; }
+.period-panel { display: none; }
+.period-panel.active { display: block; }
+footer { text-align: center; color: #93a0b0; font-size: 12px; margin-top: 24px; }
+</style>
+</head>
+<body>
+<div class="header">
+    <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
+        <img src="logo.jpg" alt="Fonlarca" style="height:36px; width:36px; border-radius:8px; object-fit:cover;">
+        <h1>FONLARCA Puanlama Sistemi <span style="font-weight:400; opacity:0.75; font-size:16px;">— Kategori Özeti</span></h1>
+    </div>
+    <div class="meta"><span>Son güncelleme: 2026-07-20</span></div>
+    <div style="display:flex; gap:8px; margin-top:12px; flex-wrap:wrap;"><a href="index.html" style="color:white; text-decoration:none; padding:5px 14px; border-radius:20px; font-size:13px; background:rgba(255,255,255,0.12);">Hareketler</a><a href="kategori-ozeti.html" style="color:white; text-decoration:none; padding:5px 14px; border-radius:20px; font-size:13px; background:rgba(255,255,255,0.28); font-weight:600;">Puanlama - Kategori Özeti</a><a href="tum-fonlar.html" style="color:white; text-decoration:none; padding:5px 14px; border-radius:20px; font-size:13px; background:rgba(255,255,255,0.12);">Puanlama - Tüm Fonlar</a><a href="yeni-fonlar.html" style="color:white; text-decoration:none; padding:5px 14px; border-radius:20px; font-size:13px; background:rgba(255,255,255,0.12);">En Son Eklenen Fonlar</a></div>
+</div>
+
+<div class="card kat-card">
+    <h2>Altın <span class="kat-count">(43 fon)</span></h2>
+    <div class="kat-cols">
+        <div>
+            <h3 class="up">▲ En İyi 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td><a href="https://fonlarca.com/fon/hai.html" target="_blank">HAI</a></td><td>AHLATCI PORTFÖY ALTIN FONU</td><td><span class='score-badge good'>94.0</span></td></tr><tr><td><a href="https://fonlarca.com/fon/njf.html" target="_blank">NJF</a></td><td>NUROL PORTFÖY ALTIN KATILIM FONU</td><td><span class='score-badge good'>87.5</span></td></tr><tr><td><a href="https://fonlarca.com/fon/vlt.html" target="_blank">VLT</a></td><td>VAKIF KATILIM PORTFÖY ALTIN KATILIM FONU</td><td><span class='score-badge good'>85.6</span></td></tr><tr><td><a href="https://fonlarca.com/fon/tro.html" target="_blank">TRO</a></td><td>TRIVE PORTFÖY ALTIN FONU</td><td><span class='score-badge good'>84.6</span></td></tr><tr><td><a href="https://fonlarca.com/fon/up1.html" target="_blank">UP1</a></td><td>ÜNLÜ PORTFÖY ALTIN FONU</td><td><span class='score-badge good'>82.7</span></td></tr></table>
+        </div>
+        <div>
+            <h3 class="down">▼ En Kötü 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td><a href="https://fonlarca.com/fon/tca.html" target="_blank">TCA</a></td><td>ZİRAAT PORTFÖY ALTIN KATILIM FONU</td><td><span class='score-badge bad'>12.3</span></td></tr><tr><td><a href="https://fonlarca.com/fon/fak.html" target="_blank">FAK</a></td><td>FONMAP PORTFÖY ALTIN KATILIM FONU</td><td><span class='score-badge bad'>14.4</span></td></tr><tr><td><a href="https://fonlarca.com/fon/tal.html" target="_blank">TAL</a></td><td>ATLAS PORTFÖY ALTIN KATILIM FONU</td><td><span class='score-badge bad'>20.8</span></td></tr><tr><td><a href="https://fonlarca.com/fon/fib.html" target="_blank">FIB</a></td><td>FİBA PORTFÖY ALTIN FONU</td><td><span class='score-badge bad'>24.5</span></td></tr><tr><td><a href="https://fonlarca.com/fon/tua.html" target="_blank">TUA</a></td><td>TEB PORTFÖY ALTIN FONU</td><td><span class='score-badge bad'>26.6</span></td></tr></table>
+        </div>
+    </div>
+</div>
+<div class="card kat-card">
+    <h2>BIST Endeks <span class="kat-count">(41 fon)</span></h2>
+    <div class="kat-cols">
+        <div>
+            <h3 class="up">▲ En İyi 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td><a href="https://fonlarca.com/fon/mhf.html" target="_blank">MHF</a></td><td>MT PORTFÖY BIST HALKA ARZ ŞİRKETLERİ HİSSE SENEDİ FONU (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge good'>95.6</span></td></tr><tr><td><a href="https://fonlarca.com/fon/khb.html" target="_blank">KHB</a></td><td>KARE PORTFÖY BIST 100 DIŞI ŞİRKETLER HİSSE SENEDİ FONU (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge good'>89.2</span></td></tr><tr><td><a href="https://fonlarca.com/fon/biy.html" target="_blank">BIY</a></td><td>AZİMUT PORTFÖY BIST 100 DIŞI ŞİRKETLER HİSSE SENEDİ FONU (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge good'>88.9</span></td></tr><tr><td><a href="https://fonlarca.com/fon/hrz.html" target="_blank">HRZ</a></td><td>AKTİF PORTFÖY BIST HALKA ARZ ŞİRKETLERİ HİSSE SENEDİ (TL) FONU (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge good'>76.4</span></td></tr><tr><td><a href="https://fonlarca.com/fon/dtl.html" target="_blank">DTL</a></td><td>DENİZ PORTFÖY BIST 100 DIŞI ŞİRKETLER HİSSE SENEDİ (TL) FONU (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge good'>75.2</span></td></tr></table>
+        </div>
+        <div>
+            <h3 class="down">▼ En Kötü 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td><a href="https://fonlarca.com/fon/yzh.html" target="_blank">YZH</a></td><td>TEB PORTFÖY BIST BANKA ENDEKSİ HİSSE SENEDİ FONU (HİSSE SENEDİ YOĞUN)</td><td><span class='score-badge bad'>10.7</span></td></tr><tr><td><a href="https://fonlarca.com/fon/dda.html" target="_blank">DDA</a></td><td>DENİZ PORTFÖY BANKACILIK SEKTÖRÜ HİSSE SENEDİ SERBEST FON (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge bad'>11.3</span></td></tr><tr><td><a href="https://fonlarca.com/fon/ycp.html" target="_blank">YCP</a></td><td>YAPI KREDİ PORTFÖY BANKACILIK SEKTÖRÜ HİSSE SENEDİ SERBEST FON (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge bad'>16.8</span></td></tr><tr><td><a href="https://fonlarca.com/fon/sas.html" target="_blank">SAS</a></td><td>AK PORTFÖY SABANCI TOPLULUĞU ŞİRKETLERİ ENDEKSİ HİSSE SENEDİ (TL) FONU (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge bad'>17.3</span></td></tr><tr><td><a href="https://fonlarca.com/fon/adp.html" target="_blank">ADP</a></td><td>AK PORTFÖY BIST BANKA ENDEKSİ HİSSE SENEDİ (TL) FONU (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge bad'>18.6</span></td></tr></table>
+        </div>
+    </div>
+</div>
+<div class="card kat-card">
+    <h2>Borçlanma Araçları <span class="kat-count">(45 fon)</span></h2>
+    <div class="kat-cols">
+        <div>
+            <h3 class="up">▲ En İyi 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td><a href="https://fonlarca.com/fon/trj.html" target="_blank">TRJ</a></td><td>TERA PORTFÖY BİRİNCİ BORÇLANMA ARAÇLARI (TL) FONU</td><td><span class='score-badge good'>91.7</span></td></tr><tr><td><a href="https://fonlarca.com/fon/mbr.html" target="_blank">MBR</a></td><td>MT PORTFÖY BİRİNCİ BORÇLANMA ARAÇLARI FONU</td><td><span class='score-badge good'>87.5</span></td></tr><tr><td><a href="https://fonlarca.com/fon/osl.html" target="_blank">OSL</a></td><td>OSMANLI PORTFÖY KISA VADELİ BORÇLANMA ARAÇLARI (TL) FONU</td><td><span class='score-badge good'>87.2</span></td></tr><tr><td><a href="https://fonlarca.com/fon/hvk.html" target="_blank">HVK</a></td><td>HEDEF PORTFÖY BİRİNCİ BORÇLANMA ARAÇLARI (TL) FONU</td><td><span class='score-badge good'>81.9</span></td></tr><tr><td><a href="https://fonlarca.com/fon/ist.html" target="_blank">IST</a></td><td>İSTANBUL PORTFÖY KISA VADELİ BORÇLANMA ARAÇLARI (TL) FONU</td><td><span class='score-badge good'>81.4</span></td></tr></table>
+        </div>
+        <div>
+            <h3 class="down">▼ En Kötü 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td><a href="https://fonlarca.com/fon/fit.html" target="_blank">FIT</a></td><td>FİBA PORTFÖY BORÇLANMA ARAÇLARI (TL) FONU</td><td><span class='score-badge bad'>12.5</span></td></tr><tr><td><a href="https://fonlarca.com/fon/tbt.html" target="_blank">TBT</a></td><td>TEB PORTFÖY BORÇLANMA ARAÇLARI FONU</td><td><span class='score-badge bad'>14.5</span></td></tr><tr><td><a href="https://fonlarca.com/fon/ak2.html" target="_blank">AK2</a></td><td>AK PORTFÖY UZUN VADELİ BORÇLANMA ARAÇLARI FONU</td><td><span class='score-badge bad'>15.5</span></td></tr><tr><td><a href="https://fonlarca.com/fon/ti6.html" target="_blank">TI6</a></td><td>İŞ PORTFÖY BORÇLANMA ARAÇLARI (TL) FONU</td><td><span class='score-badge bad'>17.6</span></td></tr><tr><td><a href="https://fonlarca.com/fon/duv.html" target="_blank">DUV</a></td><td>DENİZ PORTFÖY UZUN VADELİ BORÇLANMA ARAÇLARI FONU</td><td><span class='score-badge bad'>19.1</span></td></tr></table>
+        </div>
+    </div>
+</div>
+<div class="card kat-card">
+    <h2>Değişken <span class="kat-count">(76 fon)</span></h2>
+    <div class="kat-cols">
+        <div>
+            <h3 class="up">▲ En İyi 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td><a href="https://fonlarca.com/fon/pbr.html" target="_blank">PBR</a></td><td>PUSULA PORTFÖY BİRİNCİ DEĞİŞKEN FON</td><td><span class='score-badge good'>92.6</span></td></tr><tr><td><a href="https://fonlarca.com/fon/eib.html" target="_blank">EIB</a></td><td>ASTRA PORTFÖY DEĞİŞKEN FON</td><td><span class='score-badge good'>91.6</span></td></tr><tr><td><a href="https://fonlarca.com/fon/md2.html" target="_blank">MD2</a></td><td>MT PORTFÖY İKİNCİ DEĞİŞKEN FON</td><td><span class='score-badge good'>89.3</span></td></tr><tr><td><a href="https://fonlarca.com/fon/te4.html" target="_blank">TE4</a></td><td>TEB PORTFÖY BİRİNCİ DEĞİŞKEN FON</td><td><span class='score-badge good'>88.1</span></td></tr><tr><td><a href="https://fonlarca.com/fon/ich.html" target="_blank">ICH</a></td><td>PARDUS PORTFÖY İKİNCİ DEĞİŞKEN FON</td><td><span class='score-badge good'>85.4</span></td></tr></table>
+        </div>
+        <div>
+            <h3 class="down">▼ En Kötü 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td><a href="https://fonlarca.com/fon/mad.html" target="_blank">MAD</a></td><td>MEKSA PORTFÖY BİRİNCİ DEĞİŞKEN FON</td><td><span class='score-badge bad'>14.4</span></td></tr><tr><td><a href="https://fonlarca.com/fon/zdz.html" target="_blank">ZDZ</a></td><td>ZİRAAT PORTFÖY AGRESİF DEĞİŞKEN FON</td><td><span class='score-badge bad'>15.7</span></td></tr><tr><td><a href="https://fonlarca.com/fon/dgf.html" target="_blank">DGF</a></td><td>A1 CAPİTAL PORTFÖY DEĞİŞKEN FON</td><td><span class='score-badge bad'>16.6</span></td></tr><tr><td><a href="https://fonlarca.com/fon/atj.html" target="_blank">ATJ</a></td><td>AZİMUT PORTFÖY İKİNCİ DEĞİŞKEN FON</td><td><span class='score-badge bad'>18.0</span></td></tr><tr><td><a href="https://fonlarca.com/fon/hkg.html" target="_blank">HKG</a></td><td>ZİRAAT PORTFÖY HALK'IN ÜRETEN KADINLARI DEĞİŞKEN FON</td><td><span class='score-badge bad'>20.9</span></td></tr></table>
+        </div>
+    </div>
+</div>
+<div class="card kat-card">
+    <h2>Diğer Katılım <span class="kat-count">(14 fon)</span></h2>
+    <div class="kat-cols">
+        <div>
+            <h3 class="up">▲ En İyi 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td><a href="https://fonlarca.com/fon/bvk.html" target="_blank">BVK</a></td><td>BULLS PORTFÖY VOLTRAN KATILIM SERBEST (TL) FON</td><td><span class='score-badge good'>94.3</span></td></tr><tr><td><a href="https://fonlarca.com/fon/njy.html" target="_blank">NJY</a></td><td>NUROL PORTFÖY BİRİNCİ KATILIM FONU</td><td><span class='score-badge good'>85.9</span></td></tr><tr><td><a href="https://fonlarca.com/fon/kde.html" target="_blank">KDE</a></td><td>KUVEYT TÜRK PORTFÖY DENGELİ KATILIM FONU</td><td><span class='score-badge good'>78.5</span></td></tr><tr><td><a href="https://fonlarca.com/fon/kud.html" target="_blank">KUD</a></td><td>KUVEYT TÜRK PORTFÖY DİNAMİK KATILIM FONU</td><td><span class='score-badge good'>65.1</span></td></tr><tr><td><a href="https://fonlarca.com/fon/ktm.html" target="_blank">KTM</a></td><td>KUVEYT TÜRK PORTFÖY BİRİNCİ KATILIM (TL) FONU</td><td><span class='score-badge good'>60.9</span></td></tr></table>
+        </div>
+        <div>
+            <h3 class="down">▼ En Kötü 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td><a href="https://fonlarca.com/fon/gkf.html" target="_blank">GKF</a></td><td>GLOBAL MD PORTFÖY KATILIM FONU</td><td><span class='score-badge bad'>18.8</span></td></tr><tr><td><a href="https://fonlarca.com/fon/kua.html" target="_blank">KUA</a></td><td>KUVEYT TÜRK PORTFÖY AGRESİF KATILIM FONU</td><td><span class='score-badge bad'>23.5</span></td></tr><tr><td><a href="https://fonlarca.com/fon/kik.html" target="_blank">KIK</a></td><td>KUVEYT TÜRK PORTFÖY İKİNCİ KATILIM FONU</td><td><span class='score-badge bad'>32.2</span></td></tr><tr><td><a href="https://fonlarca.com/fon/pp1.html" target="_blank">PP1</a></td><td>PARDUS PORTFÖY BİRİNCİ KATILIM FONU</td><td><span class='score-badge bad'>36.5</span></td></tr><tr><td><a href="https://fonlarca.com/fon/gpf.html" target="_blank">GPF</a></td><td>GARANTİ PORTFÖY ÇOKLU VARLIK KATILIM FONU</td><td><span class='score-badge bad'>52.3</span></td></tr></table>
+        </div>
+    </div>
+</div>
+<div class="card kat-card">
+    <h2>Diğer Serbest <span class="kat-count">(91 fon)</span></h2>
+    <div class="kat-cols">
+        <div>
+            <h3 class="up">▲ En İyi 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td><a href="https://fonlarca.com/fon/tly.html" target="_blank">TLY</a></td><td>TERA PORTFÖY BİRİNCİ SERBEST FON</td><td><span class='score-badge good'>90.4</span></td></tr><tr><td><a href="https://fonlarca.com/fon/bsm.html" target="_blank">BSM</a></td><td>GLOBAL MD PORTFÖY BERRAK SERBEST FON</td><td><span class='score-badge good'>89.9</span></td></tr><tr><td><a href="https://fonlarca.com/fon/dfi.html" target="_blank">DFI</a></td><td>ATLAS PORTFÖY SERBEST FON</td><td><span class='score-badge good'>89.1</span></td></tr><tr><td><a href="https://fonlarca.com/fon/bbs.html" target="_blank">BBS</a></td><td>BULLS PORTFÖY BİRİNCİ SERBEST (TL) FON</td><td><span class='score-badge good'>88.8</span></td></tr><tr><td><a href="https://fonlarca.com/fon/dgh.html" target="_blank">DGH</a></td><td>ATA PORTFÖY PARA PİYASASI SERBEST (TL) FON</td><td><span class='score-badge good'>88.0</span></td></tr></table>
+        </div>
+        <div>
+            <h3 class="down">▼ En Kötü 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td><a href="https://fonlarca.com/fon/buv.html" target="_blank">BUV</a></td><td>BULLS PORTFÖY VOLTRAN SERBEST (TL) FON</td><td><span class='score-badge bad'>14.9</span></td></tr><tr><td><a href="https://fonlarca.com/fon/mpp.html" target="_blank">MPP</a></td><td>MEKSA PORTFÖY PRİME SERBEST FON</td><td><span class='score-badge bad'>15.8</span></td></tr><tr><td><a href="https://fonlarca.com/fon/dkc.html" target="_blank">DKC</a></td><td>DENİZ PORTFÖY İKİNCİ SERBEST FON</td><td><span class='score-badge bad'>16.1</span></td></tr><tr><td><a href="https://fonlarca.com/fon/hgv.html" target="_blank">HGV</a></td><td>HEDEF PORTFÖY BİRİNCİ SERBEST FON</td><td><span class='score-badge bad'>16.8</span></td></tr><tr><td><a href="https://fonlarca.com/fon/hif.html" target="_blank">HIF</a></td><td>HEDEF PORTFÖY İKİNCİ SERBEST FON</td><td><span class='score-badge bad'>16.9</span></td></tr></table>
+        </div>
+    </div>
+</div>
+<div class="card kat-card">
+    <h2>Döviz <span class="kat-count">(107 fon)</span></h2>
+    <div class="kat-cols">
+        <div>
+            <h3 class="up">▲ En İyi 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td><a href="https://fonlarca.com/fon/vpp.html" target="_blank">VPP</a></td><td>VEGA PORTFÖY PARLA SERBEST (DÖVİZ) FON</td><td><span class='score-badge good'>95.6</span></td></tr><tr><td><a href="https://fonlarca.com/fon/bky.html" target="_blank">BKY</a></td><td>YAPI KREDİ PORTFÖY BİRİNCİ KATILIM SERBEST (DÖVİZ) FON</td><td><span class='score-badge good'>91.9</span></td></tr><tr><td><a href="https://fonlarca.com/fon/yoz.html" target="_blank">YOZ</a></td><td>DENİZ PORTFÖY YAKAMOZ SERBEST (DÖVİZ) FON</td><td><span class='score-badge good'>89.2</span></td></tr><tr><td><a href="https://fonlarca.com/fon/bsd.html" target="_blank">BSD</a></td><td>BV PORTFÖY SERBEST (DÖVİZ) FON</td><td><span class='score-badge good'>86.6</span></td></tr><tr><td><a href="https://fonlarca.com/fon/ybr.html" target="_blank">YBR</a></td><td>İŞ PORTFÖY YİRMİBİRİNCİ SERBEST (DÖVİZ) FON</td><td><span class='score-badge good'>85.3</span></td></tr></table>
+        </div>
+        <div>
+            <h3 class="down">▼ En Kötü 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td><a href="https://fonlarca.com/fon/fsp.html" target="_blank">FSP</a></td><td>FONMAP PORTFÖY SERBEST (DÖVİZ) FON</td><td><span class='score-badge bad'>14.6</span></td></tr><tr><td><a href="https://fonlarca.com/fon/kls.html" target="_blank">KLS</a></td><td>ALLBATROSS PORTFÖY KATILIM SERBEST (DÖVİZ) FON</td><td><span class='score-badge bad'>21.5</span></td></tr><tr><td><a href="https://fonlarca.com/fon/as1.html" target="_blank">AS1</a></td><td>ALLBATROSS PORTFÖY BİRİNCİ SERBEST (DÖVİZ) FON</td><td><span class='score-badge bad'>22.4</span></td></tr><tr><td><a href="https://fonlarca.com/fon/ahn.html" target="_blank">AHN</a></td><td>ATLAS PORTFÖY SERBEST(DÖVİZ)FON</td><td><span class='score-badge bad'>24.1</span></td></tr><tr><td><a href="https://fonlarca.com/fon/kav.html" target="_blank">KAV</a></td><td>KUVEYT TÜRK PORTFÖY ALTINCI KATILIM SERBEST (DÖVİZ-AVRO) FON</td><td><span class='score-badge bad'>24.1</span></td></tr></table>
+        </div>
+    </div>
+</div>
+<div class="card kat-card">
+    <h2>Emtia <span class="kat-count">(11 fon)</span></h2>
+    <div class="kat-cols">
+        <div>
+            <h3 class="up">▲ En İyi 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td><a href="https://fonlarca.com/fon/aes.html" target="_blank">AES</a></td><td>AK PORTFÖY PETROL YABANCI BYF FON SEPETİ FONU</td><td><span class='score-badge good'>92.2</span></td></tr><tr><td><a href="https://fonlarca.com/fon/ovd.html" target="_blank">OVD</a></td><td>QNB PORTFÖY EMTİA FON SEPETİ FONU</td><td><span class='score-badge good'>77.9</span></td></tr><tr><td><a href="https://fonlarca.com/fon/tge.html" target="_blank">TGE</a></td><td>İŞ PORTFÖY EMTİA YABANCI BYF FON SEPETİ FONU</td><td><span class='score-badge good'>64.1</span></td></tr><tr><td><a href="https://fonlarca.com/fon/gze.html" target="_blank">GZE</a></td><td>GARANTİ PORTFÖY EMTİA SERBEST FON</td><td><span class='score-badge good'>60.0</span></td></tr><tr><td><a href="https://fonlarca.com/fon/dfd.html" target="_blank">DFD</a></td><td>DENİZ PORTFÖY EMTİA SERBEST FON</td><td><span class='score-badge good'>55.4</span></td></tr></table>
+        </div>
+        <div>
+            <h3 class="down">▼ En Kötü 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td><a href="https://fonlarca.com/fon/esp.html" target="_blank">ESP</a></td><td>AURA PORTFÖY EMTİA SERBEST FON</td><td><span class='score-badge bad'>20.8</span></td></tr><tr><td><a href="https://fonlarca.com/fon/bfs.html" target="_blank">BFS</a></td><td>BULLS PORTFÖY EMTİA FON SEPETİ FONU</td><td><span class='score-badge bad'>32.7</span></td></tr><tr><td><a href="https://fonlarca.com/fon/gbz.html" target="_blank">GBZ</a></td><td>AZİMUT PORTFÖY EMTİA FON SEPETİ FONU</td><td><span class='score-badge bad'>34.4</span></td></tr><tr><td><a href="https://fonlarca.com/fon/ygm.html" target="_blank">YGM</a></td><td>YAPI KREDİ PORTFÖY EMTİA SERBEST FON</td><td><span class='score-badge bad'>41.7</span></td></tr><tr><td><a href="https://fonlarca.com/fon/zcn.html" target="_blank">ZCN</a></td><td>ZİRAAT PORTFÖY EMTİA FON SEPETİ FONU</td><td><span class='score-badge bad'>52.8</span></td></tr></table>
+        </div>
+    </div>
+</div>
+<div class="card kat-card">
+    <h2>Eurobond <span class="kat-count">(8 fon)</span></h2>
+    <div class="kat-cols">
+        <div>
+            <h3 class="up">▲ En İyi 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td><a href="https://fonlarca.com/fon/ybe.html" target="_blank">YBE</a></td><td>YAPI KREDİ PORTFÖY EUROBOND (DOLAR) BORÇLANMA ARAÇLARI FONU</td><td><span class='score-badge good'>76.2</span></td></tr><tr><td><a href="https://fonlarca.com/fon/dbh.html" target="_blank">DBH</a></td><td>DENİZ PORTFÖY EUROBOND (DÖVİZ) BORÇLANMA ARAÇLARI FONU</td><td><span class='score-badge good'>70.8</span></td></tr><tr><td><a href="https://fonlarca.com/fon/ipv.html" target="_blank">IPV</a></td><td>İŞ PORTFÖY EUROBOND BORÇLANMA ARAÇLARI (DÖVİZ) FONU</td><td><span class='score-badge good'>68.4</span></td></tr><tr><td><a href="https://fonlarca.com/fon/fpe.html" target="_blank">FPE</a></td><td>FİBA PORTFÖY EUROBOND BORÇLANMA ARAÇLARI (DÖVİZ) FONU</td><td><span class='score-badge good'>63.8</span></td></tr><tr><td><a href="https://fonlarca.com/fon/gpa.html" target="_blank">GPA</a></td><td>GARANTİ PORTFÖY EUROBOND BORÇLANMA ARAÇLARI (DÖVİZ) FONU</td><td><span class='score-badge good'>63.5</span></td></tr></table>
+        </div>
+        <div>
+            <h3 class="down">▼ En Kötü 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td><a href="https://fonlarca.com/fon/tpl.html" target="_blank">TPL</a></td><td>TEB PORTFÖY EUROBOND (DÖVİZ) BORÇLANMA ARAÇLARI FONU</td><td><span class='score-badge bad'>23.7</span></td></tr><tr><td><a href="https://fonlarca.com/fon/fub.html" target="_blank">FUB</a></td><td>QNB PORTFÖY EUROBOND (DÖVİZ) BORÇLANMA ARAÇLARI FONU</td><td><span class='score-badge bad'>36.5</span></td></tr><tr><td><a href="https://fonlarca.com/fon/ake.html" target="_blank">AKE</a></td><td>AK PORTFÖY EUROBOND (AMERİKAN DOLARI) BORÇLANMA ARAÇLARI FONU</td><td><span class='score-badge bad'>43.4</span></td></tr><tr><td><a href="https://fonlarca.com/fon/gpa.html" target="_blank">GPA</a></td><td>GARANTİ PORTFÖY EUROBOND BORÇLANMA ARAÇLARI (DÖVİZ) FONU</td><td><span class='score-badge bad'>63.5</span></td></tr><tr><td><a href="https://fonlarca.com/fon/fpe.html" target="_blank">FPE</a></td><td>FİBA PORTFÖY EUROBOND BORÇLANMA ARAÇLARI (DÖVİZ) FONU</td><td><span class='score-badge bad'>63.8</span></td></tr></table>
+        </div>
+    </div>
+</div>
+<div class="card kat-card">
+    <h2>Fon Sepeti <span class="kat-count">(55 fon)</span></h2>
+    <div class="kat-cols">
+        <div>
+            <h3 class="up">▲ En İyi 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td><a href="https://fonlarca.com/fon/bub.html" target="_blank">BUB</a></td><td>BULLS PORTFÖY BİRİNCİ FON SEPETİ FONU</td><td><span class='score-badge good'>99.3</span></td></tr><tr><td><a href="https://fonlarca.com/fon/nbo.html" target="_blank">NBO</a></td><td>NEO PORTFÖY BORÇLANMA ARACI FONLARI FON SEPETİ FONU</td><td><span class='score-badge good'>96.6</span></td></tr><tr><td><a href="https://fonlarca.com/fon/irf.html" target="_blank">IRF</a></td><td>İSTANBUL PORTFÖY BİRİNCİ FON SEPETİ FONU</td><td><span class='score-badge good'>93.3</span></td></tr><tr><td><a href="https://fonlarca.com/fon/ycy.html" target="_blank">YCY</a></td><td>İSTANBUL PORTFÖY KATILIM FON SEPETİ FONU</td><td><span class='score-badge good'>88.0</span></td></tr><tr><td><a href="https://fonlarca.com/fon/ole.html" target="_blank">OLE</a></td><td>OSMANLI PORTFÖY BİRİNCİ FON SEPETİ FONU</td><td><span class='score-badge good'>84.9</span></td></tr></table>
+        </div>
+        <div>
+            <h3 class="down">▼ En Kötü 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td><a href="https://fonlarca.com/fon/tpc.html" target="_blank">TPC</a></td><td>TEB PORTFÖY BİRİNCİ FON SEPETİ FONU</td><td><span class='score-badge bad'>10.3</span></td></tr><tr><td><a href="https://fonlarca.com/fon/ypv.html" target="_blank">YPV</a></td><td>YAPI KREDİ PORTFÖY ÜÇÜNCÜ FON SEPETİ FONU</td><td><span class='score-badge bad'>12.5</span></td></tr><tr><td><a href="https://fonlarca.com/fon/fsu.html" target="_blank">FSU</a></td><td>TERA PORTFÖY FON SEPETİ FONU</td><td><span class='score-badge bad'>13.1</span></td></tr><tr><td><a href="https://fonlarca.com/fon/odv.html" target="_blank">ODV</a></td><td>AK PORTFÖY ÜÇÜNCÜ FON SEPETİ FONU</td><td><span class='score-badge bad'>16.9</span></td></tr><tr><td><a href="https://fonlarca.com/fon/zpc.html" target="_blank">ZPC</a></td><td>ZİRAAT PORTFÖY FON SEPETİ FONU</td><td><span class='score-badge bad'>18.2</span></td></tr></table>
+        </div>
+    </div>
+</div>
+<div class="card kat-card">
+    <h2>Gümüş <span class="kat-count">(13 fon)</span></h2>
+    <div class="kat-cols">
+        <div>
+            <h3 class="up">▲ En İyi 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td><a href="https://fonlarca.com/fon/guf.html" target="_blank">GUF</a></td><td>İŞ PORTFÖY GÜMÜŞ FON SEPETİ FONU</td><td><span class='score-badge good'>83.8</span></td></tr><tr><td><a href="https://fonlarca.com/fon/kgm.html" target="_blank">KGM</a></td><td>KUVEYT TÜRK PORTFÖY GÜMÜŞ KATILIM FON SEPETİ FONU</td><td><span class='score-badge good'>74.4</span></td></tr><tr><td><a href="https://fonlarca.com/fon/gmi.html" target="_blank">GMI</a></td><td>AK PORTFÖY GÜMÜŞ SERBEST FON</td><td><span class='score-badge good'>73.4</span></td></tr><tr><td><a href="https://fonlarca.com/fon/iog.html" target="_blank">IOG</a></td><td>İŞ PORTFÖY GÜMÜŞ SERBEST FON</td><td><span class='score-badge good'>70.1</span></td></tr><tr><td><a href="https://fonlarca.com/fon/mjg.html" target="_blank">MJG</a></td><td>AKTİF PORTFÖY GÜMÜŞ FON SEPETİ FONU</td><td><span class='score-badge good'>69.5</span></td></tr></table>
+        </div>
+        <div>
+            <h3 class="down">▼ En Kötü 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td><a href="https://fonlarca.com/fon/gtz.html" target="_blank">GTZ</a></td><td>GARANTİ PORTFÖY GÜMÜŞ FON SEPETİ FONU</td><td><span class='score-badge bad'>20.6</span></td></tr><tr><td><a href="https://fonlarca.com/fon/gmc.html" target="_blank">GMC</a></td><td>TEB PORTFÖY GÜMÜŞ FON SEPETİ FONU</td><td><span class='score-badge bad'>20.8</span></td></tr><tr><td><a href="https://fonlarca.com/fon/yzg.html" target="_blank">YZG</a></td><td>YAPI KREDİ PORTFÖY GÜMÜŞ FON SEPETİ FONU</td><td><span class='score-badge bad'>36.2</span></td></tr><tr><td><a href="https://fonlarca.com/fon/fpg.html" target="_blank">FPG</a></td><td>FİBA PORTFÖY GÜMÜŞ SERBEST FON</td><td><span class='score-badge bad'>40.8</span></td></tr><tr><td><a href="https://fonlarca.com/fon/guk.html" target="_blank">GUK</a></td><td>GARANTİ PORTFÖY GÜMÜŞ KATILIM SERBEST FON</td><td><span class='score-badge bad'>41.2</span></td></tr></table>
+        </div>
+    </div>
+</div>
+<div class="card kat-card">
+    <h2>Hisse Senedi <span class="kat-count">(137 fon)</span></h2>
+    <div class="kat-cols">
+        <div>
+            <h3 class="up">▲ En İyi 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td><a href="https://fonlarca.com/fon/ltl.html" target="_blank">LTL</a></td><td>AHLATCI PORTFÖY HİSSE SENEDİ (TL) FONU (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge good'>98.5</span></td></tr><tr><td><a href="https://fonlarca.com/fon/phe.html" target="_blank">PHE</a></td><td>PUSULA PORTFÖY HİSSE SENEDİ FONU (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge good'>97.5</span></td></tr><tr><td><a href="https://fonlarca.com/fon/srl.html" target="_blank">SRL</a></td><td>PARDUS PORTFÖY SÜRDÜRÜLEBİLİRLİK HİSSE SENEDİ (TL) FONU (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge good'>95.2</span></td></tr><tr><td><a href="https://fonlarca.com/fon/kpf.html" target="_blank">KPF</a></td><td>NEO PORTFÖY MUTLAK GETİRİ HEDEFLİ HİSSE SENEDİ SERBEST FON (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge good'>94.0</span></td></tr><tr><td><a href="https://fonlarca.com/fon/puk.html" target="_blank">PUK</a></td><td>PUSULA PORTFÖY KATILIM HİSSE SENEDİ (TL) FONU (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge good'>93.9</span></td></tr></table>
+        </div>
+        <div>
+            <h3 class="down">▼ En Kötü 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td><a href="https://fonlarca.com/fon/lla.html" target="_blank">LLA</a></td><td>ALLBATROSS PORTFÖY AYDIN HİSSE SENEDİ SERBEST (TL) FON (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge bad'>9.3</span></td></tr><tr><td><a href="https://fonlarca.com/fon/pmp.html" target="_blank">PMP</a></td><td>PARDUS PORTFÖY MODEL PORTFÖY HİSSE SENEDİ SERBEST FON (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge bad'>13.1</span></td></tr><tr><td><a href="https://fonlarca.com/fon/brt.html" target="_blank">BRT</a></td><td>PARDUS PORTFÖY BEREKET HİSSE SENEDİ SERBEST FON (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge bad'>13.6</span></td></tr><tr><td><a href="https://fonlarca.com/fon/pbn.html" target="_blank">PBN</a></td><td>PİRAMİT PORTFÖY BİRİNCİ HİSSE SENEDİ SERBEST FON (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge bad'>14.3</span></td></tr><tr><td><a href="https://fonlarca.com/fon/ihz.html" target="_blank">IHZ</a></td><td>ALLBATROSS PORTFÖY İKİNCİ HİSSE SENEDİ SERBEST FON (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge bad'>15.3</span></td></tr></table>
+        </div>
+    </div>
+</div>
+<div class="card kat-card">
+    <h2>Kar Payı Ödeyen <span class="kat-count">(12 fon)</span></h2>
+    <div class="kat-cols">
+        <div>
+            <h3 class="up">▲ En İyi 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td><a href="https://fonlarca.com/fon/kpa.html" target="_blank">KPA</a></td><td>KUVEYT TÜRK PORTFÖY KAR PAYI ÖDEYEN KATILIM HİSSE SENEDİ FONU (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge good'>87.0</span></td></tr><tr><td><a href="https://fonlarca.com/fon/ynk.html" target="_blank">YNK</a></td><td>YAPI KREDİ PORTFÖY NİŞANTAŞI KAR PAYI ÖDEYEN SERBEST (DÖVİZ) FON</td><td><span class='score-badge good'>76.2</span></td></tr><tr><td><a href="https://fonlarca.com/fon/kpd.html" target="_blank">KPD</a></td><td>KUVEYT TÜRK PORTFÖY KAR PAYI ÖDEYEN KATILIM SERBEST (DÖVİZ) FON</td><td><span class='score-badge good'>66.2</span></td></tr><tr><td><a href="https://fonlarca.com/fon/gkg.html" target="_blank">GKG</a></td><td>GARANTİ PORTFÖY KAR PAYI ÖDEYEN HİSSE SENEDİ (TL) FONU (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge good'>61.4</span></td></tr><tr><td><a href="https://fonlarca.com/fon/gsp.html" target="_blank">GSP</a></td><td>AZİMUT PYŞ KAR PAYI ÖDEYEN HİSSE SENEDİ FONU (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge good'>60.8</span></td></tr></table>
+        </div>
+        <div>
+            <h3 class="down">▼ En Kötü 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td><a href="https://fonlarca.com/fon/kph.html" target="_blank">KPH</a></td><td>İŞ PORTFÖY KAR PAYI ÖDEYEN HİSSE SENEDİ (TL) FONU (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge bad'>31.2</span></td></tr><tr><td><a href="https://fonlarca.com/fon/yly.html" target="_blank">YLY</a></td><td>YAPI KREDİ PORTFÖY KAR PAYI ÖDEYEN HİSSE SENEDİ (TL) FON (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge bad'>32.0</span></td></tr><tr><td><a href="https://fonlarca.com/fon/fbc.html" target="_blank">FBC</a></td><td>ONE PORTFÖY KAR PAYI ÖDEYEN KATILIM FONU</td><td><span class='score-badge bad'>39.3</span></td></tr><tr><td><a href="https://fonlarca.com/fon/nkp.html" target="_blank">NKP</a></td><td>NEO PORTFÖY KAR PAYI ÖDEYEN DEĞİŞKEN FON</td><td><span class='score-badge bad'>41.2</span></td></tr><tr><td><a href="https://fonlarca.com/fon/aya.html" target="_blank">AYA</a></td><td>ATA PORTFÖY KAR PAYI ÖDEYEN HİSSE SENEDİ (TL) FONU (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge bad'>41.5</span></td></tr></table>
+        </div>
+    </div>
+</div>
+<div class="card kat-card">
+    <h2>Kira Sertifikası <span class="kat-count">(21 fon)</span></h2>
+    <div class="kat-cols">
+        <div>
+            <h3 class="up">▲ En İyi 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td><a href="https://fonlarca.com/fon/ais.html" target="_blank">AIS</a></td><td>AK PORTFÖY PARA PİYASASI KATILIM FONU</td><td><span class='score-badge good'>90.5</span></td></tr><tr><td><a href="https://fonlarca.com/fon/rbt.html" target="_blank">RBT</a></td><td>ALBARAKA PORTFÖY KİRA SERTİFİKALARI  KATILIM FONU</td><td><span class='score-badge good'>90.0</span></td></tr><tr><td><a href="https://fonlarca.com/fon/ksk.html" target="_blank">KSK</a></td><td>AZİMUT PORTFÖY İKİNCİ PARA PİYASASI KATILIM FONU</td><td><span class='score-badge good'>88.8</span></td></tr><tr><td><a href="https://fonlarca.com/fon/vkv.html" target="_blank">VKV</a></td><td>VAKIF KATILIM PORTFÖY KISA VADELİ KİRA SERTİFİKALARI KATILIM FONU</td><td><span class='score-badge good'>84.3</span></td></tr><tr><td><a href="https://fonlarca.com/fon/mpk.html" target="_blank">MPK</a></td><td>AKTİF PORTFÖY KİRA SERTİFİKASI KATILIM (TL) FONU</td><td><span class='score-badge good'>72.1</span></td></tr></table>
+        </div>
+        <div>
+            <h3 class="down">▼ En Kötü 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td><a href="https://fonlarca.com/fon/ktn.html" target="_blank">KTN</a></td><td>KUVEYT TÜRK PORTFÖY KİRA SERTİFİKALARI KATILIM (TL) FONU</td><td><span class='score-badge bad'>17.3</span></td></tr><tr><td><a href="https://fonlarca.com/fon/kis.html" target="_blank">KIS</a></td><td>ASTRA PORTFÖY KİRA SERTİFİKASI KATILIM (DÖVİZ) FONU</td><td><span class='score-badge bad'>19.5</span></td></tr><tr><td><a href="https://fonlarca.com/fon/ekf.html" target="_blank">EKF</a></td><td>ASTRA PORTFÖY KİRA SERTİFİKASI KATILIM (TL) FONU</td><td><span class='score-badge bad'>21.0</span></td></tr><tr><td><a href="https://fonlarca.com/fon/yfv.html" target="_blank">YFV</a></td><td>YAPI KREDİ PORTFÖY KİRA SERTİFİKALARI KATILIM FONU</td><td><span class='score-badge bad'>24.7</span></td></tr><tr><td><a href="https://fonlarca.com/fon/tpz.html" target="_blank">TPZ</a></td><td>TEB PORTFÖY KİRA SERTİFİKALARI (DÖVİZ) KATILIM FONU</td><td><span class='score-badge bad'>30.8</span></td></tr></table>
+        </div>
+    </div>
+</div>
+<div class="card kat-card">
+    <h2>Kısa Vade <span class="kat-count">(16 fon)</span></h2>
+    <div class="kat-cols">
+        <div>
+            <h3 class="up">▲ En İyi 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td><a href="https://fonlarca.com/fon/pru.html" target="_blank">PRU</a></td><td>ALLBATROSS PORTFÖY KISA VADELİ SERBEST (TL) FON</td><td><span class='score-badge good'>78.5</span></td></tr><tr><td><a href="https://fonlarca.com/fon/pis.html" target="_blank">PIS</a></td><td>PARDUS PORTFÖY İKİNCİ KISA VADELİ SERBEST (TL) FON</td><td><span class='score-badge good'>76.2</span></td></tr><tr><td><a href="https://fonlarca.com/fon/kkl.html" target="_blank">KKL</a></td><td>ALLBATROSS PORTFÖY KISA VADELİ KATILIM SERBEST (TL) FON</td><td><span class='score-badge good'>73.7</span></td></tr><tr><td><a href="https://fonlarca.com/fon/ksa.html" target="_blank">KSA</a></td><td>HEDEF PORTFÖY KISA VADELİ SERBEST (TL) FON</td><td><span class='score-badge good'>72.9</span></td></tr><tr><td><a href="https://fonlarca.com/fon/pkv.html" target="_blank">PKV</a></td><td>PARDUS PORTFÖY KISA VADELİ SERBEST (TL) FON</td><td><span class='score-badge good'>69.6</span></td></tr></table>
+        </div>
+        <div>
+            <h3 class="down">▼ En Kötü 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td><a href="https://fonlarca.com/fon/ksv.html" target="_blank">KSV</a></td><td>KUVEYT TÜRK PORTFÖY KISA VADELİ KATILIM SERBEST (TL) FON</td><td><span class='score-badge bad'>29.0</span></td></tr><tr><td><a href="https://fonlarca.com/fon/pvk.html" target="_blank">PVK</a></td><td>ALBARAKA PORTFÖY KISA VADELİ KATILIM SERBEST (TL) FON</td><td><span class='score-badge bad'>32.2</span></td></tr><tr><td><a href="https://fonlarca.com/fon/rkv.html" target="_blank">RKV</a></td><td>RE-PIE PORTFÖY KISA VADELİ KATILIM SERBEST (TL) FON</td><td><span class='score-badge bad'>34.9</span></td></tr><tr><td><a href="https://fonlarca.com/fon/dvs.html" target="_blank">DVS</a></td><td>DENİZ PORTFÖY KISA VADELİ SERBEST (TL) FON</td><td><span class='score-badge bad'>36.3</span></td></tr><tr><td><a href="https://fonlarca.com/fon/hyu.html" target="_blank">HYU</a></td><td>HSBC PORTFÖY KISA VADELİ SERBEST (TL) FON</td><td><span class='score-badge bad'>37.1</span></td></tr></table>
+        </div>
+    </div>
+</div>
+<div class="card kat-card">
+    <h2>Kıymetli Madenler <span class="kat-count">(4 fon)</span></h2>
+    <div class="kat-cols">
+        <div>
+            <h3 class="up">▲ En İyi 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td><a href="https://fonlarca.com/fon/kut.html" target="_blank">KUT</a></td><td>KUVEYT TÜRK PORTFÖY KIYMETLİ MADENLER KATILIM FONU</td><td><span class='score-badge good'>80.0</span></td></tr><tr><td><a href="https://fonlarca.com/fon/otj.html" target="_blank">OTJ</a></td><td>OYAK PORTFÖY KIYMETLİ MADENLER FON SEPETİ FONU</td><td><span class='score-badge good'>69.8</span></td></tr><tr><td><a href="https://fonlarca.com/fon/kmn.html" target="_blank">KMN</a></td><td>YAPI KREDİ PORTFÖY KIYMETLİ MADENLER KATILIM FONU</td><td><span class='score-badge good'>55.0</span></td></tr><tr><td><a href="https://fonlarca.com/fon/epk.html" target="_blank">EPK</a></td><td>EMAA BLUE PORTFÖY KIYMETLİ MADENLER KATILIM FON SEPETİ FONU</td><td><span class='score-badge good'>41.6</span></td></tr></table>
+        </div>
+        <div>
+            <h3 class="down">▼ En Kötü 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td><a href="https://fonlarca.com/fon/epk.html" target="_blank">EPK</a></td><td>EMAA BLUE PORTFÖY KIYMETLİ MADENLER KATILIM FON SEPETİ FONU</td><td><span class='score-badge bad'>41.6</span></td></tr><tr><td><a href="https://fonlarca.com/fon/kmn.html" target="_blank">KMN</a></td><td>YAPI KREDİ PORTFÖY KIYMETLİ MADENLER KATILIM FONU</td><td><span class='score-badge bad'>55.0</span></td></tr><tr><td><a href="https://fonlarca.com/fon/otj.html" target="_blank">OTJ</a></td><td>OYAK PORTFÖY KIYMETLİ MADENLER FON SEPETİ FONU</td><td><span class='score-badge bad'>69.8</span></td></tr><tr><td><a href="https://fonlarca.com/fon/kut.html" target="_blank">KUT</a></td><td>KUVEYT TÜRK PORTFÖY KIYMETLİ MADENLER KATILIM FONU</td><td><span class='score-badge bad'>80.0</span></td></tr></table>
+        </div>
+    </div>
+</div>
+<div class="card kat-card">
+    <h2>Para Piyasası <span class="kat-count">(98 fon)</span></h2>
+    <div class="kat-cols">
+        <div>
+            <h3 class="up">▲ En İyi 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td><a href="https://fonlarca.com/fon/pnu.html" target="_blank">PNU</a></td><td>PUSULA PORTFÖY İKİNCİ PARA PİYASASI (TL) FONU</td><td><span class='score-badge good'>98.9</span></td></tr><tr><td><a href="https://fonlarca.com/fon/pry.html" target="_blank">PRY</a></td><td>PUSULA PORTFÖY PARA PİYASASI (TL) FONU</td><td><span class='score-badge good'>89.4</span></td></tr><tr><td><a href="https://fonlarca.com/fon/pse.html" target="_blank">PSE</a></td><td>ATLAS PORTFÖY PARA PİYASASI SERBEST FON</td><td><span class='score-badge good'>87.8</span></td></tr><tr><td><a href="https://fonlarca.com/fon/tp2.html" target="_blank">TP2</a></td><td>TERA PORTFÖY PARA PİYASASI (TL) FONU</td><td><span class='score-badge good'>86.5</span></td></tr><tr><td><a href="https://fonlarca.com/fon/rbp.html" target="_blank">RBP</a></td><td>RE-PIE PORTFÖY BİRİNCİ PARA PİYASASI (TL) FONU</td><td><span class='score-badge good'>80.8</span></td></tr></table>
+        </div>
+        <div>
+            <h3 class="down">▼ En Kötü 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td><a href="https://fonlarca.com/fon/kni.html" target="_blank">KNI</a></td><td>AZİMUT PORTFÖY İKİNCİ PARA PİYASASI SERBEST (TL) FON</td><td><span class='score-badge bad'>3.9</span></td></tr><tr><td><a href="https://fonlarca.com/fon/aal.html" target="_blank">AAL</a></td><td>ATA PORTFÖY PARA PİYASASI (TL) FONU</td><td><span class='score-badge bad'>4.3</span></td></tr><tr><td><a href="https://fonlarca.com/fon/lkt.html" target="_blank">LKT</a></td><td>AKTİF PORTFÖY İKİNCİ PARA PİYASASI (TL) FONU</td><td><span class='score-badge bad'>18.6</span></td></tr><tr><td><a href="https://fonlarca.com/fon/rrp.html" target="_blank">RRP</a></td><td>RE-PIE PORTFÖY PARA PİYASASI KATILIM (TL) FON</td><td><span class='score-badge bad'>21.1</span></td></tr><tr><td><a href="https://fonlarca.com/fon/ice.html" target="_blank">ICE</a></td><td>ICBC TURKEY PORTFÖY PARA PİYASASI (TL) FONU</td><td><span class='score-badge bad'>21.7</span></td></tr></table>
+        </div>
+    </div>
+</div>
+<div class="card kat-card">
+    <h2>Teknoloji Temalı <span class="kat-count">(65 fon)</span></h2>
+    <div class="kat-cols">
+        <div>
+            <h3 class="up">▲ En İyi 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td><a href="https://fonlarca.com/fon/gzg.html" target="_blank">GZG</a></td><td>GARANTİ PORTFÖY SAĞLIK VE GENETİK TEKNOLOJİLERİ DEĞİŞKEN FON</td><td><span class='score-badge good'>89.2</span></td></tr><tr><td><a href="https://fonlarca.com/fon/rpm.html" target="_blank">RPM</a></td><td>ROTA PORTFÖY İLAÇ VE MEDİKAL TEKNOLOJİLERİ DEĞİŞKEN FON</td><td><span class='score-badge good'>81.6</span></td></tr><tr><td><a href="https://fonlarca.com/fon/htk.html" target="_blank">HTK</a></td><td>QNB PORTFÖY HAVACILIK VE SAVUNMA TEKNOLOJİLERİ FON SEPETİ FONU</td><td><span class='score-badge good'>80.9</span></td></tr><tr><td><a href="https://fonlarca.com/fon/bvv.html" target="_blank">BVV</a></td><td>BV PORTFÖY TEKNOLOJİ DEĞİŞKEN FON</td><td><span class='score-badge good'>72.8</span></td></tr><tr><td><a href="https://fonlarca.com/fon/ijz.html" target="_blank">IJZ</a></td><td>İŞ PORTFÖY SİBER GÜVENLİK TEKNOLOJİLERİ DEĞİŞKEN FON</td><td><span class='score-badge good'>72.2</span></td></tr></table>
+        </div>
+        <div>
+            <h3 class="down">▼ En Kötü 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td><a href="https://fonlarca.com/fon/mtd.html" target="_blank">MTD</a></td><td>BV PORTFÖY MALZEME TEKNOLOJİLERİ DEĞİŞKEN FON</td><td><span class='score-badge bad'>17.8</span></td></tr><tr><td><a href="https://fonlarca.com/fon/rbl.html" target="_blank">RBL</a></td><td>QNB PORTFÖY ROBOTİK VE BLOCKCHAİN TEKNOLOJİLERİ SERBEST FON</td><td><span class='score-badge bad'>22.4</span></td></tr><tr><td><a href="https://fonlarca.com/fon/dhj.html" target="_blank">DHJ</a></td><td>DENİZ PORTFÖY TEKNOLOJİ ŞİRKETLERİ HİSSE SENEDİ FONU (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge bad'>23.6</span></td></tr><tr><td><a href="https://fonlarca.com/fon/ivy.html" target="_blank">IVY</a></td><td>İSTANBUL PORTFÖY BLOCKCHAIN TEKNOLOJİLERİ DEĞİŞKEN FON</td><td><span class='score-badge bad'>23.6</span></td></tr><tr><td><a href="https://fonlarca.com/fon/fly.html" target="_blank">FLY</a></td><td>AKTİF PORTFÖY HAVACILIK VE SAVUNMA TEKNOLOJİLERİ DEĞİŞKEN FON</td><td><span class='score-badge bad'>25.1</span></td></tr></table>
+        </div>
+    </div>
+</div>
+<div class="card kat-card">
+    <h2>Tematik <span class="kat-count">(95 fon)</span></h2>
+    <div class="kat-cols">
+        <div>
+            <h3 class="up">▲ En İyi 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td><a href="https://fonlarca.com/fon/pto.html" target="_blank">PTO</a></td><td>PARDUS PORTFÖY TEMETTÜ ÖDEYEN ŞİRKETLER HİSSE SENEDİ FONU (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge good'>94.7</span></td></tr><tr><td><a href="https://fonlarca.com/fon/nbh.html" target="_blank">NBH</a></td><td>NEO PORTFÖY ALGORİTMİK STRATEJİLER SERBEST FON</td><td><span class='score-badge good'>93.9</span></td></tr><tr><td><a href="https://fonlarca.com/fon/bhi.html" target="_blank">BHI</a></td><td>BV PORTFÖY MUTLAK GETİRİ HEDEFLİ HİSSE SENEDİ SERBEST (TL) FON (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge good'>90.0</span></td></tr><tr><td><a href="https://fonlarca.com/fon/yso.html" target="_blank">YSO</a></td><td>YAPI KREDİ PORTFÖY SAĞLIK SEKTÖRÜ SERBEST FON</td><td><span class='score-badge good'>89.2</span></td></tr><tr><td><a href="https://fonlarca.com/fon/ssk.html" target="_blank">SSK</a></td><td>DENİZ PORTFÖY SAĞLIK SEKTÖRÜ DEĞİŞKEN FON</td><td><span class='score-badge good'>86.8</span></td></tr></table>
+        </div>
+        <div>
+            <h3 class="down">▼ En Kötü 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td><a href="https://fonlarca.com/fon/bnh.html" target="_blank">BNH</a></td><td>İSTANBUL PORTFÖY BANKACILIK SEKTÖRÜ HİSSE SENEDİ SERBEST (TL) FON (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge bad'>8.9</span></td></tr><tr><td><a href="https://fonlarca.com/fon/bft.html" target="_blank">BFT</a></td><td>AZİMUT PORTFÖY BANKA VE FİNANS SEKTÖRÜ HİSSE SENEDİ FONU (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge bad'>10.0</span></td></tr><tr><td><a href="https://fonlarca.com/fon/ihk.html" target="_blank">IHK</a></td><td>İŞ PORTFÖY İŞ'TE KADIN HİSSE SENEDİ (TL) FONU (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge bad'>14.6</span></td></tr><tr><td><a href="https://fonlarca.com/fon/hms.html" target="_blank">HMS</a></td><td>HSBC PORTFÖY SÜRDÜRÜLEBİLİRLİK HİSSE SENEDİ (TL) FONU (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge bad'>16.2</span></td></tr><tr><td><a href="https://fonlarca.com/fon/bio.html" target="_blank">BIO</a></td><td>İŞ PORTFÖY SÜRDÜRÜLEBİLİRLİK HİSSE SENEDİ (TL) FONU (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge bad'>16.7</span></td></tr></table>
+        </div>
+    </div>
+</div>
+<div class="card kat-card">
+    <h2>Çoklu Varlık <span class="kat-count">(18 fon)</span></h2>
+    <div class="kat-cols">
+        <div>
+            <h3 class="up">▲ En İyi 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td><a href="https://fonlarca.com/fon/zbi.html" target="_blank">ZBI</a></td><td>ZİRAAT PORTFÖY TEMKİNLİ KATILIM FONU</td><td><span class='score-badge good'>85.0</span></td></tr><tr><td><a href="https://fonlarca.com/fon/gma.html" target="_blank">GMA</a></td><td>AZİMUT PORTFÖY BİRİNCİ DEĞİŞKEN FON</td><td><span class='score-badge good'>70.4</span></td></tr><tr><td><a href="https://fonlarca.com/fon/cvl.html" target="_blank">CVL</a></td><td>A1 CAPİTAL PORTFÖY ÇOKLU VARLIK KATILIM FONU</td><td><span class='score-badge good'>69.9</span></td></tr><tr><td><a href="https://fonlarca.com/fon/bco.html" target="_blank">BCO</a></td><td>BULLS PORTFÖY ÇOKLU VARLIK KATILIM FONU</td><td><span class='score-badge good'>64.9</span></td></tr><tr><td><a href="https://fonlarca.com/fon/hpo.html" target="_blank">HPO</a></td><td>HSBC PORTFÖY ÇOKLU VARLIK BİRİNCİ DEĞİŞKEN FON</td><td><span class='score-badge good'>63.6</span></td></tr></table>
+        </div>
+        <div>
+            <h3 class="down">▼ En Kötü 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td><a href="https://fonlarca.com/fon/hcv.html" target="_blank">HCV</a></td><td>HEDEF PORTFÖY ATAK ÇOKLU VARLIK KATILIM FONU</td><td><span class='score-badge bad'>16.7</span></td></tr><tr><td><a href="https://fonlarca.com/fon/fid.html" target="_blank">FID</a></td><td>FİBA PORTFÖY ÇOKLU VARLIK İKİNCİ DEĞİŞKEN FON</td><td><span class='score-badge bad'>24.5</span></td></tr><tr><td><a href="https://fonlarca.com/fon/ckl.html" target="_blank">CKL</a></td><td>YAPI KREDİ PORTFÖY ÇOKLU VARLIK DEĞİŞKEN FON</td><td><span class='score-badge bad'>30.6</span></td></tr><tr><td><a href="https://fonlarca.com/fon/hpd.html" target="_blank">HPD</a></td><td>HSBC PORTFÖY İKİNCİ DEĞİŞKEN FON</td><td><span class='score-badge bad'>34.4</span></td></tr><tr><td><a href="https://fonlarca.com/fon/zck.html" target="_blank">ZCK</a></td><td>ZİRAAT PORTFÖY AGRESİF KATILIM FONU</td><td><span class='score-badge bad'>40.4</span></td></tr></table>
+        </div>
+    </div>
+</div>
+<div class="card kat-card">
+    <h2>Özel Sektör Borçlanma Araçları <span class="kat-count">(9 fon)</span></h2>
+    <div class="kat-cols">
+        <div>
+            <h3 class="up">▲ En İyi 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td><a href="https://fonlarca.com/fon/osd.html" target="_blank">OSD</a></td><td>OSMANLI PORTFÖY ÖZEL SEKTÖR BORÇLANMA ARAÇLARI FONU</td><td><span class='score-badge good'>81.7</span></td></tr><tr><td><a href="https://fonlarca.com/fon/dbz.html" target="_blank">DBZ</a></td><td>DENİZ PORTFÖY ÖZEL SEKTÖR BORÇLANMA ARAÇLARI FONU</td><td><span class='score-badge good'>64.6</span></td></tr><tr><td><a href="https://fonlarca.com/fon/fyo.html" target="_blank">FYO</a></td><td>QNB PORTFÖY ÖZEL SEKTÖR BORÇLANMA ARAÇLARI FONU</td><td><span class='score-badge good'>64.4</span></td></tr><tr><td><a href="https://fonlarca.com/fon/gub.html" target="_blank">GUB</a></td><td>GARANTİ PORTFÖY ÖZEL SEKTÖR BORÇLANMA ARAÇLARI FONU</td><td><span class='score-badge good'>64.4</span></td></tr><tr><td><a href="https://fonlarca.com/fon/ybs.html" target="_blank">YBS</a></td><td>YAPI KREDİ PORTFÖY ÖZEL SEKTÖR BORÇLANMA ARAÇLARI FONU</td><td><span class='score-badge good'>59.3</span></td></tr></table>
+        </div>
+        <div>
+            <h3 class="down">▼ En Kötü 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td><a href="https://fonlarca.com/fon/ahu.html" target="_blank">AHU</a></td><td>ATLAS PORTFÖY BİRİNCİ ÖZEL SEKTÖR BORÇLANMA ARAÇLARI FONU</td><td><span class='score-badge bad'>14.4</span></td></tr><tr><td><a href="https://fonlarca.com/fon/ayr.html" target="_blank">AYR</a></td><td>AK PORTFÖY ÖZEL SEKTÖR BORÇLANMA ARAÇLARI (TL) FONU</td><td><span class='score-badge bad'>42.9</span></td></tr><tr><td><a href="https://fonlarca.com/fon/tbv.html" target="_blank">TBV</a></td><td>İŞ PORTFÖY ÖZEL SEKTÖR BORÇLANMA ARAÇLARI (TL) FONU</td><td><span class='score-badge bad'>49.9</span></td></tr><tr><td><a href="https://fonlarca.com/fon/tot.html" target="_blank">TOT</a></td><td>TEB PORTFÖY ÖZEL SEKTÖR BORÇLANMA ARAÇLARI FONU</td><td><span class='score-badge bad'>56.3</span></td></tr><tr><td><a href="https://fonlarca.com/fon/ybs.html" target="_blank">YBS</a></td><td>YAPI KREDİ PORTFÖY ÖZEL SEKTÖR BORÇLANMA ARAÇLARI FONU</td><td><span class='score-badge bad'>59.3</span></td></tr></table>
+        </div>
+    </div>
+</div>
+<div class="card kat-card">
+    <h2>İstatiksel Arbitraj <span class="kat-count">(43 fon)</span></h2>
+    <div class="kat-cols">
+        <div>
+            <h3 class="up">▲ En İyi 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td><a href="https://fonlarca.com/fon/nmu.html" target="_blank">NMU</a></td><td>NUROL PORTFÖY MUTLAK GETİRİ HEDEFLİ HİSSE SENEDİ SERBEST FON (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge good'>88.2</span></td></tr><tr><td><a href="https://fonlarca.com/fon/ap7.html" target="_blank">AP7</a></td><td>PARDUS PORTFÖY ALGO ETNA İSTATİSTİKSEL ARBİTRAJ SERBEST FON</td><td><span class='score-badge good'>85.5</span></td></tr><tr><td><a href="https://fonlarca.com/fon/hia.html" target="_blank">HIA</a></td><td>HEDEF PORTFÖY İSTATİSTİKSEL ARBİTRAJ SERBEST FON</td><td><span class='score-badge good'>84.3</span></td></tr><tr><td><a href="https://fonlarca.com/fon/lph.html" target="_blank">LPH</a></td><td>STATECH PORTFÖY İSTATİSTİKSEL ARBİTRAJ HİSSE SENEDİ SERBEST (TL) FON (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge good'>83.7</span></td></tr><tr><td><a href="https://fonlarca.com/fon/fs6.html" target="_blank">FS6</a></td><td>ONE PORTFÖY İKİNCİ İSTATİSTİKSEL ARBİTRAJ SERBEST FON</td><td><span class='score-badge good'>79.4</span></td></tr></table>
+        </div>
+        <div>
+            <h3 class="down">▼ En Kötü 5</h3>
+            <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>Skor</th></tr><tr><td><a href="https://fonlarca.com/fon/ade.html" target="_blank">ADE</a></td><td>AK PORTFÖY MUTLAK GETİRİ HEDEFLİ DEĞİŞKEN FON</td><td><span class='score-badge bad'>12.4</span></td></tr><tr><td><a href="https://fonlarca.com/fon/fs5.html" target="_blank">FS5</a></td><td>ONE PORTFÖY BİRİNCİ İSTATİSTİKSEL ARBİTRAJ HİSSE SENEDİ SERBEST FON (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge bad'>15.8</span></td></tr><tr><td><a href="https://fonlarca.com/fon/kia.html" target="_blank">KIA</a></td><td>TRIVE PORTFÖY MUTLAK GETİRİ HEDEFLİ DEĞİŞKEN FON</td><td><span class='score-badge bad'>16.4</span></td></tr><tr><td><a href="https://fonlarca.com/fon/mgb.html" target="_blank">MGB</a></td><td>İŞ PORTFÖY MUTLAK GETİRİ HEDEFLİ HİSSE SENEDİ SERBEST FON (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge bad'>18.4</span></td></tr><tr><td><a href="https://fonlarca.com/fon/mgh.html" target="_blank">MGH</a></td><td>TEB PORTFÖY MUTLAK GETİRİ HEDEFLİ HİSSE SENEDİ SERBEST FON (HİSSE SENEDİ YOĞUN FON)</td><td><span class='score-badge bad'>19.5</span></td></tr></table>
+        </div>
+    </div>
+</div>
+</body>
+</html>
