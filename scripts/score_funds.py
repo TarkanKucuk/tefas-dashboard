@@ -382,79 +382,122 @@ def build_movers(df, mapping, days):
     return movers, anchor
 
 
-def _mover_rows(sub, value_col, fmt, cls):
-    out = ""
-    for _, r in sub.iterrows():
-        out += (f"<tr><td>{fonlarca_link(r['Fon Kodu'])}</td><td>{r['Fon Adı']}</td>"
-                f"<td><span class='score-badge {cls}'>{fmt(r[value_col])}</span></td></tr>")
-    return out
-
-
-def _mover_block(movers, value_col, fmt, title):
-    valid = movers[movers[value_col].notna()]
-    top5 = valid.sort_values(value_col, ascending=False).head(5)
-    bottom5 = valid.sort_values(value_col, ascending=True).head(5)
-    return f"""
-<div>
-    <h3 class="up">▲ En Çok Artan 5</h3>
-    <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>{title}</th></tr>{_mover_rows(top5, value_col, fmt, 'good')}</table>
-</div>
-<div>
-    <h3 class="down">▼ En Çok Azalan 5</h3>
-    <table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>{title}</th></tr>{_mover_rows(bottom5, value_col, fmt, 'bad')}</table>
-</div>"""
-
-
 def write_hareketler_page(df, mapping):
+    import json
+
     periods = [('gunluk', 1, 'Günlük'), ('haftalik', 7, 'Haftalık'), ('aylik', 30, 'Aylık')]
     movers_by_key = {key: build_movers(df, mapping, days) for key, days, _ in periods}
     anchor = movers_by_key['gunluk'][1]
 
-    def pct_fmt(v):
-        return f"{v:+.2f}%"
+    def to_records(movers):
+        recs = []
+        for _, r in movers.iterrows():
+            recs.append({
+                'kod': r['Fon Kodu'],
+                'ad': r['Fon Adı'],
+                'kat': r['Alt Kategori'],
+                'fiyat': None if pd.isna(r.get('Fiyat_Değişim_%')) else round(float(r['Fiyat_Değişim_%']), 4),
+                'kisi': None if pd.isna(r.get('Kişi_Değişim')) else round(float(r['Kişi_Değişim']), 2),
+                'akis': None if pd.isna(r.get('Net_Akış_TL')) else round(float(r['Net_Akış_TL']), 2),
+            })
+        return recs
 
-    def kisi_fmt(v):
-        return f"{v:+,.0f}".replace(",", ".")
+    movers_json = {key: to_records(movers_by_key[key][0]) for key, _, _ in periods}
+    all_categories = sorted(x for x in mapping['Alt Kategori'].dropna().unique())
 
-    def tl_fmt(v):
-        return f"{v:+,.0f}".replace(",", ".")
-
-    metrics = [
-        ('Fiyat Hareketleri', 'Fiyat_Değişim_%', pct_fmt, 'Değişim'),
-        ('Yatırımcı Sayısı Hareketleri', 'Kişi_Değişim', kisi_fmt, 'Kişi'),
-        ('Para Akışı Hareketleri (TL)', 'Net_Akış_TL', tl_fmt, 'TL'),
-    ]
+    data_json = json.dumps(movers_json, ensure_ascii=False)
+    categories_json = json.dumps(all_categories, ensure_ascii=False)
 
     tab_buttons = []
     panels = []
     for i, (key, days, label) in enumerate(periods):
         active_cls = "active" if i == 0 else ""
         tab_buttons.append(f'<button class="period-tab {active_cls}" onclick="showPeriod(\'{key}\')" id="tab-{key}">{label}</button>')
+        panels.append(f'<div class="period-panel {active_cls}" id="panel-{key}"></div>')
 
-        movers, _ = movers_by_key[key]
-        metric_cards = []
-        for metric_title, col, fmt, unit_title in metrics:
-            metric_cards.append(f"""
-<div class="card kat-card">
-    <h2>{metric_title}</h2>
-    <div class="kat-cols">{_mover_block(movers, col, fmt, unit_title)}</div>
-</div>""")
-        panels.append(f'<div class="period-panel {active_cls}" id="panel-{key}">{"".join(metric_cards)}</div>')
+    category_options = '<option value="">Tüm Kategoriler</option>' + ''.join(
+        f'<option value="{k}">{k}</option>' for k in all_categories)
 
-    body = f"""{page_header('index.html', 'Hareketler', anchor)}
-<div class="period-tabs">{''.join(tab_buttons)}</div>
-{''.join(panels)}
+    controls = f"""
+<div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:18px;">
+    <div class="period-tabs" style="margin-bottom:0;">{''.join(tab_buttons)}</div>
+    <div>
+        <label for="categorySelect" style="font-size:13px; color:#5f6b7a; margin-right:8px;">Kategori:</label>
+        <select id="categorySelect" onchange="onCategoryChange()">{category_options}</select>
+    </div>
+</div>"""
+
+    # JS'i düz string olarak kuruyoruz (f-string parantez kaçışından kaçınmak için),
+    # sadece veri yer tutucularını yerleştiriyoruz.
+    script_js = """
 <script>
-function showPeriod(key) {{
+const MOVERS_DATA = __DATA__;
+
+function fmtPct(v) { return (v >= 0 ? '+' : '') + v.toFixed(2) + '%'; }
+function fmtNum(v) { return (v >= 0 ? '+' : '') + Math.round(v).toLocaleString('tr-TR'); }
+function fonLink(kod) { return '<a href="https://fonlarca.com/fon/' + kod.toLowerCase() + '.html" target="_blank">' + kod + '</a>'; }
+
+const METRICS = [
+    {title: 'Fiyat Hareketleri', key: 'fiyat', fmt: fmtPct, unit: 'Değişim'},
+    {title: 'Yatırımcı Sayısı Hareketleri', key: 'kisi', fmt: fmtNum, unit: 'Kişi'},
+    {title: 'Para Akışı Hareketleri (TL)', key: 'akis', fmt: fmtNum, unit: 'TL'},
+];
+
+function topBottom(data, key) {
+    const valid = data.filter(r => r[key] !== null && r[key] !== undefined);
+    const desc = [...valid].sort((a, b) => b[key] - a[key]);
+    const asc = [...valid].sort((a, b) => a[key] - b[key]);
+    return {top5: desc.slice(0, 5), bottom5: asc.slice(0, 5)};
+}
+
+function buildRows(list, key, fmt, cls) {
+    return list.map(r => '<tr><td>' + fonLink(r.kod) + '</td><td>' + r.ad + '</td>' +
+        '<td><span class="score-badge ' + cls + '">' + fmt(r[key]) + '</span></td></tr>').join('');
+}
+
+function metricCardHtml(m, data) {
+    const bt = topBottom(data, m.key);
+    return '<div class="card kat-card"><h2>' + m.title + '</h2><div class="kat-cols">' +
+        '<div><h3 class="up">▲ En Çok Artan 5</h3><table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>' + m.unit + '</th></tr>' +
+        buildRows(bt.top5, m.key, m.fmt, 'good') + '</table></div>' +
+        '<div><h3 class="down">▼ En Çok Azalan 5</h3><table class="mini"><tr><th>Kod</th><th>Fon Adı</th><th>' + m.unit + '</th></tr>' +
+        buildRows(bt.bottom5, m.key, m.fmt, 'bad') + '</table></div></div></div>';
+}
+
+function renderPanel(periodKey) {
+    const cat = document.getElementById('categorySelect').value;
+    let data = MOVERS_DATA[periodKey];
+    if (cat) { data = data.filter(r => r.kat === cat); }
+    document.getElementById('panel-' + periodKey).innerHTML = METRICS.map(m => metricCardHtml(m, data)).join('');
+}
+
+function showPeriod(key) {
     document.querySelectorAll('.period-panel').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.period-tab').forEach(t => t.classList.remove('active'));
     document.getElementById('panel-' + key).classList.add('active');
     document.getElementById('tab-' + key).classList.add('active');
-}}
+    renderPanel(key);
+}
+
+function onCategoryChange() {
+    document.querySelectorAll('.period-panel.active').forEach(p => renderPanel(p.id.replace('panel-', '')));
+}
+
+renderPanel('gunluk');
 </script>"""
+    script_js = script_js.replace("__DATA__", data_json)
+
+    extra_style = """
+#categorySelect { border: 1px solid #d7e0ea; border-radius: 6px; padding: 5px 10px; font-size: 13px; background: white; }
+"""
+
+    body = f"""{page_header('index.html', 'Hareketler', anchor)}
+{controls}
+{''.join(panels)}
+{script_js}"""
 
     with open("docs/index.html", "w", encoding="utf-8") as f:
-        f.write(page_shell("FONLARCA Puanlama Sistemi — Hareketler", "index.html", body))
+        f.write(page_shell("FONLARCA Puanlama Sistemi — Hareketler", "index.html", body, extra_style))
     print("Hareketler sayfası (açılış sayfası) oluşturuldu: docs/index.html")
 
 
