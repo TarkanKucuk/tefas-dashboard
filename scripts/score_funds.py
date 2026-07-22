@@ -41,7 +41,20 @@ body {
     box-shadow: 0 2px 12px rgba(0,0,0,0.08);
 }
 .header h1 { margin: 0; font-size: 26px; font-weight: 600; }
-.header .meta span { background: rgba(255,255,255,0.15); padding: 4px 12px; border-radius: 20px; font-size: 13px; }
+.header .meta { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.header .meta span { background: rgba(255,255,255,0.15); padding: 4px 12px; border-radius: 20px; font-size: 13px; white-space: nowrap; }
+.nav-bar { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+.nav-bar a { color: white; text-decoration: none; padding: 5px 14px; border-radius: 20px; font-size: 13px; white-space: nowrap; }
+@media (max-width: 640px) {
+    body { padding: 14px 12px 40px; }
+    .header { padding: 14px 16px; margin-bottom: 14px; }
+    .header h1 { font-size: 17px; line-height: 1.3; }
+    .header h1 span { display: block; font-size: 12px; margin-top: 2px; }
+    .header img { height: 28px !important; width: 28px !important; }
+    .header .meta { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 2px; }
+    .nav-bar { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-top: 8px; padding-bottom: 2px; }
+    .card { padding: 12px 12px 16px; }
+}
 .card {
     background: white; border-radius: 12px; padding: 20px 24px 24px; margin-bottom: 18px;
     box-shadow: 0 2px 12px rgba(0,0,0,0.06);
@@ -82,9 +95,8 @@ def nav_bar(active):
     for href, label in NAV_PAGES:
         style = ("background:rgba(255,255,255,0.28); font-weight:600;" if href == active
                  else "background:rgba(255,255,255,0.12);")
-        parts.append(f'<a href="{href}" style="color:white; text-decoration:none; padding:5px 14px; '
-                     f'border-radius:20px; font-size:13px; {style}">{label}</a>')
-    return '<div style="display:flex; gap:8px; margin-top:12px; flex-wrap:wrap;">' + ''.join(parts) + '</div>'
+        parts.append(f'<a href="{href}" style="{style}">{label}</a>')
+    return '<div class="nav-bar">' + ''.join(parts) + '</div>'
 
 
 def page_header(active, subtitle, anchor, extra_meta=""):
@@ -98,7 +110,7 @@ def page_header(active, subtitle, anchor, extra_meta=""):
 </div>"""
 
 
-def page_shell(title, active, body, extra_style=""):
+def page_shell(title, active, body, extra_style="", extra_head=""):
     return f"""<!DOCTYPE html>
 <html lang="tr">
 <head>
@@ -109,6 +121,7 @@ def page_shell(title, active, body, extra_style=""):
 <meta name="theme-color" content="#1F4E78">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" href="icon-192.png">
+{extra_head}
 <style>{BASE_STYLE}{extra_style}</style>
 </head>
 <body>
@@ -261,7 +274,7 @@ def write_tum_fonlar_page(res, anchor):
     table['Fon Kodu'] = table['Fon Kodu'].apply(fonlarca_link)
     table.columns = headers
 
-    html_table = table.to_html(index=False, table_id="tefasTable", classes="display", escape=False, na_rep="—")
+    html_table = table.to_html(index=False, table_id="tefasTable", classes="display responsive", escape=False, na_rep="—")
 
     extra_meta = (f'<span>Risksiz oran (TLREF): %{RISK_FREE_RATE*100:.2f}</span>'
                   f'<span>Toplam fon: {len(table)}</span>')
@@ -272,6 +285,7 @@ def write_tum_fonlar_page(res, anchor):
 <footer>Kategori içi percentile bazlı puanlama · Momentum %35 · Getiri %25 · Para Akışı %15 · Sharpe %15 · StdDev %10</footer>
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
 <script>
 function scoreColor(v) {{
     if (v === null || v === "" || v === "—" || isNaN(v)) return null;
@@ -284,27 +298,37 @@ $(document).ready(function() {{
     $('#tefasTable').DataTable({{
         pageLength: 25,
         order: [[4, 'desc']],
+        responsive: true,
         language: {{ url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/tr.json' }},
         columnDefs: [
             {{ targets: [4,5,6,7,8,9], createdCell: function(td, cellData) {{
                 var bg = scoreColor(cellData);
                 if (bg) {{ $(td).html('<span class="score-badge" style="background:' + bg + '">' + cellData + '</span>'); }}
-            }} }}
+            }} }},
+            {{ targets: [2], responsivePriority: 1 }},
+            {{ targets: [4], responsivePriority: 2 }},
+            {{ targets: [3], responsivePriority: 3 }},
+            {{ targets: [0], responsivePriority: 4 }},
+            {{ targets: [10, 11], responsivePriority: 10000 }}
         ]
     }});
 }});
 </script>"""
     extra_style = """
 table.dataTable { font-size: 13px; border-collapse: collapse !important; width: 100% !important; }
-table.dataTable thead th { background: #eef2f7; color: #1F4E78; font-weight: 600; border-bottom: 2px solid #d7e0ea !important; padding: 10px 8px !important; }
+table.dataTable thead th {
+    background: #eef2f7; color: #1F4E78; font-weight: 600; border-bottom: 2px solid #d7e0ea !important;
+    padding: 10px 8px !important; position: sticky; top: 0; z-index: 5;
+}
 table.dataTable tbody td { padding: 8px !important; vertical-align: middle; }
 table.dataTable tbody tr:hover { background: #f0f6fc !important; }
 table.dataTable tbody td a { color: #1F4E78; font-weight: 600; text-decoration: underline; text-decoration-color: #a9c3da; }
 table.dataTable tbody td a:hover { color: #14345a; text-decoration-color: #14345a; }
 .dataTables_wrapper .dataTables_filter input, .dataTables_wrapper .dataTables_length select { border: 1px solid #d7e0ea; border-radius: 6px; padding: 4px 8px; }
 """
+    extra_head = '<link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css">'
     with open("docs/tum-fonlar.html", "w", encoding="utf-8") as f:
-        f.write(page_shell("FONLARCA Puanlama Sistemi — Tüm Fonlar", "tum-fonlar.html", body, extra_style))
+        f.write(page_shell("FONLARCA Puanlama Sistemi — Tüm Fonlar", "tum-fonlar.html", body, extra_style, extra_head))
     print("Tüm Fonlar sayfası oluşturuldu: docs/tum-fonlar.html")
 
 
