@@ -105,10 +105,19 @@ def page_shell(title, active, body, extra_style=""):
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{title}</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1F4E78">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
 <style>{BASE_STYLE}{extra_style}</style>
 </head>
 <body>
 {body}
+<script>
+if ('serviceWorker' in navigator) {{
+    navigator.serviceWorker.register('sw.js');
+}}
+</script>
 </body>
 </html>"""
 
