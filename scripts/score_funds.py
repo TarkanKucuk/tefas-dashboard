@@ -103,7 +103,7 @@ def page_header(active, subtitle, anchor, extra_meta=""):
     return f"""<div class="header">
     <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
         <img src="logo.jpg" alt="Fonlarca" style="height:36px; width:36px; border-radius:8px; object-fit:cover;">
-        <h1>FONLARCA Puanlama Sistemi <span style="font-weight:400; opacity:0.75; font-size:16px;">— {subtitle}</span></h1>
+        <h1>FONLARCA <span style="font-weight:400; opacity:0.75; font-size:16px;">— {subtitle}</span></h1>
     </div>
     <div class="meta"><span>Son güncelleme: {anchor.date()}</span>{extra_meta}</div>
     {nav_bar(active)}
@@ -261,7 +261,7 @@ def write_tum_fonlar_page(res, anchor):
     cols = ['Alt Kategori', 'Kategori_Sırası', 'Fon Kodu', 'Fon Adı', 'TEFAS_Skoru',
             'Skor_Momentum', 'Skor_Getiri', 'Skor_ParaAkışı', 'Skor_Sharpe', 'Skor_StdDev',
             'Kullanılan_Bileşenler', 'Fon Toplam Değer']
-    headers = ['Alt Kategori', 'Kat. Sıra', 'Fon Kodu', 'Fon Adı', 'TEFAS Skoru',
+    headers = ['Alt Kategori', 'Kat. Sıra', 'Fon Kodu', 'Fon Adı', 'Fonlarca Skoru',
                'Momentum', 'Getiri', 'Para Akışı', 'Sharpe', 'StdDev',
                'Kullanılan Bileşenler', 'Fon Toplam Değer']
 
@@ -270,22 +270,22 @@ def write_tum_fonlar_page(res, anchor):
 
     for c in ['TEFAS_Skoru', 'Skor_Momentum', 'Skor_Getiri', 'Skor_ParaAkışı', 'Skor_Sharpe', 'Skor_StdDev']:
         table[c] = table[c].round(1)
+    table['Kategori_Sırası'] = table['Kategori_Sırası'].astype(int)
     table['Fon Toplam Değer'] = table['Fon Toplam Değer'].apply(lambda x: f"{x:,.0f}".replace(",", "."))
     table['Fon Kodu'] = table['Fon Kodu'].apply(fonlarca_link)
     table.columns = headers
 
-    html_table = table.to_html(index=False, table_id="tefasTable", classes="display responsive", escape=False, na_rep="—")
+    html_table = table.to_html(index=False, table_id="tefasTable", classes="display", escape=False, na_rep="—")
 
     extra_meta = (f'<span>Risksiz oran (TLREF): %{RISK_FREE_RATE*100:.2f}</span>'
                   f'<span>Toplam fon: {len(table)}</span>')
     body = f"""{page_header('tum-fonlar.html', 'Tüm Fonlar', anchor, extra_meta)}
-<div class="card">
+<div class="card" style="overflow-x:auto;">
 {html_table}
 </div>
 <footer>Kategori içi percentile bazlı puanlama · Momentum %35 · Getiri %25 · Para Akışı %15 · Sharpe %15 · StdDev %10</footer>
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
 <script>
 function scoreColor(v) {{
     if (v === null || v === "" || v === "—" || isNaN(v)) return null;
@@ -298,37 +298,73 @@ $(document).ready(function() {{
     $('#tefasTable').DataTable({{
         pageLength: 25,
         order: [[4, 'desc']],
-        responsive: true,
+        scrollX: false,
+        autoWidth: false,
         language: {{ url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/tr.json' }},
         columnDefs: [
             {{ targets: [4,5,6,7,8,9], createdCell: function(td, cellData) {{
                 var bg = scoreColor(cellData);
                 if (bg) {{ $(td).html('<span class="score-badge" style="background:' + bg + '">' + cellData + '</span>'); }}
-            }} }},
-            {{ targets: [2], responsivePriority: 1 }},
-            {{ targets: [4], responsivePriority: 2 }},
-            {{ targets: [3], responsivePriority: 3 }},
-            {{ targets: [0], responsivePriority: 4 }},
-            {{ targets: [10, 11], responsivePriority: 10000 }}
+            }} }}
         ]
     }});
 }});
 </script>"""
     extra_style = """
-table.dataTable { font-size: 13px; border-collapse: collapse !important; width: 100% !important; }
+table.dataTable { font-size: 13px; border-collapse: collapse !important; width: auto !important; min-width: 100%; }
+table.dataTable th, table.dataTable td { white-space: nowrap; }
 table.dataTable thead th {
     background: #eef2f7; color: #1F4E78; font-weight: 600; border-bottom: 2px solid #d7e0ea !important;
-    padding: 10px 8px !important; position: sticky; top: 0; z-index: 5;
+    padding: 10px 20px !important; position: sticky; top: 0; z-index: 5; text-align: left;
+    cursor: pointer;
 }
+table.dataTable thead th.sorting:after,
+table.dataTable thead th.sorting_asc:after,
+table.dataTable thead th.sorting_desc:after {
+    font-size: 11px; opacity: 0.6; margin-left: 6px;
+}
+table.dataTable thead th.sorting:after { content: "⇕"; }
+table.dataTable thead th.sorting_asc:after { content: "▲"; opacity: 1; }
+table.dataTable thead th.sorting_desc:after { content: "▼"; opacity: 1; }
 table.dataTable tbody td { padding: 8px !important; vertical-align: middle; }
 table.dataTable tbody tr:hover { background: #f0f6fc !important; }
 table.dataTable tbody td a { color: #1F4E78; font-weight: 600; text-decoration: underline; text-decoration-color: #a9c3da; }
 table.dataTable tbody td a:hover { color: #14345a; text-decoration-color: #14345a; }
-.dataTables_wrapper .dataTables_filter input, .dataTables_wrapper .dataTables_length select { border: 1px solid #d7e0ea; border-radius: 6px; padding: 4px 8px; }
+
+/* Kolon hizalamaları: 1 Alt Kategori(sol) 2 Kat.Sıra 3 Fon Kodu 4 Fon Adı(sol)
+   5 Fonlarca Skoru 6 Momentum 7 Getiri 8 Para Akışı 9 Sharpe 10 StdDev 11 Bileşenler(sol) 12 Fon Toplam Değer */
+#tefasTable th:nth-child(2), #tefasTable td:nth-child(2),
+#tefasTable th:nth-child(3), #tefasTable td:nth-child(3),
+#tefasTable th:nth-child(5), #tefasTable td:nth-child(5),
+#tefasTable th:nth-child(6), #tefasTable td:nth-child(6),
+#tefasTable th:nth-child(7), #tefasTable td:nth-child(7),
+#tefasTable th:nth-child(8), #tefasTable td:nth-child(8),
+#tefasTable th:nth-child(9), #tefasTable td:nth-child(9),
+#tefasTable th:nth-child(10), #tefasTable td:nth-child(10) {
+    text-align: center;
+}
+#tefasTable th:nth-child(12) { text-align: left; }
+#tefasTable td:nth-child(12) { text-align: right; }
+
+.dataTables_wrapper .dataTables_filter input, .dataTables_wrapper .dataTables_length select {
+    border: 1px solid #d7e0ea; border-radius: 6px; padding: 4px 8px;
+}
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+    padding: 6px 12px; margin: 0 2px; border: 1px solid #d7e0ea !important; border-radius: 6px;
+    cursor: pointer; color: #1F4E78 !important; background: white !important;
+}
+.dataTables_wrapper .dataTables_paginate .paginate_button.current {
+    background: #1F4E78 !important; color: white !important; border-color: #1F4E78 !important;
+}
+.dataTables_wrapper .dataTables_paginate .paginate_button:hover:not(.disabled) {
+    background: #eef2f7 !important;
+}
+.dataTables_wrapper .dataTables_paginate .paginate_button.disabled {
+    color: #c2c9d1 !important; cursor: default; background: white !important;
+}
 """
-    extra_head = '<link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css">'
     with open("docs/tum-fonlar.html", "w", encoding="utf-8") as f:
-        f.write(page_shell("FONLARCA Puanlama Sistemi — Tüm Fonlar", "tum-fonlar.html", body, extra_style, extra_head))
+        f.write(page_shell("FONLARCA — Tüm Fonlar", "tum-fonlar.html", body, extra_style))
     print("Tüm Fonlar sayfası oluşturuldu: docs/tum-fonlar.html")
 
 
@@ -372,7 +408,7 @@ def write_category_summary(res, anchor):
 {''.join(sections)}"""
 
     with open("docs/kategori-ozeti.html", "w", encoding="utf-8") as f:
-        f.write(page_shell("FONLARCA Puanlama Sistemi — Kategori Özeti", "kategori-ozeti.html", body))
+        f.write(page_shell("FONLARCA — Kategori Özeti", "kategori-ozeti.html", body))
     print("Kategori özeti oluşturuldu: docs/kategori-ozeti.html")
 
 
@@ -530,7 +566,7 @@ renderPanel('gunluk');
 {script_js}"""
 
     with open("docs/index.html", "w", encoding="utf-8") as f:
-        f.write(page_shell("FONLARCA Puanlama Sistemi — Hareketler", "index.html", body, extra_style))
+        f.write(page_shell("FONLARCA — Hareketler", "index.html", body, extra_style))
     print("Hareketler sayfası (açılış sayfası) oluşturuldu: docs/index.html")
 
 
@@ -566,7 +602,7 @@ def write_yeni_fonlar_page(df, mapping):
 </div>"""
 
     with open("docs/yeni-fonlar.html", "w", encoding="utf-8") as f:
-        f.write(page_shell("FONLARCA Puanlama Sistemi — En Son Eklenen Fonlar", "yeni-fonlar.html", body))
+        f.write(page_shell("FONLARCA — En Son Eklenen Fonlar", "yeni-fonlar.html", body))
     print("En Son Eklenen Fonlar sayfası oluşturuldu: docs/yeni-fonlar.html")
 
 
