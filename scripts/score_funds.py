@@ -258,10 +258,10 @@ def compute_scores(res):
 # ------------------------------------------------------------------
 
 def write_tum_fonlar_page(res, anchor):
-    cols = ['Alt Kategori', 'Kategori_Sırası', 'Fon Kodu', 'Fon Adı', 'TEFAS_Skoru',
+    cols = ['Fon Kodu', 'Fon Adı', 'Alt Kategori', 'Kategori_Sırası', 'TEFAS_Skoru',
             'Skor_Momentum', 'Skor_Getiri', 'Skor_ParaAkışı', 'Skor_Sharpe', 'Skor_StdDev',
             'Kullanılan_Bileşenler', 'Fon Toplam Değer']
-    headers = ['Alt Kategori', 'Kat. Sıra', 'Fon Kodu', 'Fon Adı', 'Fonlarca Skoru',
+    headers = ['Fon Kodu', 'Fon Adı', 'Alt Kategori', 'Kat. Sıra', 'Fonlarca Skoru',
                'Momentum', 'Getiri', 'Para Akışı', 'Sharpe', 'StdDev',
                'Kullanılan Bileşenler', 'Fon Toplam Değer']
 
@@ -280,12 +280,13 @@ def write_tum_fonlar_page(res, anchor):
     extra_meta = (f'<span>Risksiz oran (TLREF): %{RISK_FREE_RATE*100:.2f}</span>'
                   f'<span>Toplam fon: {len(table)}</span>')
     body = f"""{page_header('tum-fonlar.html', 'Tüm Fonlar', anchor, extra_meta)}
-<div class="card" style="overflow-x:auto;">
+<div class="card">
 {html_table}
 </div>
 <footer>Kategori içi percentile bazlı puanlama · Momentum %35 · Getiri %25 · Para Akışı %15 · Sharpe %15 · StdDev %10</footer>
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/fixedcolumns/4.3.0/js/dataTables.fixedColumns.min.js"></script>
 <script>
 function scoreColor(v) {{
     if (v === null || v === "" || v === "—" || isNaN(v)) return null;
@@ -298,7 +299,10 @@ $(document).ready(function() {{
     $('#tefasTable').DataTable({{
         pageLength: 25,
         order: [[4, 'desc']],
-        scrollX: false,
+        scrollX: true,
+        scrollY: '65vh',
+        scrollCollapse: true,
+        fixedColumns: {{ start: 1 }},
         autoWidth: false,
         language: {{ url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/tr.json' }},
         columnDefs: [
@@ -311,12 +315,11 @@ $(document).ready(function() {{
 }});
 </script>"""
     extra_style = """
-table.dataTable { font-size: 13px; border-collapse: collapse !important; width: auto !important; min-width: 100%; }
+table.dataTable { font-size: 13px; }
 table.dataTable th, table.dataTable td { white-space: nowrap; }
 table.dataTable thead th {
-    background: #eef2f7; color: #1F4E78; font-weight: 600; border-bottom: 2px solid #d7e0ea !important;
-    padding: 10px 20px !important; position: sticky; top: 0; z-index: 5; text-align: left;
-    cursor: pointer;
+    background: #eef2f7 !important; color: #1F4E78; font-weight: 600; border-bottom: 2px solid #d7e0ea !important;
+    padding: 10px 20px !important; text-align: left; cursor: pointer; background-image: none !important;
 }
 table.dataTable thead th.sorting:after,
 table.dataTable thead th.sorting_asc:after,
@@ -326,15 +329,15 @@ table.dataTable thead th.sorting_desc:after {
 table.dataTable thead th.sorting:after { content: "⇕"; }
 table.dataTable thead th.sorting_asc:after { content: "▲"; opacity: 1; }
 table.dataTable thead th.sorting_desc:after { content: "▼"; opacity: 1; }
-table.dataTable tbody td { padding: 8px !important; vertical-align: middle; }
-table.dataTable tbody tr:hover { background: #f0f6fc !important; }
+table.dataTable tbody td { padding: 8px !important; vertical-align: middle; background: white; }
+table.dataTable tbody tr:hover td { background: #f0f6fc !important; }
 table.dataTable tbody td a { color: #1F4E78; font-weight: 600; text-decoration: underline; text-decoration-color: #a9c3da; }
 table.dataTable tbody td a:hover { color: #14345a; text-decoration-color: #14345a; }
 
-/* Kolon hizalamaları: 1 Alt Kategori(sol) 2 Kat.Sıra 3 Fon Kodu 4 Fon Adı(sol)
+/* Kolon hizalamaları: 1 Fon Kodu 2 Fon Adı(sol) 3 Alt Kategori(sol) 4 Kat.Sıra
    5 Fonlarca Skoru 6 Momentum 7 Getiri 8 Para Akışı 9 Sharpe 10 StdDev 11 Bileşenler(sol) 12 Fon Toplam Değer */
-#tefasTable th:nth-child(2), #tefasTable td:nth-child(2),
-#tefasTable th:nth-child(3), #tefasTable td:nth-child(3),
+#tefasTable th:nth-child(1), #tefasTable td:nth-child(1),
+#tefasTable th:nth-child(4), #tefasTable td:nth-child(4),
 #tefasTable th:nth-child(5), #tefasTable td:nth-child(5),
 #tefasTable th:nth-child(6), #tefasTable td:nth-child(6),
 #tefasTable th:nth-child(7), #tefasTable td:nth-child(7),
@@ -346,11 +349,20 @@ table.dataTable tbody td a:hover { color: #14345a; text-decoration-color: #14345
 #tefasTable th:nth-child(12) { text-align: left; }
 #tefasTable td:nth-child(12) { text-align: right; }
 
+/* DataTables FixedColumns dondurulmuş sütun klonu için aynı hizalama */
+.DTFC_LeftHeadWrapper th:nth-child(1), .DTFC_LeftBodyWrapper td:nth-child(1) { text-align: center; }
+.DTFC_LeftBodyWrapper td { background: white; }
+.DTFC_LeftHeadWrapper th { background: #eef2f7 !important; background-image: none !important; }
+
 .dataTables_wrapper .dataTables_filter input, .dataTables_wrapper .dataTables_length select {
     border: 1px solid #d7e0ea; border-radius: 6px; padding: 4px 8px;
 }
+.dataTables_wrapper .dataTables_info { clear: both; margin-top: 10px; font-size: 13px; color: #5f6b7a; }
+.dataTables_wrapper .dataTables_paginate {
+    display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; float: none !important;
+}
 .dataTables_wrapper .dataTables_paginate .paginate_button {
-    padding: 6px 12px; margin: 0 2px; border: 1px solid #d7e0ea !important; border-radius: 6px;
+    padding: 6px 12px; margin: 0; border: 1px solid #d7e0ea !important; border-radius: 6px;
     cursor: pointer; color: #1F4E78 !important; background: white !important;
 }
 .dataTables_wrapper .dataTables_paginate .paginate_button.current {
@@ -363,8 +375,10 @@ table.dataTable tbody td a:hover { color: #14345a; text-decoration-color: #14345
     color: #c2c9d1 !important; cursor: default; background: white !important;
 }
 """
+    extra_head = ('<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">'
+                  '<link rel="stylesheet" href="https://cdn.datatables.net/fixedcolumns/4.3.0/css/fixedColumns.dataTables.min.css">')
     with open("docs/tum-fonlar.html", "w", encoding="utf-8") as f:
-        f.write(page_shell("FONLARCA — Tüm Fonlar", "tum-fonlar.html", body, extra_style))
+        f.write(page_shell("FONLARCA — Tüm Fonlar", "tum-fonlar.html", body, extra_style, extra_head))
     print("Tüm Fonlar sayfası oluşturuldu: docs/tum-fonlar.html")
 
 
