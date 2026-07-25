@@ -1,13 +1,6 @@
 name: TEFAS Gunluk Guncelleme
 
 on:
-  schedule:
-    # Türkiye saati (UTC+3, sabit) -> UTC karşılıkları
-    # Yuvarlak dakikalardan kaçınmak için birkaç dakika kaydırılmış
-    - cron: "3 6 * * 1-5"    # 09:03 TR
-    - cron: "7 7 * * 1-5"    # 10:07 TR
-    - cron: "33 9 * * 1-5"   # 12:33 TR
-    - cron: "37 13 * * 1-5"  # 16:37 TR
   workflow_dispatch: {}
 
 permissions:
