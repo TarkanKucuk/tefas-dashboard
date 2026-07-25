@@ -329,6 +329,18 @@ table.dataTable thead th.sorting_desc:after {
 table.dataTable thead th.sorting:after { content: "⇕"; }
 table.dataTable thead th.sorting_asc:after { content: "▲"; opacity: 1; }
 table.dataTable thead th.sorting_desc:after { content: "▼"; opacity: 1; }
+
+/* DataTables'ın scrollX/scrollY icin olusturdugu gizli "genislik esitleme" basligi
+   yukarıdaki !important kurallarindan etkilenip gorunur oluyordu - burada sifirliyoruz. */
+.dataTables_scrollBody thead th, .dataTables_scrollBody thead td {
+    padding: 0 !important; height: 0 !important; border: none !important;
+    line-height: 0 !important; font-size: 0 !important;
+}
+.DTFC_LeftBodyLiner thead th, .DTFC_LeftBodyLiner thead td {
+    padding: 0 !important; height: 0 !important; border: none !important;
+    line-height: 0 !important; font-size: 0 !important;
+}
+
 table.dataTable tbody td { padding: 8px !important; vertical-align: middle; background: white; }
 table.dataTable tbody tr:hover td { background: #f0f6fc !important; }
 table.dataTable tbody td a { color: #1F4E78; font-weight: 600; text-decoration: underline; text-decoration-color: #a9c3da; }
@@ -611,7 +623,7 @@ def write_yeni_fonlar_page(df, mapping):
 
     body = f"""{page_header('yeni-fonlar.html', 'En Son Eklenen Fonlar', anchor)}
 <div class="card">
-    <h2 style="color:#1F4E78; margin-top:0;">Son 30 Günde İlk Kez Fiyat Üreten Fonlar <span class="kat-count">({len(yeni)} fon)</span></h2>
+    <h2 style="color:#1F4E78; margin-top:0;">Son 30 Günde TEFAS'a Açılan Fonlar <span class="kat-count">({len(yeni)} fon)</span></h2>
     {table_html}
 </div>"""
 
