@@ -22,6 +22,11 @@ jobs:
       - name: Veriyi guncelle
         run: python scripts/update_data.py
 
+      - name: Karsilastirma verilerini guncelle (USD/EUR/BIST100)
+        env:
+          EVDS_API_KEY: ${{ secrets.EVDS_API_KEY }}
+        run: python scripts/update_benchmarks.py
+
       - name: Puanlama sistemini calistir
         run: python scripts/score_funds.py
 
@@ -29,6 +34,6 @@ jobs:
         run: |
           git config user.name "github-actions"
           git config user.email "actions@github.com"
-          git add tefas_gecmis_veri.parquet docs/
+          git add tefas_gecmis_veri.parquet benchmarklar.parquet docs/
           git diff --quiet --cached || git commit -m "Otomatik guncelleme"
           git push
