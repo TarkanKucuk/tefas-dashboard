@@ -2,4 +2,4 @@ pytefas
 pandas
 openpyxl
 pyarrow
-evds
+borsapy
