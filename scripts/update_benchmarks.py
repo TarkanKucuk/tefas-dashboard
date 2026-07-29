@@ -7,16 +7,17 @@ DATA_PATH = "benchmarklar.parquet"
 # İlk çalıştırmada (dosya hiç yoksa) kaç yıl geriye gidilsin
 ILK_CALISTIRMA_YIL = 3
 
-EVDS_SERIES = ["TP.DK.USD.A.YTL", "TP.DK.EUR.A.YTL", "TP.MK.F.BILESIK.TUM"]
+EVDS_SERIES = ["TP.DK.USD.A.YTL", "TP.DK.EUR.A.YTL", "TP.MK.F.BILESIK.TUM", "TP.BISTTLREF.KAPANIS"]
 EVDS_COLUMN_MAP = {
     "TP.DK.USD.A.YTL": "USD_Alis",
     "TP.DK.EUR.A.YTL": "EUR_Alis",
     "TP.MK.F.BILESIK.TUM": "BIST100",
+    "TP.BISTTLREF.KAPANIS": "TLREF_Endeks",
 }
 
-# NOT: BIST-KYD 1 Aylık Mevduat TL Endeksi henüz otomatik çekilemiyor
-# (borsapy'de yok, borsaistanbul.com sayfası JavaScript ile yükleniyor).
-# Bulununca bu dosyaya "Mevduat_Endeksi" sütunu olarak eklenecek.
+# NOT: TLREF_Endeks, "1 Aylık Mevduat" ile birebir aynı şey değil — BIST TLREF Endeksi,
+# gecelik referans faizin (TLREF) günden güne bileşik büyümesini gösteren resmi bir endeks.
+# Mevduata yakın, güvenli bir TL nakit alternatifi olarak karşılaştırma amacıyla kullanılıyor.
 
 
 def fetch_evds_usd_eur_bist(start, end):
@@ -36,7 +37,7 @@ def fetch_evds_usd_eur_bist(start, end):
     df = df.reset_index()
     df = df.rename(columns={df.columns[0]: "Tarih", **EVDS_COLUMN_MAP})
     df["Tarih"] = pd.to_datetime(df["Tarih"]).dt.normalize()
-    return df[["Tarih", "USD_Alis", "EUR_Alis", "BIST100"]]
+    return df[["Tarih", "USD_Alis", "EUR_Alis", "BIST100", "TLREF_Endeks"]]
 
 
 def fetch_gold(start, end):
@@ -58,7 +59,7 @@ def main():
         hist["Tarih"] = pd.to_datetime(hist["Tarih"]).dt.normalize()
         last_date = hist["Tarih"].max()
     else:
-        hist = pd.DataFrame(columns=["Tarih", "USD_Alis", "EUR_Alis", "BIST100", "Altin_Gram"])
+        hist = pd.DataFrame(columns=["Tarih", "USD_Alis", "EUR_Alis", "BIST100", "TLREF_Endeks", "Altin_Gram"])
         last_date = pd.Timestamp(datetime.today().date()) - timedelta(days=365 * ILK_CALISTIRMA_YIL)
 
     start = last_date  # son günü de tekrar çek (kaynaklar bazen o günü sonradan düzeltiyor)
@@ -72,7 +73,7 @@ def main():
         evds_df = fetch_evds_usd_eur_bist(start, end)
     except Exception as e:
         print("EVDS (USD/EUR/BIST100) verisi çekilemedi:", e)
-        evds_df = pd.DataFrame(columns=["Tarih", "USD_Alis", "EUR_Alis", "BIST100"])
+        evds_df = pd.DataFrame(columns=["Tarih", "USD_Alis", "EUR_Alis", "BIST100", "TLREF_Endeks"])
 
     try:
         gold_df = fetch_gold(start, end)
