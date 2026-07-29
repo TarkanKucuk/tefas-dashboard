@@ -3,4 +3,4 @@ pandas
 openpyxl
 pyarrow
 borsapy
-tefasfon
+
