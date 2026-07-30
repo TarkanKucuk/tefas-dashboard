@@ -7,11 +7,11 @@ DATA_PATH = "benchmarklar.parquet"
 # İlk çalıştırmada (dosya hiç yoksa) kaç yıl geriye gidilsin
 ILK_CALISTIRMA_YIL = 3
 
-EVDS_SERIES = ["TP.DK.USD.A.YTL", "TP.DK.EUR.A.YTL", "TP.MK.F.BILESIK.TUM", "TP.BISTTLREF.KAPANIS"]
+EVDS_SERIES = ["TP.DK.USD.A.YTL", "TP.DK.EUR.A.YTL", "TP.MK.F.BILESIK", "TP.BISTTLREF.KAPANIS"]
 EVDS_COLUMN_MAP = {
     "TP.DK.USD.A.YTL": "USD_Alis",
     "TP.DK.EUR.A.YTL": "EUR_Alis",
-    "TP.MK.F.BILESIK.TUM": "BIST100",
+    "TP.MK.F.BILESIK": "BIST100",
     "TP.BISTTLREF.KAPANIS": "TLREF_Endeks",
 }
 
