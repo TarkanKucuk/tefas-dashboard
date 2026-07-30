@@ -7,18 +7,16 @@ DATA_PATH = "tefas_portfoy_dagilim.parquet"
 
 # Kısaltmalardan Orijinal Türkçe Başlıklara Çeviri
 KOLON_MAP = {
- "fonKodu": "Fon Kodu",
+"fonKodu": "Fon Kodu",
 "fonUnvan": "Fon Unvanı",
 "tarih": "Tarih",
 "hs": "His.Sen.",
-"yhs": "Yab.His.Sen.",
 "dt": "Dev.Tah.",
 "hb": "Haz.Bon.",
 "vdm": "VDMK",
 "vmtl": "Mevd.(TL)",
 "tr": "Ters Repo",
 "byf": "BYF",
-"yyf": "Yab.Yat.Fonu",
 "km": "Kıy.Maden",
 "kkstl": "Kam.Kira Sert. (TL)",
 "osks": "Ö.S.Kira Sert.",
@@ -27,7 +25,7 @@ KOLON_MAP = {
 "btaa": "BİST Tah.İşl.Paz.Alım",
 "btas": "BİST Tah.İşl.Paz.Satım",
 "fb": "Fin.Bon.",
-"gas": "Gayr.Menk.Sert.",
+"gas": "G.Menk.Sert.",
 "gsykb": "GSYF",
 "gykb": "GYF",
 "kba": "Kam.Dış Borç.",
@@ -53,7 +51,9 @@ KOLON_MAP = {
 "yyf": "YF Kat.Pay.",
 "oksyd": "ÖS Y.Dışı Kira Sert.",
 "osdb": "ÖS Dış Borç.",
-
+"osdb": "Diğ.Borç.",
+"eut": "Euro Tahvil",
+"gyy": "G.Menk.Yat.Ort.",
 }
 
 
