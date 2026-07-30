@@ -51,7 +51,6 @@ KOLON_MAP = {
 "yyf": "YF Kat.Pay.",
 "oksyd": "ÖS Y.Dışı Kira Sert.",
 "osdb": "ÖS Dış Borç.",
-"osdb": "Diğ.Borç.",
 "eut": "Euro Tahvil",
 "gyy": "G.Menk.Yat.Ort.",
 }
