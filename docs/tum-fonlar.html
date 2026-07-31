@@ -81,11 +81,13 @@ table.dataTable thead th.sorting_desc:after { content: "▼"; opacity: 1; }
 
 /* DataTables'ın scrollX/scrollY icin olusturdugu gizli "genislik esitleme" basligi
    yukarıdaki !important kurallarindan etkilenip gorunur oluyordu - burada sifirliyoruz. */
-.dataTables_scrollBody thead th, .dataTables_scrollBody thead td,
+.dataTables_scrollBody thead th, .dataTables_scrollBody thead td {
+    padding: 0 !important; height: 0 !important; border: none !important;
+    line-height: 0 !important; font-size: 0 !important;
+}
 .DTFC_LeftBodyLiner thead th, .DTFC_LeftBodyLiner thead td {
-    color: transparent !important;
-    background: transparent !important;
-    background-image: none !important;
+    padding: 0 !important; height: 0 !important; border: none !important;
+    line-height: 0 !important; font-size: 0 !important;
 }
 
 table.dataTable tbody td { padding: 8px !important; vertical-align: middle; background: white; }
