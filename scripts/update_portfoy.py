@@ -27,6 +27,7 @@ KOLON_MAP = {
 "fb": "Fin.Bon.",
 "gas": "G.Menk.Sert.",
 "gsykb": "GSYF",
+"gsyy": "Gir.Ser.Yatırımları",
 "gykb": "GYF",
 "kba": "Kam.Dış Borç.",
 "khau": "Kat.Hes.(Altın)",
