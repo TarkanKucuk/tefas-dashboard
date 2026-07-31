@@ -89,6 +89,7 @@ def main():
 
     # Türkçe başlıklara çevir
     df = df.rename(columns=KOLON_MAP)
+    df["Tarih"] = pd.to_datetime(df["Tarih"])
 
     # Sadece mapping'te olan kolonları tut
     mevcut_kolonlar = [KOLON_MAP[k] for k in KOLON_MAP if k in df.columns or k in ["fonKodu", "fonUnvan", "tarih"]]
