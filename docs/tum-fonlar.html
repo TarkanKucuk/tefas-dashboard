@@ -8,8 +8,9 @@
 <meta name="theme-color" content="#1F4E78">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" href="icon-192.png">
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css"><link rel="stylesheet" href="https://cdn.datatables.net/fixedcolumns/4.3.0/css/fixedColumns.dataTables.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 <style>
+html { -webkit-text-size-adjust: 100%; }
 * { box-sizing: border-box; }
 body {
     font-family: -apple-system, Segoe UI, Roboto, Arial, sans-serif;
@@ -79,24 +80,23 @@ table.dataTable thead th.sorting:after { content: "⇕"; }
 table.dataTable thead th.sorting_asc:after { content: "▲"; opacity: 1; }
 table.dataTable thead th.sorting_desc:after { content: "▼"; opacity: 1; }
 
-/* DataTables'ın scrollX/scrollY icin olusturdugu gizli "genislik esitleme" basligi
-   yukarıdaki !important kurallarindan etkilenip gorunur oluyordu - burada sifirliyoruz. */
-.dataTables_scrollBody thead th, .dataTables_scrollBody thead td {
-    padding: 0 !important; height: 0 !important; border: none !important;
-    line-height: 0 !important; font-size: 0 !important;
-}
-.DTFC_LeftBodyLiner thead th, .DTFC_LeftBodyLiner thead td {
-    padding: 0 !important; height: 0 !important; border: none !important;
-    line-height: 0 !important; font-size: 0 !important;
-}
-
 table.dataTable tbody td { padding: 8px !important; vertical-align: middle; background: white; }
 table.dataTable tbody tr:hover td { background: #f0f6fc !important; }
 table.dataTable tbody td a { color: #1F4E78; font-weight: 600; text-decoration: underline; text-decoration-color: #a9c3da; }
 table.dataTable tbody td a:hover { color: #14345a; text-decoration-color: #14345a; }
 
-/* Kolon hizalamaları: 1 Fon Kodu 2 Fon Adı(sol) 3 Alt Kategori(sol) 4 Kat.Sıra
-   5 Fonlarca Skoru 6 Momentum 7 Getiri 8 Para Akışı 9 Sharpe 10 StdDev 11 Bileşenler(sol) 12 Fon Toplam Değer */
+#tefasTable thead th:first-child,
+#tefasTable tbody td:first-child {
+    position: sticky;
+    left: 0;
+    background: white;
+    z-index: 2;
+}
+#tefasTable thead th:first-child {
+    background: #eef2f7 !important;
+    z-index: 3;
+}
+
 #tefasTable th:nth-child(1), #tefasTable td:nth-child(1),
 #tefasTable th:nth-child(4), #tefasTable td:nth-child(4),
 #tefasTable th:nth-child(5), #tefasTable td:nth-child(5),
@@ -109,11 +109,6 @@ table.dataTable tbody td a:hover { color: #14345a; text-decoration-color: #14345
 }
 #tefasTable th:nth-child(12) { text-align: left; }
 #tefasTable td:nth-child(12) { text-align: right; }
-
-/* DataTables FixedColumns dondurulmuş sütun klonu için aynı hizalama */
-.DTFC_LeftHeadWrapper th:nth-child(1), .DTFC_LeftBodyWrapper td:nth-child(1) { text-align: center; }
-.DTFC_LeftBodyWrapper td { background: white; }
-.DTFC_LeftHeadWrapper th { background: #eef2f7 !important; background-image: none !important; }
 
 .dataTables_wrapper .dataTables_filter input, .dataTables_wrapper .dataTables_length select {
     border: 1px solid #d7e0ea; border-radius: 6px; padding: 4px 8px;
@@ -14577,7 +14572,6 @@ table.dataTable tbody td a:hover { color: #14345a; text-decoration-color: #14345
 <footer>Kategori içi percentile bazlı puanlama · Momentum %35 · Getiri %25 · Para Akışı %15 · Sharpe %15 · StdDev %10</footer>
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/fixedcolumns/4.3.0/js/dataTables.fixedColumns.min.js"></script>
 <script>
 function scoreColor(v) {
     if (v === null || v === "" || v === "—" || isNaN(v)) return null;
@@ -14593,7 +14587,6 @@ $(document).ready(function() {
         scrollX: true,
         scrollY: '65vh',
         scrollCollapse: true,
-        fixedColumns: { start: 1 },
         autoWidth: false,
         language: { url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/tr.json' },
         columnDefs: [
