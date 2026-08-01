@@ -16,7 +16,10 @@ jobs:
           python-version: "3.11"
 
       - name: Gerekli kütüphaneleri kur
-        run: pip install pandas pyarrow openpyxl
+        run: pip install pandas numpy pyarrow openpyxl
 
-      - name: Kontrolü çalıştır
-        run: python kontrol.py
+      - name: Export script'ini çalıştır (deneme)
+        run: python scripts/export_fon_kartlari.py
+
+      - name: Örnek çıktıyı göster (PBR)
+        run: cat docs/data/fon-kartlari/PBR.json
