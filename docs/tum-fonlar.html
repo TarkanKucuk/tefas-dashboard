@@ -10,6 +10,9 @@
 <link rel="icon" href="icon-192.png">
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css"><link rel="stylesheet" href="https://cdn.datatables.net/fixedcolumns/4.3.0/css/fixedColumns.dataTables.min.css">
 <style>
+    html {
+    -webkit-text-size-adjust: 100%;
+}
 * { box-sizing: border-box; }
 body {
     font-family: -apple-system, Segoe UI, Roboto, Arial, sans-serif;
@@ -14593,7 +14596,16 @@ $(document).ready(function() {
         scrollX: true,
         scrollY: '65vh',
         scrollCollapse: true,
-        fixedColumns: { start: 1 },
+        #tefasTable th:first-child, #tefasTable td:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    background: white;
+}
+#tefasTable thead th:first-child {
+    z-index: 3;
+    background: #eef2f7 !important;
+}
         autoWidth: false,
         language: { url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/tr.json' },
         columnDefs: [
