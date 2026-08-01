@@ -175,13 +175,19 @@ def build_allocation(alloc_df):
     alloc_df = alloc_df.sort_values("Tarih")
     cat_cols = [c for c in alloc_df.columns if c not in ALLOC_EXCLUDE_COLS]
 
-    latest_row = alloc_df.iloc[-1]
-    latest = {
-        c: round(float(latest_row[c]), 2)
-        for c in cat_cols
-        if pd.notna(latest_row[c]) and latest_row[c] > 0
-    }
-    latest = dict(sorted(latest.items(), key=lambda kv: -kv[1]))
+    # En son TARİH değil, en son DOLU satır — güncel gün henüz yayınlanmamışsa
+    # (tüm kategoriler boş/null) bir önceki güne geri düşer.
+    filled = alloc_df[alloc_df[cat_cols].notna().any(axis=1)]
+    if filled.empty:
+        latest = {}
+    else:
+        latest_row = filled.iloc[-1]
+        latest = {
+            c: round(float(latest_row[c]), 2)
+            for c in cat_cols
+            if pd.notna(latest_row[c]) and latest_row[c] > 0
+        }
+        latest = dict(sorted(latest.items(), key=lambda kv: -kv[1]))
 
     history = {
         "tarihler": [d.strftime("%Y-%m-%d") for d in alloc_df["Tarih"]],
@@ -214,6 +220,7 @@ def main():
     if os.path.exists(BENCHMARK_PATH):
         bench_df = pd.read_parquet(BENCHMARK_PATH)
         bench_df["Tarih"] = pd.to_datetime(bench_df["Tarih"]).dt.normalize()
+        bench_df = bench_df.sort_values("Tarih").reset_index(drop=True)
 
     # Fonlarca Skoru + alt skorlar (score_funds.py'deki aynı hesap)
     res, anchor = build_fund_metrics(price_df)
