@@ -3,6 +3,9 @@ name: Kontrol
 on:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   kontrol:
     runs-on: ubuntu-latest
@@ -18,8 +21,14 @@ jobs:
       - name: Gerekli kütüphaneleri kur
         run: pip install pandas numpy pyarrow openpyxl
 
-      - name: Export script'ini çalıştır (deneme)
+      - name: Export script'ini çalıştır
         run: python scripts/export_fon_kartlari.py
 
-      - name: Örnek çıktıyı göster (PBR)
-        run: cat docs/data/fon-kartlari/PBR.json
+      - name: Üretilen JSON'ları repoya kaydet
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add docs/data/fon-kartlari
+          git diff --cached --quiet && echo "Değişiklik yok, commit atılmadı." || git commit -m "Fon kartı verilerini güncelle"
+          git push
+
