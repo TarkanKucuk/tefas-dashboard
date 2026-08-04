@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<title>PBR — Pusula Portföy Birinci Değişken Fon | Fon Kartı</title>
+<script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg: #23252d;
+    --panel: #2c2f39;
+    --panel-light: #f3f5f8;
+    --ink: #eef0f4;
+    --ink-dim: #9aa0ac;
+    --line: #3a3d48;
+    --teal: #2f7c7a;
+    --teal-bright: #3fb6ab;
+    --green: #4cbb6d;
+    --red: #e05a5a;
+    --blue: #4a7fe0;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family: "Inter","Segoe UI",Arial,sans-serif;
+    padding:24px;
+  }
+  .wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:18px;}
+
+  /* Header */
+  .header{
+    background:var(--panel);
+    border-radius:14px;
+    padding:18px 22px;
+    display:flex;
+    align-items:center;
+    gap:18px;
+    border:1px solid var(--line);
+  }
+  .score-badge{
+    background:var(--teal);
+    border-radius:10px;
+    padding:8px 16px;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    flex-shrink:0;
+  }
+  .score-badge .code{font-size:22px;font-weight:800;letter-spacing:.5px;}
+  .score-badge .score-box{text-align:center;line-height:1.1;}
+  .score-badge .score-box .label{font-size:10px;color:#d8f2ef;text-transform:uppercase;}
+  .score-badge .score-box .val{
+    background:var(--green);color:#0d2b18;font-weight:800;font-size:16px;
+    border-radius:6px;padding:2px 8px;margin-top:2px;display:inline-block;
+  }
+  .header .fund-name{font-size:22px;font-weight:700;}
+
+  .stat-strip{
+    background:var(--panel);
+    border-radius:14px;
+    border:1px solid var(--line);
+    padding:14px 20px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:22px;
+  }
+  .stat{display:flex;align-items:center;gap:10px;min-width:130px;}
+  .stat .icon{font-size:20px;opacity:.85;}
+  .stat .num{font-size:16px;font-weight:700;}
+  .stat .lbl{font-size:11px;color:var(--ink-dim);}
+
+  /* Returns table */
+  .returns{
+    display:grid;
+    grid-template-columns:repeat(8,1fr);
+    gap:8px;
+  }
+  .returns .cell{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:10px 6px;
+    text-align:center;
+  }
+  .returns .cell .h{font-size:11px;color:var(--ink-dim);margin-bottom:4px;}
+  .returns .cell .v{font-size:15px;font-weight:700;}
+  .returns .cell .v.pos{color:var(--green);}
+  .returns .cell .v.neg{color:var(--red);}
+
+  /* Price chart */
+  .card{
+    background:#12141a;
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:16px;
+  }
+  .card-light{background:var(--panel-light);color:#20242c;}
+  .card h3{margin:0 0 12px 4px;font-size:14px;font-weight:700;letter-spacing:.3px;}
+  .card-light h3{color:#20242c;}
+  #price-chart{height:340px;}
+
+  .tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;}
+  .tab{
+    background:transparent;border:1px solid var(--line);color:var(--ink-dim);
+    padding:6px 12px;border-radius:7px;font-size:12px;cursor:pointer;
+  }
+  .tab.active{background:var(--blue);color:#fff;border-color:var(--blue);}
+  .card-light .tab{border-color:#d5dae2;color:#5a6472;}
+  .card-light .tab.active{background:var(--blue);color:#fff;border-color:var(--blue);}
+
+  .row-2{display:grid;grid-template-columns:1fr 1.4fr;gap:16px;}
+  .row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+  @media (max-width:900px){.row-2,.row-3{grid-template-columns:1fr;}}
+
+  canvas{max-height:280px;}
+
+  /* Score details — v2: gauge + rank ribbon + radar */
+  .score-panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px 24px;}
+  .score-panel h2{font-size:14px;margin:0 0 2px;letter-spacing:.5px;color:var(--ink-dim);text-transform:uppercase;}
+  .score-panel .sub{font-size:16px;font-weight:700;margin-bottom:18px;}
+
+  .score-grid{display:grid;grid-template-columns:220px 1fr;gap:28px;align-items:center;}
+  @media (max-width:760px){.score-grid{grid-template-columns:1fr;}}
+
+  .gauge-col{display:flex;flex-direction:column;align-items:center;gap:14px;}
+  .gauge-wrap{position:relative;width:180px;height:180px;}
+  .gauge-center{
+    position:absolute;top:0;left:0;width:100%;height:100%;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+  }
+  .gauge-center .num{font-size:34px;font-weight:800;line-height:1;}
+  .gauge-center .lbl{font-size:10px;color:var(--ink-dim);text-transform:uppercase;letter-spacing:.5px;margin-top:4px;}
+
+  .rank-ribbon{
+    display:flex;align-items:center;gap:10px;
+    background:linear-gradient(135deg,#3a8f6c,#2f7c7a);
+    border-radius:999px;padding:8px 18px 8px 10px;
+    box-shadow:0 4px 14px rgba(0,0,0,.25);
+  }
+  .rank-ribbon .medal{
+    width:30px;height:30px;border-radius:50%;background:#ffd257;color:#3a2c00;
+    display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;
+    box-shadow:inset 0 -2px 4px rgba(0,0,0,.25);
+  }
+  .rank-ribbon .txt{font-size:12px;line-height:1.25;}
+  .rank-ribbon .txt b{font-size:13px;}
+
+  .radar-col{min-height:280px;}
+  .radar-legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:8px;justify-content:center;font-size:11px;color:var(--ink-dim);}
+  .radar-legend .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:middle;}
+
+  .note{font-size:11.5px;color:var(--ink-dim);padding:2px 6px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="score-badge">
+      <div class="code" id="hdr-code">PBR</div>
+      <div class="score-box">
+        <div class="label">Kategori Skoru</div>
+        <div class="val" id="hdr-score">—</div>
+      </div>
+    </div>
+    <div class="fund-name" id="hdr-name">Yükleniyor…</div>
+  </div>
+
+  <!-- STAT STRIP -->
+  <div class="stat-strip">
+    <div class="stat"><span class="icon">💰</span><div><div class="num" id="stat-toplam">—</div><div class="lbl">Toplam Fon Değeri</div></div></div>
+    <div class="stat"><span class="icon">👥</span><div><div class="num" id="stat-yatirimci">—</div><div class="lbl">Yatırımcı Sayısı</div></div></div>
+    <div class="stat"><span class="icon">🎯</span><div><div class="num" id="stat-risk">—</div><div class="lbl">Risk Değeri</div></div></div>
+    <div class="stat"><span class="icon">✂️</span><div><div class="num" id="stat-stopaj">—</div><div class="lbl">Stopaj</div></div></div>
+    <div class="stat"><span class="icon">🏦</span><div><div class="num" id="stat-yonetim">—</div><div class="lbl">Yönetim Ücreti</div></div></div>
+    <div class="stat"><span class="icon">☂️</span><div><div class="num" id="stat-semsiye">—</div><div class="lbl">Şemsiye</div></div></div>
+    <div class="stat"><span class="icon">🗂️</span><div><div class="num" id="stat-kategori">—</div><div class="lbl">Kategori</div></div></div>
+    <div class="stat"><span class="icon">📅</span><div><div class="num" id="stat-tarih">—</div><div class="lbl">Veri Tarihi</div></div></div>
+  </div>
+
+  <!-- RETURNS TABLE -->
+  <div class="returns" id="returns-table"></div>
+
+  <!-- PRICE CHART -->
+  <div class="card">
+    <h3>Fiyat Grafiği</h3>
+    <div id="price-chart"></div>
+  </div>
+
+  <!-- RETURN COMPARISON -->
+  <div class="card">
+    <h3>Fon Getiri Karşılaştır</h3>
+    <div class="tabs" data-group="compare">
+      <button class="tab" data-period="1H">Haftalık</button>
+      <button class="tab" data-period="1A">Aylık</button>
+      <button class="tab" data-period="3A">3 Aylık</button>
+      <button class="tab" data-period="6A">6 Aylık</button>
+      <button class="tab" data-period="YB">Yılbaşından İtibaren</button>
+      <button class="tab active" data-period="1Y">1 Yıllık</button>
+      <button class="tab" data-period="3Y">3 Yıllık</button>
+      <button class="tab" data-period="5Y">5 Yıllık</button>
+    </div>
+    <canvas id="compare-chart"></canvas>
+  </div>
+
+  <!-- ALLOCATION -->
+  <div class="row-2">
+    <div class="card card-light">
+      <h3>Son tarihli Varlık Dağılımı</h3>
+      <canvas id="alloc-latest-chart"></canvas>
+    </div>
+    <div class="card card-light">
+      <h3>Varlık Dağılımı Değişimi</h3>
+      <div class="tabs" data-group="alloc-change">
+        <button class="tab" data-period="1H">Haftalık</button>
+        <button class="tab" data-period="1A">Aylık</button>
+        <button class="tab" data-period="3A">3 Aylık</button>
+        <button class="tab" data-period="6A">6 Aylık</button>
+        <button class="tab" data-period="YB">Yılbaşından İtibaren</button>
+        <button class="tab active" data-period="1Y">1 Yıllık</button>
+        <button class="tab" data-period="3Y">3 Yıllık</button>
+        <button class="tab" data-period="5Y">5 Yıllık</button>
+      </div>
+      <canvas id="alloc-change-chart"></canvas>
+    </div>
+  </div>
+
+  <!-- INVESTOR / VALUE / CASHFLOW -->
+  <div class="tabs" data-group="flows" style="margin:0 4px;">
+    <button class="tab" data-period="1H">Haftalık</button>
+    <button class="tab" data-period="1A">Aylık</button>
+    <button class="tab" data-period="3A">3 Aylık</button>
+    <button class="tab" data-period="6A">6 Aylık</button>
+    <button class="tab" data-period="YB">Yılbaşından İtibaren</button>
+    <button class="tab active" data-period="1Y">1 Yıllık</button>
+    <button class="tab" data-period="3Y">3 Yıllık</button>
+    <button class="tab" data-period="5Y">5 Yıllık</button>
+  </div>
+  <div class="row-3">
+    <div class="card card-light">
+      <h3>👥 <span id="tt-investors">Fon</span> Yatırımcı Sayısı Grafiği</h3>
+      <canvas id="investors-chart"></canvas>
+    </div>
+    <div class="card card-light">
+      <h3>💎 <span id="tt-totalvalue">Fon</span> Toplam Değer Grafiği</h3>
+      <canvas id="totalvalue-chart"></canvas>
+    </div>
+    <div class="card card-light">
+      <h3><span id="tt-cashflow">Fon</span> Nakit Giriş/Çıkış (Net)</h3>
+      <canvas id="cashflow-chart"></canvas>
+    </div>
+  </div>
+
+  <!-- FONLARCA SKORU DETAYLARI -->
+  <div class="score-panel">
+    <h2>Fonlarca Skoru Detayları</h2>
+    <div class="sub" id="score-sub">—</div>
+
+    <div class="score-grid">
+      <div class="gauge-col">
+        <div class="gauge-wrap">
+          <canvas id="score-gauge"></canvas>
+          <div class="gauge-center">
+            <div class="num" id="gauge-num">—</div>
+            <div class="lbl">Kategori Skoru</div>
+          </div>
+        </div>
+        <div class="rank-ribbon">
+          <div class="medal">🏆</div>
+          <div class="txt" id="rank-txt">—</div>
+        </div>
+      </div>
+
+      <div class="radar-col">
+        <canvas id="score-radar"></canvas>
+        <div class="radar-legend">
+          <span><span class="dot" style="background:#4cbb6d;"></span>Güçlü (≥80)</span>
+          <span><span class="dot" style="background:#e0b23f;"></span>Orta (50–79)</span>
+          <span><span class="dot" style="background:#e05a5a;"></span>Zayıf (&lt;50)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="note">Bu sayfa docs/data/fon-kartlari/{KOD}.json dosyasından gerçek veriyle besleniyor. Farklı bir fon görmek için URL'nin sonuna ?kod=FONKODU ekle (örn. ?kod=TLY). Benchmark karşılaştırmasında bazı dönemler benchmarklar.parquet'teki veri boşlukları nedeniyle "—" görünebilir.</div>
+
+</div>
+
+<script>
+/* =========================================================================
+   FON KARTI — gerçek veri sürümü
+   Bu sayfa docs/data/fon-kartlari/{KOD}.json dosyalarını okuyup render eder.
+   Hangi fon gösterilecek: ?kod=PBR gibi bir URL parametresiyle belirlenir
+   (parametre yoksa PBR gösterilir). Sayfanın docs/ klasöründe, data/ klasörü
+   ile aynı seviyede olduğu varsayılır — farklıysa DATA_BASE'i güncelle.
+   ========================================================================= */
+const DATA_BASE = "data/fon-kartlari";
+const FUND_CODE = new URLSearchParams(location.search).get("kod") || "PBR";
+
+const PERIOD_LABELS = {"1H":"Haftalık","1A":"Aylık","3A":"3 Aylık","6A":"6 Aylık","YB":"Yılbaşından İtibaren","1Y":"1 Yıllık","3Y":"3 Yıllık","5Y":"5 Yıllık"};
+const PERIOD_MONTHS = {"1H":1,"1A":1,"3A":3,"6A":6,"YB":8,"1Y":12,"3Y":36,"5Y":60};
+const BENCH_LABELS = {USD:"USD", EUR:"EUR", BIST100:"BIST 100", TLREF:"TLREF", Altin:"Altın"};
+const SUBSCORE_LABELS = {Momentum:"MOMENTUM", Getiri:"GETİRİ", "ParaAkışı":"PARA AKIŞI", Sharpe:"SHARPE", StdDev:"STD SAPMA"};
+
+/* ---------- format yardımcıları ---------- */
+function trNum(v, decimals=2){
+  if (v === null || v === undefined || isNaN(v)) return "—";
+  return v.toLocaleString('tr-TR', {minimumFractionDigits:decimals, maximumFractionDigits:decimals});
+}
+function trInt(v){
+  if (v === null || v === undefined || isNaN(v)) return "—";
+  return Math.round(v).toLocaleString('tr-TR');
+}
+function trPct(v, decimals=2){
+  if (v === null || v === undefined || isNaN(v)) return "—";
+  return (v>=0?'':'') + trNum(v, decimals) + '%';
+}
+function trBigMoney(v){
+  if (v === null || v === undefined || isNaN(v)) return "—";
+  if (v >= 1e9) return trNum(v/1e9, 2) + " Milyar";
+  if (v >= 1e6) return trNum(v/1e6, 2) + " Milyon";
+  return trInt(v);
+}
+function trDate(iso){
+  if (!iso) return "—";
+  const [y,m,d] = iso.split("-");
+  return `${d}-${m}-${y.slice(2)}`;
+}
+function tierColor(v){ return v===null||v===undefined ? '#6b7280' : v>=80 ? '#4cbb6d' : v>=50 ? '#e0b23f' : '#e05a5a'; }
+
+/* ---------- ana akış ---------- */
+fetch(`${DATA_BASE}/${FUND_CODE}.json`)
+  .then(r => { if(!r.ok) throw new Error(`${FUND_CODE}.json bulunamadı (HTTP ${r.status})`); return r.json(); })
+  .then(renderCard)
+  .catch(err => {
+    document.getElementById('hdr-name').textContent = "Veri yüklenemedi";
+    console.error(err);
+  });
+
+function renderCard(data){
+  renderHeader(data);
+  renderReturns(data.getiriler || {});
+  renderPriceChart(data.fiyat_grafigi || []);
+  renderCompareChart(data.karsilastirma || {});
+  renderAllocation(data.varlik_dagilimi || {});
+  renderFlows(data.akislar || {});
+  renderScore(data.fonlarca_skoru || {});
+  wireTabs(data);
+}
+
+/* ---------- header + stat şeridi ---------- */
+function renderHeader(d){
+  document.getElementById('hdr-code').textContent = d.fon_kodu || FUND_CODE;
+  document.getElementById('hdr-name').textContent = d.fon_adi || "—";
+  document.getElementById('hdr-score').textContent = d.fonlarca_skoru ? trNum(d.fonlarca_skoru.kategori_skoru, 1) : "—";
+
+  document.getElementById('stat-toplam').textContent = trBigMoney(d.toplam_fon_degeri);
+  document.getElementById('stat-yatirimci').textContent = trInt(d.yatirimci_sayisi);
+  document.getElementById('stat-risk').textContent = d.risk_degeri != null ? `${trInt(d.risk_degeri)}/7` : "—";
+  document.getElementById('stat-stopaj').textContent = d.stopaj_orani != null ? `%${trNum(d.stopaj_orani*100,1)}` : "—";
+  document.getElementById('stat-yonetim').textContent = d.yonetim_ucreti != null ? `%${trNum(d.yonetim_ucreti,2)}` : "—";
+  document.getElementById('stat-semsiye').textContent = d.semsiye || "—";
+  document.getElementById('stat-kategori').textContent = d.kategori || "—";
+  document.getElementById('stat-tarih').textContent = trDate(d.veri_tarihi);
+
+  ["tt-investors","tt-totalvalue","tt-cashflow"].forEach(id => {
+    document.getElementById(id).textContent = d.fon_kodu || FUND_CODE;
+  });
+}
+
+/* ---------- getiri tablosu ---------- */
+function renderReturns(getiriler){
+  const order = ["Günlük","Haftalık","Aylık","3 Ay","6 Ay","Yılbaşı","1 Yıl","3 Yıl"];
+  const box = document.getElementById("returns-table");
+  box.innerHTML = "";
+  order.forEach(key=>{
+    const v = getiriler[key];
+    const cell = document.createElement("div");
+    cell.className = "cell";
+    const valTxt = v==null ? "—" : trPct(v,2);
+    const cls = v==null ? "" : (v>=0?"pos":"neg");
+    cell.innerHTML = `<div class="h">${key}</div><div class="v ${cls}">${valTxt}</div>`;
+    box.appendChild(cell);
+  });
+}
+
+/* ---------- fiyat grafiği ---------- */
+function renderPriceChart(series){
+  const chart = LightweightCharts.createChart(document.getElementById('price-chart'), {
+    layout:{ background:{color:'#0b0c11'}, textColor:'#9aa0ac' },
+    grid:{ vertLines:{color:'#1c1e26'}, horzLines:{color:'#1c1e26'} },
+    rightPriceScale:{ borderColor:'#2a2d36' },
+    timeScale:{ borderColor:'#2a2d36' },
+    autoSize:true,
+  });
+  const area = chart.addAreaSeries({
+    lineColor:'#4a7fe0', topColor:'rgba(74,127,224,0.35)', bottomColor:'rgba(74,127,224,0.02)', lineWidth:2,
+  });
+  area.setData(series);
+}
+
+/* ---------- getiri karşılaştırma ---------- */
+let compareChart, compareData;
+function renderCompareChart(karsilastirma){
+  compareData = karsilastirma;
+  const canvas = document.getElementById('compare-chart');
+  compareChart = new Chart(canvas, {
+    type:'bar',
+    data:{ labels:[], datasets:[{data:[], backgroundColor: []}] },
+    options:{
+      plugins:{legend:{display:false}},
+      scales:{
+        x:{ticks:{color:'#9aa0ac'}, grid:{color:'#2a2d36'}},
+        y:{ticks:{color:'#9aa0ac', callback:v=>'%'+v}, grid:{color:'#2a2d36'}}
+      }
+    }
+  });
+  updateCompare("1Y");
+}
+function updateCompare(period){
+  const row = (compareData && compareData[period]) || {};
+  const labels = ["Fon", ...Object.keys(BENCH_LABELS).map(k=>BENCH_LABELS[k])];
+  const keys = ["fon", ...Object.keys(BENCH_LABELS)];
+  const values = keys.map(k => row[k] ?? null);
+  const colors = ["#3fb6ab","#a9d6f5","#e0d24c","#7f9089","#8f8fe0","#e08a8a"];
+  compareChart.data.labels = labels;
+  compareChart.data.datasets[0].data = values;
+  compareChart.data.datasets[0].backgroundColor = colors;
+  compareChart.update();
+}
+
+/* ---------- varlık dağılımı ---------- */
+let allocChangeChart, allocHistory;
+function renderAllocation(alloc){
+  const latest = alloc.son_tarihli || {};
+  const labels = Object.keys(latest);
+  const values = Object.values(latest);
+  new Chart(document.getElementById('alloc-latest-chart'), {
+    type:'bar',
+    data:{ labels, datasets:[{data: values, backgroundColor:'#1e3a8a'}] },
+    options:{
+      indexAxis:'y',
+      plugins:{legend:{display:false}},
+      scales:{ x:{ticks:{color:'#5a6472', callback:v=>'%'+v}, grid:{color:'#e3e7ee'}},
+               y:{ticks:{color:'#20242c'}, grid:{display:false}} }
+    }
+  });
+
+  allocHistory = alloc.gecmis || {tarihler:[], seriler:{}};
+  const canvas = document.getElementById('alloc-change-chart');
+  allocChangeChart = new Chart(canvas, {
+    type:'line',
+    data:{ labels:[], datasets:[] },
+    options:{
+      plugins:{legend:{position:'bottom', labels:{color:'#5a6472', boxWidth:12, font:{size:10}}}},
+      scales:{
+        x:{ticks:{color:'#5a6472', maxTicksLimit:8}, grid:{display:false}},
+        y:{stacked:true, min:0, max:100, ticks:{color:'#5a6472', callback:v=>'%'+v}, grid:{color:'#e3e7ee'}}
+      },
+      elements:{point:{radius:0}}
+    }
+  });
+  updateAllocChange("1Y");
+}
+const STACK_COLORS = ["#5b9bd5","#f2b134","#79c26a","#a58ad1","#e0806b","#4fb8a0","#c9c9c9"];
+function updateAllocChange(period){
+  const months = PERIOD_MONTHS[period] || 12;
+  let tarihler = allocHistory.tarihler || [];
+  const seriler = allocHistory.seriler || {};
+
+  // Son güncellenmemiş (tümü null) günleri sondan kırp
+  let lastValidIdx = tarihler.length - 1;
+  while (lastValidIdx >= 0 && Object.keys(seriler).every(k => seriler[k][lastValidIdx] == null)) {
+    lastValidIdx--;
+  }
+  tarihler = tarihler.slice(0, lastValidIdx + 1);
+  if (tarihler.length === 0){ allocChangeChart.data.labels=[]; allocChangeChart.data.datasets=[]; allocChangeChart.update(); return; }
+
+  // Gösterilecek pencere (yaklaşık gün sayısı, aylık ~21 iş günü)
+  const windowDays = Math.min(tarihler.length, Math.round(months * 21));
+  const startIdx = tarihler.length - windowDays;
+  const slicedDates = tarihler.slice(startIdx);
+
+  // En büyük 6 kategoriyi seç (pencere içi ortalamaya göre), gerisini "Diğer (toplam)" olarak topla
+  const cats = Object.keys(seriler);
+  const avg = cats.map(c => {
+    const vals = seriler[c].slice(startIdx).filter(v=>v!=null);
+    return {c, a: vals.length ? vals.reduce((s,v)=>s+v,0)/vals.length : 0};
+  }).sort((a,b)=>b.a-a.a);
+  const topCats = avg.slice(0,6).map(x=>x.c);
+  const restCats = avg.slice(6).map(x=>x.c);
+
+  const datasets = topCats.map((c,i) => ({
+    label:c,
+    data: slicedDates.map((_,i2)=> seriler[c][startIdx+i2] ?? 0),
+    backgroundColor: STACK_COLORS[i % STACK_COLORS.length],
+    fill:true, tension:0.25,
+  }));
+  if (restCats.length){
+    datasets.push({
+      label:"Diğer",
+      data: slicedDates.map((_,i2)=> restCats.reduce((s,c)=> s + (seriler[c][startIdx+i2] || 0), 0)),
+      backgroundColor: STACK_COLORS[6],
+      fill:true, tension:0.25,
+    });
+  }
+  allocChangeChart.data.labels = slicedDates;
+  allocChangeChart.data.datasets = datasets;
+  allocChangeChart.update();
+}
+
+/* ---------- yatırımcı / değer / nakit akışı ---------- */
+let investorsChart, totalValueChart, cashflowChart, flowsData;
+function renderFlows(akislar){
+  flowsData = akislar;
+  const empty = { labels:[], data:[] };
+  investorsChart = makeBar('investors-chart', empty, '#2f7c7a', v=>trInt(v));
+  totalValueChart = makeBar('totalvalue-chart', empty, '#2f7c7a', v=>trBigMoney(v));
+  cashflowChart = makeBar('cashflow-chart', empty, '#2f7c7a', v=>trBigMoney(v));
+  updateFlows("1Y");
+}
+function makeBar(canvasId, initial, color, fmt){
+  return new Chart(document.getElementById(canvasId), {
+    type:'bar',
+    data:{ labels: initial.labels, datasets:[{data: initial.data, backgroundColor: color}] },
+    options:{
+      plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>fmt(c.raw)}}},
+      scales:{ x:{ticks:{color:'#5a6472'}, grid:{display:false}},
+               y:{ticks:{color:'#5a6472', callback:v=>fmt(v)}, grid:{color:'#e3e7ee'}} }
+    }
+  });
+}
+function updateFlows(period){
+  const months = PERIOD_MONTHS[period] || 12;
+  const aylar = flowsData.aylar || [];
+  const n = Math.min(aylar.length, months);
+  const start = aylar.length - n;
+  const labels = aylar.slice(start);
+
+  investorsChart.data.labels = labels;
+  investorsChart.data.datasets[0].data = (flowsData.yatirimci_sayisi||[]).slice(start);
+  investorsChart.update();
+
+  totalValueChart.data.labels = labels;
+  totalValueChart.data.datasets[0].data = (flowsData.toplam_deger||[]).slice(start);
+  totalValueChart.update();
+
+  cashflowChart.data.labels = labels;
+  cashflowChart.data.datasets[0].data = (flowsData.net_nakit_akisi||[]).slice(start);
+  cashflowChart.update();
+}
+
+/* ---------- fonlarca skoru: gauge + radar ---------- */
+function renderScore(skor){
+  document.getElementById('score-sub').textContent = `${FUND_CODE} — ${document.getElementById('hdr-name').textContent}`;
+  const score = skor.kategori_skoru;
+  document.getElementById('gauge-num').textContent = score!=null ? trNum(score,1) : "—";
+  document.getElementById('rank-txt').innerHTML = skor.kategori_sirasi!=null
+    ? `Kategorisinde<br><b>${skor.kategori_sirasi}. sırada</b>`
+    : "Sıralama bilgisi yok";
+
+  new Chart(document.getElementById('score-gauge'), {
+    type:'doughnut',
+    data:{ datasets:[{ data:[score||0, 100-(score||0)], backgroundColor:[tierColor(score), '#3a3d48'], borderWidth:0 }] },
+    options:{ cutout:'78%', circumference:360, rotation:-90, plugins:{legend:{display:false}, tooltip:{enabled:false}} }
+  });
+
+  const alt = skor.alt_skorlar || {};
+  const keys = Object.keys(SUBSCORE_LABELS).filter(k => k in alt);
+  new Chart(document.getElementById('score-radar'), {
+    type:'radar',
+    data:{
+      labels: keys.map(k=>SUBSCORE_LABELS[k]),
+      datasets:[{
+        data: keys.map(k=>alt[k]),
+        backgroundColor:'rgba(63,182,171,0.22)', borderColor:'#3fb6ab', borderWidth:2,
+        pointBackgroundColor: keys.map(k=>tierColor(alt[k])), pointBorderColor:'#12141a',
+        pointRadius:5, pointHoverRadius:7,
+      }]
+    },
+    options:{
+      plugins:{ legend:{display:false}, tooltip:{callbacks:{label:c=> c.label + ': ' + trNum(c.raw,1)}} },
+      scales:{ r:{ min:0, max:100, angleLines:{color:'#3a3d48'}, grid:{color:'#3a3d48'},
+                   pointLabels:{color:'#c9cdd6', font:{size:11, weight:'600'}}, ticks:{display:false} } }
+    }
+  });
+}
+
+/* ---------- sekme kablolaması ---------- */
+function wireTabs(){
+  document.querySelectorAll('.tabs').forEach(group=>{
+    group.querySelectorAll('.tab').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        group.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        const period = btn.dataset.period;
+        const g = group.dataset.group;
+        if (g==='compare') updateCompare(period);
+        if (g==='alloc-change') updateAllocChange(period);
+        if (g==='flows') updateFlows(period);
+      });
+    });
+  });
+}
+</script>
+</body>
+</html>
