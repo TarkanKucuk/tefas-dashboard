@@ -164,7 +164,7 @@ def build_flows_history(fund_prices):
         "aylar": [d.strftime("%Y-%m") for d in monthly["AyBaşı"]],
         "yatirimci_sayisi": [None if pd.isna(v) else int(v) for v in monthly["Kisi"]],
         "toplam_deger": [None if pd.isna(v) else round(float(v), 2) for v in monthly["ToplamDeger"]],
-        "net_nakit_akisi": monthly["NetAkis"].tolist(),
+        "net_nakit_akisi": [None if pd.isna(v) else round(float(v), 2) for v in monthly["NetAkis"]],
     }
 
 
@@ -289,7 +289,7 @@ def main():
         }
 
         with open(os.path.join(OUT_DIR, f"{kod}.json"), "w", encoding="utf-8") as f:
-            json.dump(card, f, ensure_ascii=False, indent=None, default=str)
+            json.dump(card, f, ensure_ascii=False, indent=None, default=str, allow_nan=False)
 
         index_list.append({"kod": kod, "ad": card["fon_adi"], "kategori": card["kategori"]})
 
