@@ -101,6 +101,30 @@
   .card-light h3{color:#20242c;}
   #price-chart{height:340px;}
 
+  .chart-legend{
+    display:flex; gap:16px; flex-wrap:wrap; margin-bottom:10px; font-size:12px; color:var(--ink-dim);
+  }
+  .chart-legend .item{display:flex; align-items:center; gap:6px;}
+  .chart-legend .swatch{width:12px; height:3px; border-radius:2px; display:inline-block;}
+
+  .chart-tooltip{
+    position:absolute; display:none; pointer-events:none; z-index:5;
+    background:rgba(18,20,26,0.95); border:1px solid var(--line); border-radius:8px;
+    padding:8px 10px; font-size:12px; color:var(--ink); white-space:nowrap;
+    box-shadow:0 4px 14px rgba(0,0,0,.35);
+  }
+  .chart-tooltip .row{display:flex; align-items:center; gap:6px; margin-top:2px;}
+  .chart-tooltip .dot{width:8px; height:8px; border-radius:50%; display:inline-block;}
+  .chart-tooltip .date{font-weight:700; margin-bottom:2px;}
+
+  .fund-compare-row{display:flex; align-items:center; gap:8px; margin-bottom:12px; flex-wrap:wrap;}
+  .fund-compare-row input{
+    background:transparent; border:1px solid var(--line); color:var(--ink);
+    border-radius:7px; padding:6px 10px; font-size:12px; min-width:220px; flex:1;
+  }
+  .fund-compare-row input::placeholder{color:var(--ink-dim);}
+  .fund-compare-error{color:var(--red); font-size:11.5px;}
+
   .tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;}
   .tab{
     background:transparent;border:1px solid var(--line);color:var(--ink-dim);
@@ -187,7 +211,25 @@
   <!-- PRICE CHART -->
   <div class="card">
     <h3>Fiyat Grafiği</h3>
-    <div id="price-chart"></div>
+    <div class="tabs" id="chart-mode-tabs">
+      <button class="tab active" data-bench="none">Sadece Fiyat</button>
+      <button class="tab" data-bench="USD">USD ile Karşılaştır</button>
+      <button class="tab" data-bench="EUR">EUR ile Karşılaştır</button>
+      <button class="tab" data-bench="BIST100">BIST 100 ile Karşılaştır</button>
+      <button class="tab" data-bench="TLREF">TLREF ile Karşılaştır</button>
+      <button class="tab" data-bench="Altin">Altın ile Karşılaştır</button>
+    </div>
+    <div class="fund-compare-row">
+      <input type="text" id="fund-compare-input" list="fund-compare-list" placeholder="Başka bir fonla karşılaştır (kod yaz veya seç)…" autocomplete="off">
+      <datalist id="fund-compare-list"></datalist>
+      <button class="tab" id="fund-compare-btn">Karşılaştır</button>
+      <span id="fund-compare-error" class="fund-compare-error"></span>
+    </div>
+    <div id="chart-legend" class="chart-legend" style="display:none;"></div>
+    <div style="position:relative;">
+      <div id="price-chart"></div>
+      <div id="chart-tooltip" class="chart-tooltip"></div>
+    </div>
   </div>
 
   <!-- RETURN COMPARISON -->
@@ -332,18 +374,24 @@ function trDate(iso){
 function tierColor(v){ return v===null||v===undefined ? '#6b7280' : v>=80 ? '#4cbb6d' : v>=50 ? '#e0b23f' : '#e05a5a'; }
 
 /* ---------- ana akış ---------- */
-fetch(`${DATA_BASE}/${FUND_CODE}.json`)
-  .then(r => { if(!r.ok) throw new Error(`${FUND_CODE}.json bulunamadı (HTTP ${r.status})`); return r.json(); })
-  .then(renderCard)
+Promise.all([
+  fetch(`${DATA_BASE}/${FUND_CODE}.json`).then(r => {
+    if(!r.ok) throw new Error(`${FUND_CODE}.json bulunamadı (HTTP ${r.status})`);
+    return r.json();
+  }),
+  fetch(`${DATA_BASE}/_benchmarks.json`).then(r => r.ok ? r.json() : {}).catch(()=>({})),
+  fetch(`${DATA_BASE}/_index.json`).then(r => r.ok ? r.json() : []).catch(()=>([])),
+])
+  .then(([data, benchmarks, index]) => renderCard(data, benchmarks, index))
   .catch(err => {
     document.getElementById('hdr-name').textContent = "Veri yüklenemedi";
     console.error(err);
   });
 
-function renderCard(data){
+function renderCard(data, benchmarks, index){
   renderHeader(data);
   renderReturns(data.getiriler || {});
-  renderPriceChart(data.fiyat_grafigi || []);
+  renderPriceChart(data.fiyat_grafigi || [], benchmarks || {}, data.fon_kodu || FUND_CODE, index || []);
   renderCompareChart(data.karsilastirma || {});
   renderAllocation(data.varlik_dagilimi || {});
   renderFlows(data.akislar || {});
@@ -387,20 +435,166 @@ function renderReturns(getiriler){
   });
 }
 
-/* ---------- fiyat grafiği ---------- */
-function renderPriceChart(series){
-  const chart = LightweightCharts.createChart(document.getElementById('price-chart'), {
+/* ---------- fiyat grafiği + benchmark / fon karşılaştırma ---------- */
+const BENCH_NAMES = {USD:"USD", EUR:"EUR", BIST100:"BIST 100", TLREF:"TLREF", Altin:"Altın"};
+const BENCH_COLORS = {USD:"#e0b23f", EUR:"#a58ad1", BIST100:"#e08a8a", TLREF:"#4fb8a0", Altin:"#f2c94c"};
+const FUND_COMPARE_COLOR = "#e05ac0";
+const FUND_COLOR = "#4a7fe0";
+
+let priceChart, fundSeriesRef, cmpSeriesRef;
+let fundRawData = [], benchmarksData = {}, currentFundCode = "", fundIndex = [];
+let activeLabel = '', activeColor = '';
+
+function renderPriceChart(series, benchmarks, fundCode, index){
+  fundRawData = series;
+  benchmarksData = benchmarks;
+  currentFundCode = fundCode;
+  fundIndex = index;
+
+  // Karşılaştırma için fon kodu seçim listesi (kendisi hariç)
+  const datalist = document.getElementById('fund-compare-list');
+  datalist.innerHTML = index
+    .filter(f => f.kod !== fundCode)
+    .map(f => `<option value="${f.kod}">${f.kod} — ${f.ad || ''}</option>`)
+    .join('');
+
+  priceChart = LightweightCharts.createChart(document.getElementById('price-chart'), {
     layout:{ background:{color:'#0b0c11'}, textColor:'#9aa0ac' },
     grid:{ vertLines:{color:'#1c1e26'}, horzLines:{color:'#1c1e26'} },
     rightPriceScale:{ borderColor:'#2a2d36' },
     timeScale:{ borderColor:'#2a2d36' },
+    crosshair:{ mode: LightweightCharts.CrosshairMode.Normal },
     autoSize:true,
+    handleScroll:true, handleScale:true,
   });
-  const area = chart.addAreaSeries({
-    lineColor:'#4a7fe0', topColor:'rgba(74,127,224,0.35)', bottomColor:'rgba(74,127,224,0.02)', lineWidth:2,
+
+  showPriceMode();
+
+  const tooltip = document.getElementById('chart-tooltip');
+  const container = document.getElementById('price-chart');
+  priceChart.subscribeCrosshairMove(param => {
+    if (!param.point || !param.time || param.point.x < 0 || param.point.y < 0) {
+      tooltip.style.display = 'none';
+      return;
+    }
+    const rows = [];
+    if (fundSeriesRef && param.seriesData.has(fundSeriesRef)) {
+      const v = param.seriesData.get(fundSeriesRef).value;
+      rows.push({label: fundCode, color: FUND_COLOR, value: v});
+    }
+    if (cmpSeriesRef && param.seriesData.has(cmpSeriesRef)) {
+      const v = param.seriesData.get(cmpSeriesRef).value;
+      rows.push({label: activeLabel, color: activeColor, value: v});
+    }
+    if (!rows.length){ tooltip.style.display = 'none'; return; }
+
+    const isPct = !!cmpSeriesRef;
+    tooltip.innerHTML = `<div class="date">${param.time}</div>` + rows.map(r =>
+      `<div class="row"><span class="dot" style="background:${r.color}"></span>${r.label}: <b>${isPct ? trPct(r.value,2) : trNum(r.value,4)}</b></div>`
+    ).join('');
+    tooltip.style.display = 'block';
+
+    const cw = container.clientWidth, ch = container.clientHeight;
+    let x = param.point.x + 14, y = param.point.y + 10;
+    if (x + 160 > cw) x = param.point.x - 170;
+    if (y + 60 > ch) y = param.point.y - 60;
+    tooltip.style.left = Math.max(4,x) + 'px';
+    tooltip.style.top = Math.max(4,y) + 'px';
   });
-  area.setData(series);
 }
+
+function clearActiveTabs(){
+  document.getElementById('chart-mode-tabs').querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+}
+function showFundCompareError(msg){
+  document.getElementById('fund-compare-error').textContent = msg || '';
+}
+
+function showPriceMode(){
+  activeLabel = ''; activeColor = '';
+  document.getElementById('fund-compare-input').value = '';
+  showFundCompareError('');
+  if (fundSeriesRef) priceChart.removeSeries(fundSeriesRef);
+  if (cmpSeriesRef) { priceChart.removeSeries(cmpSeriesRef); cmpSeriesRef = null; }
+  fundSeriesRef = priceChart.addAreaSeries({
+    lineColor: FUND_COLOR, topColor:'rgba(74,127,224,0.35)', bottomColor:'rgba(74,127,224,0.02)', lineWidth:2,
+  });
+  fundSeriesRef.setData(fundRawData);
+  document.getElementById('chart-legend').style.display = 'none';
+}
+
+/* Ortak karşılaştırma çizici — benchmark ya da başka bir fon, ikisi de bunu kullanır */
+function plotComparePct(label, color, rawSeries){
+  if (!rawSeries || !rawSeries.length || !fundRawData.length) return false;
+
+  if (fundSeriesRef) priceChart.removeSeries(fundSeriesRef);
+  if (cmpSeriesRef) priceChart.removeSeries(cmpSeriesRef);
+
+  const fundBase = fundRawData[0].value;
+  const startTime = fundRawData[0].time;
+  const fundPct = fundRawData.map(p => ({ time:p.time, value: (p.value/fundBase - 1) * 100 }));
+
+  const cmpFromStart = rawSeries.filter(p => p.time >= startTime);
+  const cmpBase = (cmpFromStart[0] || rawSeries[rawSeries.length-1]).value;
+  const cmpPct = cmpFromStart.map(p => ({ time:p.time, value: (p.value/cmpBase - 1) * 100 }));
+
+  fundSeriesRef = priceChart.addLineSeries({ color: FUND_COLOR, lineWidth:2 });
+  fundSeriesRef.setData(fundPct);
+  cmpSeriesRef = priceChart.addLineSeries({ color, lineWidth:2 });
+  cmpSeriesRef.setData(cmpPct);
+
+  activeLabel = label; activeColor = color;
+
+  const legend = document.getElementById('chart-legend');
+  legend.style.display = 'flex';
+  legend.innerHTML = `
+    <span class="item"><span class="swatch" style="background:${FUND_COLOR}"></span>${currentFundCode} (%)</span>
+    <span class="item"><span class="swatch" style="background:${color}"></span>${label} (%)</span>
+  `;
+  return true;
+}
+
+function showBenchmarkCompare(benchKey){
+  document.getElementById('fund-compare-input').value = '';
+  showFundCompareError('');
+  const ok = plotComparePct(BENCH_NAMES[benchKey], BENCH_COLORS[benchKey], benchmarksData[benchKey]);
+  if (!ok) document.querySelector(`.tab[data-bench="none"]`).click();
+}
+
+document.getElementById('chart-mode-tabs').querySelectorAll('.tab').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    clearActiveTabs();
+    btn.classList.add('active');
+    const key = btn.dataset.bench;
+    if (key === 'none') showPriceMode(); else showBenchmarkCompare(key);
+  });
+});
+
+/* Başka bir fonla karşılaştırma */
+function runFundCompare(){
+  const raw = document.getElementById('fund-compare-input').value.trim();
+  showFundCompareError('');
+  if (!raw) return;
+  // "KOD — Ad" formatında girilmiş olabilir, sadece koda bak
+  const kodTyped = raw.split(/[—-]/)[0].trim().toUpperCase();
+  const match = fundIndex.find(f => f.kod.toUpperCase() === kodTyped);
+  if (!match){
+    showFundCompareError('Bu kodda bir fon bulunamadı. Listeden seçmeyi deneyin.');
+    return;
+  }
+  fetch(`${DATA_BASE}/${match.kod}.json`)
+    .then(r => { if(!r.ok) throw new Error('fon verisi bulunamadı'); return r.json(); })
+    .then(otherData => {
+      const ok = plotComparePct(match.kod, FUND_COMPARE_COLOR, otherData.fiyat_grafigi || []);
+      if (ok) clearActiveTabs();
+      else showFundCompareError('Bu fon için karşılaştırılacak veri yok.');
+    })
+    .catch(() => showFundCompareError('Fon verisi yüklenemedi, tekrar deneyin.'));
+}
+document.getElementById('fund-compare-btn').addEventListener('click', runFundCompare);
+document.getElementById('fund-compare-input').addEventListener('keydown', e=>{
+  if (e.key === 'Enter'){ e.preventDefault(); runFundCompare(); }
+});
 
 /* ---------- getiri karşılaştırma ---------- */
 let compareChart, compareData;
