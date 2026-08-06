@@ -147,6 +147,28 @@ def build_price_history(fund_prices, max_points=1500):
     ]
 
 
+def build_benchmark_series(bench_df, max_points=1500):
+    """Tüm fonlar için PAYLAŞILAN tek bir benchmark zaman serisi dosyası üretir
+    (her fon JSON'unda tekrarlanmasın diye ayrı dosya). Her seri kendi boş
+    olmayan (dropna) noktalarını içerir — tarihler seriler arasında birebir
+    aynı olmak zorunda değil, frontend en yakın tarihi kendi eşleştirir."""
+    if bench_df is None or bench_df.empty:
+        return {}
+    out = {}
+    for label, col in BENCHMARK_COLS.items():
+        if col not in bench_df.columns:
+            continue
+        s = bench_df[["Tarih", col]].dropna().sort_values("Tarih")
+        if len(s) > max_points:
+            step = max(1, len(s) // max_points)
+            s = s.iloc[::step]
+        out[label] = [
+            {"time": d.strftime("%Y-%m-%d"), "value": round(float(v), 4)}
+            for d, v in zip(s["Tarih"], s[col])
+        ]
+    return out
+
+
 def build_flows_history(fund_prices):
     """Aylık: yatırımcı sayısı, toplam değer, net nakit giriş/çıkış (TL)."""
     df = fund_prices.copy()
@@ -231,6 +253,12 @@ def main():
         bench_df["Tarih"] = pd.to_datetime(bench_df["Tarih"]).dt.normalize()
         bench_df = bench_df.sort_values("Tarih").reset_index(drop=True)
 
+    os.makedirs(OUT_DIR, exist_ok=True)
+
+    # Tüm fonlar için PAYLAŞILAN tek benchmark dosyası (her fon JSON'unda tekrar etmesin)
+    with open(os.path.join(OUT_DIR, "_benchmarks.json"), "w", encoding="utf-8") as f:
+        json.dump(build_benchmark_series(bench_df), f, ensure_ascii=False, allow_nan=False)
+
     # Fonlarca Skoru + alt skorlar (score_funds.py'deki aynı hesap)
     res, anchor = build_fund_metrics(price_df)
     res = res.merge(mapping, on=MAPPING_COLS["kod"], how="left")
@@ -238,7 +266,6 @@ def main():
     res = compute_scores(res)
     res_by_kod = res.set_index("Fon Kodu")
 
-    os.makedirs(OUT_DIR, exist_ok=True)
     index_list = []
 
     for kod, fund_prices in price_df.groupby("Fon Kodu"):
