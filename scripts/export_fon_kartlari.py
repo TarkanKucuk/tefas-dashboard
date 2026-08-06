@@ -69,17 +69,26 @@ BENCHMARK_COLS = {
 # Yardımcılar
 # ---------------------------------------------------------------------------
 def period_return(series_dates, series_values, anchor_date, days=None):
-    """anchor_date'ten `days` gün öncesine (ya da yılbaşına) göre % getiri hesaplar."""
+    """anchor_date'ten `days` gün öncesine (ya da yılbaşına) göre % getiri hesaplar.
+    Serinin kendi son DOLU değerini kullanır — örn. TLREF birkaç gün gecikmeli
+    yayınlanıyorsa, sadece o serinin kendi son dolu tarihine göre hesaplanır;
+    diğer serileri veya dönemleri etkilemez."""
+    valid = series_values.notna()
+    dates_valid = series_dates[valid]
+    values_valid = series_values[valid]
+    if values_valid.empty:
+        return None
+    latest_val = values_valid.iloc[-1]
+
     if days is None:
         cutoff = pd.Timestamp(year=anchor_date.year, month=1, day=1)
     else:
         cutoff = anchor_date - pd.Timedelta(days=days)
-    past = series_values[series_dates <= cutoff]
+    past = values_valid[dates_valid <= cutoff]
     if past.empty:
         return None
     past_val = past.iloc[-1]
-    latest_val = series_values.iloc[-1]
-    if pd.isna(past_val) or past_val == 0 or pd.isna(latest_val):
+    if past_val == 0:
         return None
     return round(float((latest_val / past_val - 1) * 100), 2)
 
