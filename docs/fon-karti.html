@@ -435,7 +435,9 @@ const MAX_COMPARES = 6; // grafik okunaklı kalsın diye üst sınır
 
 let priceChart, fundSeriesRef;
 let fundRawData = [], benchmarksData = {}, currentFundCode = "", fundIndex = [];
-let activeCompares = []; // [{type:'bench'|'fund', key, label, color, series(chart series ref)}]
+let activeCompares = []; // [{type:'bench'|'fund', key, label, color, rawSeries, series}]
+let plottedSeries = []; // çizilmiş TÜM seriler — temizlik hep buradan yapılır, activeCompares'tan bağımsız
+let rebaseTimer = null;
 
 function renderPriceChart(series, benchmarks, fundCode, index){
   fundRawData = series;
@@ -461,6 +463,14 @@ function renderPriceChart(series, benchmarks, fundCode, index){
   });
 
   drawChart();
+
+  // Grafiği kaydırdıkça/yakınlaştırdıkça, karşılaştırma modundaysa
+  // normalize edilme noktasını o an ekranda görünen ilk güne göre yeniden hesapla.
+  priceChart.timeScale().subscribeVisibleTimeRangeChange(() => {
+    if (activeCompares.length === 0) return;
+    clearTimeout(rebaseTimer);
+    rebaseTimer = setTimeout(rebaseComparePct, 120);
+  });
 
   const tooltip = document.getElementById('chart-tooltip');
   const container = document.getElementById('price-chart');
@@ -504,35 +514,54 @@ function nextFundColor(){
   return FUND_COMPARE_PALETTE.find(c => !used.has(c)) || FUND_COMPARE_PALETTE[0];
 }
 
-/* Tüm görünümü (fiyat serisi + tüm aktif karşılaştırmalar) sıfırdan çizer */
+/* O an grafikte görünen ilk tarihi verir (fallback: fonun ilk günü) */
+function getVisibleStartTime(){
+  const range = priceChart && priceChart.timeScale().getVisibleRange();
+  if (range && range.from) return range.from;
+  return fundRawData.length ? fundRawData[0].time : null;
+}
+
+function pctFrom(rawSeries, startTime){
+  const fromStart = rawSeries.filter(p => p.time >= startTime);
+  const startPoint = fromStart[0] || rawSeries[rawSeries.length-1];
+  const base = startPoint.value;
+  return rawSeries.filter(p => p.time >= startPoint.time).map(p => ({ time:p.time, value:(p.value/base - 1) * 100 }));
+}
+
+/* Sadece VERİYİ günceller (seri objelerini silip yeniden yaratmaz) — kaydırma sırasında titremesin diye */
+function rebaseComparePct(){
+  if (!fundSeriesRef || activeCompares.length === 0) return;
+  const startTime = getVisibleStartTime();
+  fundSeriesRef.setData(pctFrom(fundRawData, startTime));
+  activeCompares.forEach(c => { if (c.series) c.series.setData(pctFrom(c.rawSeries, startTime)); });
+}
+
+/* Tüm görünümü (fiyat serisi + tüm aktif karşılaştırmalar) sıfırdan çizer.
+   Temizlik HER ZAMAN plottedSeries listesinden yapılır — activeCompares o an ne
+   içeriyor olursa olsun (çağrılma sırasına bağlı kalmadan) önceki tüm çizgiler silinir. */
 function drawChart(){
-  // Var olan tüm serileri temizle
-  if (fundSeriesRef) { priceChart.removeSeries(fundSeriesRef); fundSeriesRef = null; }
-  activeCompares.forEach(c => { if (c.series) priceChart.removeSeries(c.series); c.series = null; });
+  plottedSeries.forEach(s => { try { priceChart.removeSeries(s); } catch(e){} });
+  plottedSeries = [];
+  fundSeriesRef = null;
 
   if (activeCompares.length === 0){
     fundSeriesRef = priceChart.addAreaSeries({
       lineColor: FUND_COLOR, topColor:'rgba(74,127,224,0.35)', bottomColor:'rgba(74,127,224,0.02)', lineWidth:2,
     });
     fundSeriesRef.setData(fundRawData);
+    plottedSeries.push(fundSeriesRef);
     document.getElementById('chart-legend').style.display = 'none';
     return;
   }
 
-  const fundBase = fundRawData[0].value;
-  const startTime = fundRawData[0].time;
-  const fundPct = fundRawData.map(p => ({ time:p.time, value: (p.value/fundBase - 1) * 100 }));
   fundSeriesRef = priceChart.addLineSeries({ color: FUND_COLOR, lineWidth:2 });
-  fundSeriesRef.setData(fundPct);
-
+  plottedSeries.push(fundSeriesRef);
   activeCompares.forEach(c => {
-    const fromStart = c.rawSeries.filter(p => p.time >= startTime);
-    const base = (fromStart[0] || c.rawSeries[c.rawSeries.length-1]).value;
-    const pct = fromStart.map(p => ({ time:p.time, value: (p.value/base - 1) * 100 }));
     c.series = priceChart.addLineSeries({ color: c.color, lineWidth:2 });
-    c.series.setData(pct);
+    plottedSeries.push(c.series);
   });
 
+  rebaseComparePct(); // görünen aralığa göre normalize et (ilk kez tam geçmiş görünüyorsa fonun ilk günüyle aynı sonucu verir)
   renderLegend();
 }
 
