@@ -53,10 +53,15 @@ MAPPING_COLS = {
 
 ALLOC_EXCLUDE_COLS = {"Fon Kodu", "Tarih", "Fon Unvanı"}
 
-# Dönem sekmeleri: (anahtar, gün sayısı ya da None=yılbaşı)
+# Dönem sekmeleri: (anahtar, pandas DateOffset ya da None=yılbaşı)
+# ÖNEMLİ: TEFAS "1 ay önce" derken TAKVİM AYINI kullanıyor (7 Ağustos -> 7 Temmuz),
+# sabit 30 gün değil. Ay/yıl bazlı tüm dönemler bu yüzden DateOffset(months=/years=)
+# ile hesaplanıyor — sadece Haftalık gün bazlı (7 gün) kalıyor, orada belirsizlik yok.
 PERIODS = [
-    ("1H", 7), ("1A", 30), ("3A", 90), ("6A", 180),
-    ("YB", None), ("1Y", 365), ("3Y", 365 * 3), ("5Y", 365 * 5),
+    ("1H", pd.DateOffset(days=7)), ("1A", pd.DateOffset(months=1)),
+    ("3A", pd.DateOffset(months=3)), ("6A", pd.DateOffset(months=6)),
+    ("YB", None), ("1Y", pd.DateOffset(years=1)),
+    ("3Y", pd.DateOffset(years=3)), ("5Y", pd.DateOffset(years=5)),
 ]
 
 BENCHMARK_COLS = {
@@ -68,8 +73,10 @@ BENCHMARK_COLS = {
 # ---------------------------------------------------------------------------
 # Yardımcılar
 # ---------------------------------------------------------------------------
-def period_return(series_dates, series_values, anchor_date, days=None):
-    """anchor_date'ten `days` gün öncesine (ya da yılbaşına) göre % getiri hesaplar.
+def period_return(series_dates, series_values, anchor_date, offset=None):
+    """anchor_date'ten `offset` kadar öncesine (ya da yılbaşına) göre % getiri hesaplar.
+    `offset` bir pd.DateOffset olmalı (örn. pd.DateOffset(months=1)) — TEFAS'ın
+    kullandığı takvim ayı/yılı mantığıyla birebir uyumlu olsun diye.
     Serinin kendi son DOLU değerini kullanır — örn. TLREF birkaç gün gecikmeli
     yayınlanıyorsa, sadece o serinin kendi son dolu tarihine göre hesaplanır;
     diğer serileri veya dönemleri etkilemez."""
@@ -80,10 +87,10 @@ def period_return(series_dates, series_values, anchor_date, days=None):
         return None
     latest_val = values_valid.iloc[-1]
 
-    if days is None:
+    if offset is None:
         cutoff = pd.Timestamp(year=anchor_date.year, month=1, day=1)
     else:
-        cutoff = anchor_date - pd.Timedelta(days=days)
+        cutoff = anchor_date - offset
     past = values_valid[dates_valid <= cutoff]
     if past.empty:
         return None
@@ -94,7 +101,8 @@ def period_return(series_dates, series_values, anchor_date, days=None):
 
 
 def build_returns_table(fund_prices):
-    """Günlük/Haftalık/Aylık/3A/6A/Yılbaşı/1Y/3Y getiri tablosu."""
+    """Günlük/Haftalık/Aylık/3A/6A/Yılbaşı/1Y/3Y getiri tablosu.
+    TEFAS'ın takvim ayı/yılı mantığına uyumlu (bkz. PERIODS notu)."""
     dates = fund_prices["Tarih"]
     prices = fund_prices["Fiyat"]
     anchor = dates.max()
@@ -107,13 +115,13 @@ def build_returns_table(fund_prices):
 
     return {
         "Günlük": gunluk,
-        "Haftalık": period_return(dates, prices, anchor, 7),
-        "Aylık": period_return(dates, prices, anchor, 30),
-        "3 Ay": period_return(dates, prices, anchor, 90),
-        "6 Ay": period_return(dates, prices, anchor, 180),
+        "Haftalık": period_return(dates, prices, anchor, pd.DateOffset(days=7)),
+        "Aylık": period_return(dates, prices, anchor, pd.DateOffset(months=1)),
+        "3 Ay": period_return(dates, prices, anchor, pd.DateOffset(months=3)),
+        "6 Ay": period_return(dates, prices, anchor, pd.DateOffset(months=6)),
         "Yılbaşı": period_return(dates, prices, anchor, None),
-        "1 Yıl": period_return(dates, prices, anchor, 365),
-        "3 Yıl": period_return(dates, prices, anchor, 365 * 3),
+        "1 Yıl": period_return(dates, prices, anchor, pd.DateOffset(years=1)),
+        "3 Yıl": period_return(dates, prices, anchor, pd.DateOffset(years=3)),
     }
 
 
@@ -124,13 +132,13 @@ def build_compare_table(fund_prices, bench_df):
     anchor = dates.max()
 
     out = {}
-    for key, days in PERIODS:
-        row = {"fon": period_return(dates, prices, anchor, days)}
+    for key, offset in PERIODS:
+        row = {"fon": period_return(dates, prices, anchor, offset)}
         if bench_df is not None:
             b = bench_df[bench_df["Tarih"] <= anchor]
             for label, col in BENCHMARK_COLS.items():
                 if col in b.columns:
-                    row[label] = period_return(b["Tarih"], b[col], anchor, days)
+                    row[label] = period_return(b["Tarih"], b[col], anchor, offset)
         out[key] = row
     return out
 
