@@ -466,11 +466,15 @@ function renderPriceChart(series, benchmarks, fundCode, index){
 
   // Grafiği kaydırdıkça/yakınlaştırdıkça, karşılaştırma modundaysa
   // normalize edilme noktasını o an ekranda görünen ilk güne göre yeniden hesapla.
-  priceChart.timeScale().subscribeVisibleTimeRangeChange(() => {
+  // İki farklı olayı da dinliyoruz: bazı durumlarda (özellikle veri setinin en
+  // sonuna/bugüne yaklaşırken) sadece biri güvenilir şekilde tetikleniyor.
+  const scheduleRebase = () => {
     if (activeCompares.length === 0) return;
     clearTimeout(rebaseTimer);
     rebaseTimer = setTimeout(rebaseComparePct, 120);
-  });
+  };
+  priceChart.timeScale().subscribeVisibleTimeRangeChange(scheduleRebase);
+  priceChart.timeScale().subscribeVisibleLogicalRangeChange(scheduleRebase);
 
   const tooltip = document.getElementById('chart-tooltip');
   const container = document.getElementById('price-chart');
