@@ -437,7 +437,7 @@ let priceChart, fundSeriesRef;
 let fundRawData = [], benchmarksData = {}, currentFundCode = "", fundIndex = [];
 let activeCompares = []; // [{type:'bench'|'fund', key, label, color, rawSeries, series}]
 let plottedSeries = []; // çizilmiş TÜM seriler — temizlik hep buradan yapılır, activeCompares'tan bağımsız
-let rebaseTimer = null;
+let lastRebaseFromTime = null;
 
 function renderPriceChart(series, benchmarks, fundCode, index){
   fundRawData = series;
@@ -464,24 +464,20 @@ function renderPriceChart(series, benchmarks, fundCode, index){
 
   drawChart();
 
-  // Grafiği kaydırdıkça/yakınlaştırdıkça, karşılaştırma modundaysa
-  // normalize edilme noktasını o an ekranda görünen ilk güne göre yeniden hesapla.
-  // İki farklı olayı da dinliyoruz: bazı durumlarda (özellikle veri setinin en
-  // sonuna/bugüne yaklaşırken) sadece biri güvenilir şekilde tetikleniyor.
-  const scheduleRebase = () => {
-    if (activeCompares.length === 0) return;
-    clearTimeout(rebaseTimer);
-    rebaseTimer = setTimeout(rebaseComparePct, 120);
-  };
-  priceChart.timeScale().subscribeVisibleTimeRangeChange(scheduleRebase);
-  priceChart.timeScale().subscribeVisibleLogicalRangeChange(scheduleRebase);
-
-  // Yedek tetikleyici: sürükleme/dokunma bittiğinde de bir kez daha dene —
-  // bazı sağa-kaydırma senaryolarında kütüphanenin kendi olayı hiç ateşlenmiyor.
-  const priceChartEl = document.getElementById('price-chart');
-  ['mouseup', 'touchend', 'mouseleave', 'wheel'].forEach(evt => {
-    priceChartEl.addEventListener(evt, scheduleRebase, {passive:true});
-  });
+  // Grafiği kaydırdıkça/yakınlaştırdıkça, karşılaştırma modundaysa normalize
+  // edilme noktasını o an ekranda görünen ilk güne göre yeniden hesapla.
+  // NOT: kütüphanenin kendi "görünen aralık değişti" olayları bazı yönlerde
+  // (özellikle sağa/bugüne doğru kaydırmada) güvenilir tetiklenmiyor — bu yüzden
+  // olaya bağlı kalmak yerine düzenli aralıklarla doğrudan kontrol ediyoruz.
+  setInterval(() => {
+    if (activeCompares.length === 0 || !priceChart) return;
+    const range = priceChart.timeScale().getVisibleRange();
+    const from = range && range.from;
+    if (from && from !== lastRebaseFromTime){
+      lastRebaseFromTime = from;
+      rebaseComparePct();
+    }
+  }, 200);
 
   const tooltip = document.getElementById('chart-tooltip');
   const container = document.getElementById('price-chart');
@@ -554,6 +550,7 @@ function drawChart(){
   plottedSeries.forEach(s => { try { priceChart.removeSeries(s); } catch(e){} });
   plottedSeries = [];
   fundSeriesRef = null;
+  lastRebaseFromTime = null; // sonraki poll turunda kesin yeniden hesaplansın
 
   if (activeCompares.length === 0){
     fundSeriesRef = priceChart.addAreaSeries({
