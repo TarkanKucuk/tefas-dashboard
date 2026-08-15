@@ -476,6 +476,13 @@ function renderPriceChart(series, benchmarks, fundCode, index){
   priceChart.timeScale().subscribeVisibleTimeRangeChange(scheduleRebase);
   priceChart.timeScale().subscribeVisibleLogicalRangeChange(scheduleRebase);
 
+  // Yedek tetikleyici: sürükleme/dokunma bittiğinde de bir kez daha dene —
+  // bazı sağa-kaydırma senaryolarında kütüphanenin kendi olayı hiç ateşlenmiyor.
+  const priceChartEl = document.getElementById('price-chart');
+  ['mouseup', 'touchend', 'mouseleave', 'wheel'].forEach(evt => {
+    priceChartEl.addEventListener(evt, scheduleRebase, {passive:true});
+  });
+
   const tooltip = document.getElementById('chart-tooltip');
   const container = document.getElementById('price-chart');
   priceChart.subscribeCrosshairMove(param => {
