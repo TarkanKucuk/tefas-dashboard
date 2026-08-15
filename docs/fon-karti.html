@@ -62,14 +62,48 @@
     border-radius:14px;
     border:1px solid var(--line);
     padding:14px 20px;
-    display:flex;
-    flex-wrap:wrap;
-    gap:22px;
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:16px 22px;
   }
-  .stat{display:flex;align-items:center;gap:10px;min-width:130px;}
-  .stat .icon{font-size:20px;opacity:.85;}
-  .stat .num{font-size:16px;font-weight:700;}
+  @media (max-width:700px){ .stat-strip{grid-template-columns:repeat(2,1fr);} }
+  .stat{display:flex;align-items:center;gap:10px;min-width:0;}
+  .stat .icon{font-size:20px;opacity:.85;flex-shrink:0;}
+  .stat .num{font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .stat .lbl{font-size:11px;color:var(--ink-dim);}
+
+  /* Sayfa üstü ana sekmeler */
+  .page-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:4px;}
+  .page-tab{
+    background:var(--panel);border:1px solid var(--line);color:var(--ink-dim);
+    padding:9px 16px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;flex:1;text-align:center;
+  }
+  .page-tab.active{background:var(--blue);color:#fff;border-color:var(--blue);}
+  .page-panel{display:none;flex-direction:column;gap:18px;}
+  .page-panel.active{display:flex;}
+  @media (max-width:600px){ .page-tab{font-size:11.5px;padding:9px 8px;} }
+
+  /* Fon arama kutusu */
+  .fund-search-wrap{position:relative;flex:1;min-width:180px;}
+  .fund-search-wrap input{
+    width:100%;background:rgba(255,255,255,0.06);border:1px solid var(--line);color:var(--ink);
+    border-radius:8px;padding:8px 12px;font-size:13px;
+  }
+  .fund-search-wrap input::placeholder{color:var(--ink-dim);}
+  .header{flex-wrap:wrap;}
+
+  /* Nakit akışı listesi */
+  .flow-list{display:flex;flex-direction:column;gap:8px;}
+  .flow-row{display:grid;grid-template-columns:70px 1fr 110px;align-items:center;gap:10px;font-size:12.5px;}
+  .flow-row .ay{color:var(--ink-dim);}
+  .flow-row .bar-track{background:#1c1e26;border-radius:4px;height:16px;position:relative;overflow:hidden;}
+  .flow-row .bar-fill{position:absolute;top:0;bottom:0;border-radius:4px;}
+  .flow-row .bar-fill.pos{background:var(--green);left:50%;}
+  .flow-row .bar-fill.neg{background:var(--red);right:50%;}
+  .flow-row .mid-line{position:absolute;left:50%;top:0;bottom:0;width:1px;background:var(--line);}
+  .flow-row .val{text-align:right;font-weight:700;white-space:nowrap;}
+  .flow-row .val.pos{color:var(--green);}
+  .flow-row .val.neg{color:var(--red);}
 
   /* Returns table */
   .returns{
@@ -96,9 +130,7 @@
     border-radius:14px;
     padding:16px;
   }
-  .card-light{background:var(--panel-light);color:#20242c;}
   .card h3{margin:0 0 12px 4px;font-size:14px;font-weight:700;letter-spacing:.3px;}
-  .card-light h3{color:#20242c;}
   #price-chart{height:340px;}
 
   .chart-legend{
@@ -140,8 +172,6 @@
     padding:6px 12px;border-radius:7px;font-size:12px;cursor:pointer;
   }
   .tab.active{background:var(--blue);color:#fff;border-color:var(--blue);}
-  .card-light .tab{border-color:#d5dae2;color:#5a6472;}
-  .card-light .tab.active{background:var(--blue);color:#fff;border-color:var(--blue);}
 
   .row-2{display:grid;grid-template-columns:1fr 1.4fr;gap:16px;}
   .row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
@@ -183,6 +213,7 @@
   .radar-col{min-height:280px;}
   .radar-legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:8px;justify-content:center;font-size:11px;color:var(--ink-dim);}
   .radar-legend .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:middle;}
+  /* not: radar ızgara/eksen çizgi renkleri JS'de #5b6070 olarak ayarlandı (item 11 — daha açık ton) */
 
   .note{font-size:11.5px;color:var(--ink-dim);padding:2px 6px;}
 </style>
@@ -192,7 +223,7 @@
 
   <!-- HEADER -->
   <div class="header">
-    <div class="score-badge">
+    <div class="score-badge" id="score-badge">
       <div class="code" id="hdr-code">PBR</div>
       <div class="score-box">
         <div class="label">Kategori Skoru</div>
@@ -200,127 +231,148 @@
       </div>
     </div>
     <div class="fund-name" id="hdr-name">Yükleniyor…</div>
-  </div>
-
-  <!-- STAT STRIP -->
-  <div class="stat-strip">
-    <div class="stat"><span class="icon">💰</span><div><div class="num" id="stat-toplam">—</div><div class="lbl">Toplam Fon Değeri</div></div></div>
-    <div class="stat"><span class="icon">👥</span><div><div class="num" id="stat-yatirimci">—</div><div class="lbl">Yatırımcı Sayısı</div></div></div>
-    <div class="stat"><span class="icon">🎯</span><div><div class="num" id="stat-risk">—</div><div class="lbl">Risk Değeri</div></div></div>
-    <div class="stat"><span class="icon">✂️</span><div><div class="num" id="stat-stopaj">—</div><div class="lbl">Stopaj</div></div></div>
-    <div class="stat"><span class="icon">🏦</span><div><div class="num" id="stat-yonetim">—</div><div class="lbl">Yönetim Ücreti</div></div></div>
-    <div class="stat"><span class="icon">☂️</span><div><div class="num" id="stat-semsiye">—</div><div class="lbl">Şemsiye</div></div></div>
-    <div class="stat"><span class="icon">🗂️</span><div><div class="num" id="stat-kategori">—</div><div class="lbl">Kategori</div></div></div>
-    <div class="stat"><span class="icon">📅</span><div><div class="num" id="stat-tarih">—</div><div class="lbl">Veri Tarihi</div></div></div>
-  </div>
-
-  <!-- RETURNS TABLE -->
-  <div class="returns" id="returns-table"></div>
-
-  <!-- PRICE CHART -->
-  <div class="card">
-    <h3>Fiyat Grafiği</h3>
-    <div class="mode-tabs" id="chart-mode-tabs">
-      <button class="tab" data-bench="USD">USD</button>
-      <button class="tab" data-bench="EUR">EUR</button>
-      <button class="tab" data-bench="BIST100">BIST 100</button>
-      <button class="tab" data-bench="TLREF">TLREF</button>
-      <button class="tab" data-bench="Altin">Gram Altın</button>
-      <button class="tab tab-clear" id="clear-compare-btn">Temizle</button>
-    </div>
-    <div class="fund-compare-row">
-      <input type="text" id="fund-compare-input" list="fund-compare-list" placeholder="Başka bir fonla karşılaştır (kod yaz veya seç)…" autocomplete="off">
-      <datalist id="fund-compare-list"></datalist>
-      <button class="tab" id="fund-compare-btn">Ekle</button>
-      <span id="fund-compare-error" class="fund-compare-error"></span>
-    </div>
-    <div id="chart-legend" class="chart-legend" style="display:none;"></div>
-    <div style="position:relative;">
-      <div id="price-chart"></div>
-      <div id="chart-tooltip" class="chart-tooltip"></div>
+    <div class="fund-search-wrap">
+      <input type="text" id="fund-search-input" list="fund-search-list" placeholder="🔍 Fon ara (kod veya isim)…" autocomplete="off">
+      <datalist id="fund-search-list"></datalist>
     </div>
   </div>
 
-  <!-- ALLOCATION -->
-  <div class="row-2">
-    <div class="card card-light">
-      <h3>Son tarihli Varlık Dağılımı</h3>
-      <canvas id="alloc-latest-chart"></canvas>
+  <!-- ANA SEKMELER -->
+  <div class="page-tabs" id="page-tabs">
+    <button class="page-tab active" data-panel="panel-genel">Genel Bilgi</button>
+    <button class="page-tab" data-panel="panel-dagilim">Varlık Dağılımı</button>
+    <button class="page-tab" data-panel="panel-yatirimci">Yatırımcı &amp; Değer</button>
+    <button class="page-tab" data-panel="panel-skor">Fonlarca Skoru</button>
+  </div>
+
+  <!-- PANEL: GENEL BİLGİ -->
+  <div class="page-panel active" id="panel-genel">
+    <!-- STAT STRIP -->
+    <div class="stat-strip">
+      <div class="stat"><span class="icon">💰</span><div><div class="num" id="stat-toplam">—</div><div class="lbl">Toplam Fon Değeri</div></div></div>
+      <div class="stat"><span class="icon">👥</span><div><div class="num" id="stat-yatirimci">—</div><div class="lbl">Yatırımcı Sayısı</div></div></div>
+      <div class="stat"><span class="icon">🎯</span><div><div class="num" id="stat-risk">—</div><div class="lbl">Risk Değeri</div></div></div>
+      <div class="stat"><span class="icon">✂️</span><div><div class="num" id="stat-stopaj">—</div><div class="lbl">Stopaj</div></div></div>
+      <div class="stat"><span class="icon">🏦</span><div><div class="num" id="stat-yonetim">—</div><div class="lbl">Yönetim Ücreti</div></div></div>
+      <div class="stat"><span class="icon">☂️</span><div><div class="num" id="stat-semsiye">—</div><div class="lbl">Şemsiye</div></div></div>
+      <div class="stat"><span class="icon">🗂️</span><div><div class="num" id="stat-kategori">—</div><div class="lbl">Kategori</div></div></div>
+      <div class="stat"><span class="icon">📅</span><div><div class="num" id="stat-tarih">—</div><div class="lbl">Veri Tarihi</div></div></div>
     </div>
-    <div class="card card-light">
-      <h3>Varlık Dağılımı Değişimi</h3>
-      <div class="tabs" data-group="alloc-change">
-        <button class="tab" data-period="1H">Haftalık</button>
-        <button class="tab" data-period="1A">Aylık</button>
-        <button class="tab" data-period="3A">3 Aylık</button>
-        <button class="tab" data-period="6A">6 Aylık</button>
-        <button class="tab" data-period="YB">Yılbaşından İtibaren</button>
-        <button class="tab active" data-period="1Y">1 Yıllık</button>
-        <button class="tab" data-period="3Y">3 Yıllık</button>
-        <button class="tab" data-period="5Y">5 Yıllık</button>
+
+    <!-- RETURNS TABLE -->
+    <div class="returns" id="returns-table"></div>
+
+    <!-- PRICE CHART -->
+    <div class="card">
+      <h3>Fiyat Grafiği</h3>
+      <div class="mode-tabs" id="chart-mode-tabs">
+        <button class="tab" data-bench="USD">USD</button>
+        <button class="tab" data-bench="EUR">EUR</button>
+        <button class="tab" data-bench="BIST100">BIST 100</button>
+        <button class="tab" data-bench="TLREF">TLREF</button>
+        <button class="tab" data-bench="Altin">Gram Altın</button>
+        <button class="tab tab-clear" id="clear-compare-btn">Temizle</button>
       </div>
-      <canvas id="alloc-change-chart"></canvas>
+      <div class="fund-compare-row">
+        <input type="text" id="fund-compare-input" list="fund-compare-list" placeholder="Başka bir fonla karşılaştır (kod yaz veya seç)…" autocomplete="off">
+        <datalist id="fund-compare-list"></datalist>
+        <button class="tab" id="fund-compare-btn">Ekle</button>
+        <span id="fund-compare-error" class="fund-compare-error"></span>
+      </div>
+      <div id="chart-legend" class="chart-legend" style="display:none;"></div>
+      <div style="position:relative;">
+        <div id="price-chart"></div>
+        <div id="chart-tooltip" class="chart-tooltip"></div>
+      </div>
     </div>
   </div>
 
-  <!-- INVESTOR / VALUE / CASHFLOW -->
-  <div class="tabs" data-group="flows" style="margin:0 4px;">
-    <button class="tab" data-period="1H">Haftalık</button>
-    <button class="tab" data-period="1A">Aylık</button>
-    <button class="tab" data-period="3A">3 Aylık</button>
-    <button class="tab" data-period="6A">6 Aylık</button>
-    <button class="tab" data-period="YB">Yılbaşından İtibaren</button>
-    <button class="tab active" data-period="1Y">1 Yıllık</button>
-    <button class="tab" data-period="3Y">3 Yıllık</button>
-    <button class="tab" data-period="5Y">5 Yıllık</button>
-  </div>
-  <div class="row-3">
-    <div class="card card-light">
-      <h3>👥 <span id="tt-investors">Fon</span> Yatırımcı Sayısı Grafiği</h3>
-      <canvas id="investors-chart"></canvas>
-    </div>
-    <div class="card card-light">
-      <h3>💎 <span id="tt-totalvalue">Fon</span> Toplam Değer Grafiği</h3>
-      <canvas id="totalvalue-chart"></canvas>
-    </div>
-    <div class="card card-light">
-      <h3><span id="tt-cashflow">Fon</span> Nakit Giriş/Çıkış (Net)</h3>
-      <canvas id="cashflow-chart"></canvas>
+  <!-- PANEL: VARLIK DAĞILIMI -->
+  <div class="page-panel" id="panel-dagilim">
+    <div class="row-2">
+      <div class="card">
+        <h3>Son Tarihli Varlık Dağılımı</h3>
+        <canvas id="alloc-latest-chart"></canvas>
+      </div>
+      <div class="card">
+        <h3>Varlık Dağılımı Değişimi</h3>
+        <div class="tabs" data-group="alloc-change">
+          <button class="tab" data-period="1H">Haftalık</button>
+          <button class="tab" data-period="1A">Aylık</button>
+          <button class="tab" data-period="3A">3 Aylık</button>
+          <button class="tab" data-period="6A">6 Aylık</button>
+          <button class="tab" data-period="YB">Yılbaşından İtibaren</button>
+          <button class="tab active" data-period="1Y">1 Yıllık</button>
+          <button class="tab" data-period="3Y">3 Yıllık</button>
+          <button class="tab" data-period="5Y">5 Yıllık</button>
+        </div>
+        <canvas id="alloc-change-chart"></canvas>
+      </div>
     </div>
   </div>
 
-  <!-- FONLARCA SKORU DETAYLARI -->
-  <div class="score-panel">
-    <h2>Fonlarca Skoru Detayları</h2>
-    <div class="sub" id="score-sub">—</div>
+  <!-- PANEL: YATIRIMCI & DEĞER -->
+  <div class="page-panel" id="panel-yatirimci">
+    <div class="tabs" data-group="flows">
+      <button class="tab" data-period="1H">Haftalık</button>
+      <button class="tab" data-period="1A">Aylık</button>
+      <button class="tab" data-period="3A">3 Aylık</button>
+      <button class="tab" data-period="6A">6 Aylık</button>
+      <button class="tab" data-period="YB">Yılbaşından İtibaren</button>
+      <button class="tab active" data-period="1Y">1 Yıllık</button>
+      <button class="tab" data-period="3Y">3 Yıllık</button>
+      <button class="tab" data-period="5Y">5 Yıllık</button>
+    </div>
+    <div class="row-2">
+      <div class="card">
+        <h3>👥 <span id="tt-investors">Fon</span> Yatırımcı Sayısı Grafiği</h3>
+        <canvas id="investors-chart"></canvas>
+      </div>
+      <div class="card">
+        <h3>💎 <span id="tt-totalvalue">Fon</span> Toplam Değer Grafiği (Milyar TL)</h3>
+        <canvas id="totalvalue-chart"></canvas>
+      </div>
+    </div>
+    <div class="card">
+      <h3><span id="tt-cashflow">Fon</span> Nakit Giriş/Çıkış (Net, Aylık)</h3>
+      <div id="cashflow-list" class="flow-list"></div>
+    </div>
+  </div>
 
-    <div class="score-grid">
-      <div class="gauge-col">
-        <div class="gauge-wrap">
-          <canvas id="score-gauge"></canvas>
-          <div class="gauge-center">
-            <div class="num" id="gauge-num">—</div>
-            <div class="lbl">Kategori Skoru</div>
+  <!-- PANEL: FONLARCA SKORU -->
+  <div class="page-panel" id="panel-skor">
+    <div class="score-panel">
+      <h2>Fonlarca Skoru Detayları</h2>
+      <div class="sub" id="score-sub">—</div>
+
+      <div class="score-grid">
+        <div class="gauge-col">
+          <div class="gauge-wrap">
+            <canvas id="score-gauge"></canvas>
+            <div class="gauge-center">
+              <div class="num" id="gauge-num">—</div>
+              <div class="lbl">Kategori Skoru</div>
+            </div>
+          </div>
+          <div class="rank-ribbon">
+            <div class="medal">🏆</div>
+            <div class="txt" id="rank-txt">—</div>
           </div>
         </div>
-        <div class="rank-ribbon">
-          <div class="medal">🏆</div>
-          <div class="txt" id="rank-txt">—</div>
-        </div>
-      </div>
 
-      <div class="radar-col">
-        <canvas id="score-radar"></canvas>
-        <div class="radar-legend">
-          <span><span class="dot" style="background:#4cbb6d;"></span>Güçlü (≥80)</span>
-          <span><span class="dot" style="background:#e0b23f;"></span>Orta (50–79)</span>
-          <span><span class="dot" style="background:#e05a5a;"></span>Zayıf (&lt;50)</span>
+        <div class="radar-col">
+          <canvas id="score-radar"></canvas>
+          <div class="radar-legend">
+            <span><span class="dot" style="background:#4cbb6d;"></span>Güçlü (≥80)</span>
+            <span><span class="dot" style="background:#e0b23f;"></span>Orta (50–79)</span>
+            <span><span class="dot" style="background:#e05a5a;"></span>Zayıf (&lt;50)</span>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
-  <div class="note">Bu sayfa docs/data/fon-kartlari/{KOD}.json dosyasından gerçek veriyle besleniyor. Farklı bir fon görmek için URL'nin sonuna ?kod=FONKODU ekle (örn. ?kod=TLY). Benchmark karşılaştırmasında bazı dönemler benchmarklar.parquet'teki veri boşlukları nedeniyle "—" görünebilir.</div>
+  <div class="note">Bu sayfa docs/data/fon-kartlari/{KOD}.json dosyasından gerçek veriyle besleniyor. Benchmark karşılaştırmasında bazı dönemler benchmarklar.parquet'teki veri boşlukları nedeniyle "—" görünebilir.</div>
 
 </div>
 
@@ -365,6 +417,39 @@ function trDate(iso){
 }
 function tierColor(v){ return v===null||v===undefined ? '#6b7280' : v>=80 ? '#4cbb6d' : v>=50 ? '#e0b23f' : '#e05a5a'; }
 
+/* Bar grafiklerin üzerine/yanına değer yazan hafif, tekrar kullanılabilir Chart.js eklentisi
+   (harici kütüphane gerektirmiyor) — her chart'a ayrı, izole bir kopya olarak verilir. */
+function makeValueLabelPlugin(formatter, color){
+  return {
+    id: 'valueLabel' + Math.random().toString(36).slice(2),
+    afterDatasetsDraw(chart){
+      const { ctx } = chart;
+      const horizontal = chart.options.indexAxis === 'y';
+      chart.data.datasets.forEach((ds, dsIndex) => {
+        const meta = chart.getDatasetMeta(dsIndex);
+        meta.data.forEach((bar, i) => {
+          const value = ds.data[i];
+          if (value == null) return;
+          const label = formatter(value, i);
+          if (label == null) return;
+          ctx.save();
+          ctx.fillStyle = color || '#c9cdd6';
+          ctx.font = '600 11px -apple-system,Segoe UI,Arial,sans-serif';
+          if (horizontal){
+            ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+            ctx.fillText(label, bar.x + 8, bar.y);
+          } else {
+            ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+            ctx.fillText(label, bar.x, bar.y - 6);
+          }
+          ctx.restore();
+        });
+      });
+    }
+  };
+}
+const ALLOC_BAR_COLORS = ["#5b9bd5","#f2b134","#79c26a","#a58ad1","#e0806b","#4fb8a0","#e05ac0","#9b8cff","#5dd5d0","#ff8c42"];
+
 /* ---------- ana akış ---------- */
 Promise.all([
   fetch(`${DATA_BASE}/${FUND_CODE}.json`).then(r => {
@@ -382,19 +467,53 @@ Promise.all([
 
 function renderCard(data, benchmarks, index){
   renderHeader(data);
+  renderFundSearch(index || []);
   renderReturns(data.getiriler || {});
   renderPriceChart(data.fiyat_grafigi || [], benchmarks || {}, data.fon_kodu || FUND_CODE, index || []);
   renderAllocation(data.varlik_dagilimi || {});
   renderFlows(data.akislar || {});
   renderScore(data.fonlarca_skoru || {});
   wireTabs(data);
+  wirePageTabs();
+}
+
+/* ---------- fon arama (başlıkta) ---------- */
+function renderFundSearch(index){
+  const list = document.getElementById('fund-search-list');
+  list.innerHTML = index
+    .map(f => `<option value="${f.kod}">${f.kod} — ${f.ad || ''}</option>`)
+    .join('');
+  const input = document.getElementById('fund-search-input');
+  function goToFund(){
+    const raw = input.value.trim();
+    if (!raw) return;
+    const kod = raw.split(/[—-]/)[0].trim().toUpperCase();
+    const match = index.find(f => f.kod.toUpperCase() === kod);
+    if (match) window.location.href = `fon-karti.html?kod=${match.kod}`;
+  }
+  input.addEventListener('change', goToFund);
+  input.addEventListener('keydown', e=>{ if (e.key==='Enter'){ e.preventDefault(); goToFund(); } });
+}
+
+/* ---------- sayfa ana sekmeleri ---------- */
+function wirePageTabs(){
+  document.querySelectorAll('#page-tabs .page-tab').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('#page-tabs .page-tab').forEach(b=>b.classList.remove('active'));
+      document.querySelectorAll('.page-panel').forEach(p=>p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(btn.dataset.panel).classList.add('active');
+    });
+  });
 }
 
 /* ---------- header + stat şeridi ---------- */
 function renderHeader(d){
   document.getElementById('hdr-code').textContent = d.fon_kodu || FUND_CODE;
   document.getElementById('hdr-name').textContent = d.fon_adi || "—";
-  document.getElementById('hdr-score').textContent = d.fonlarca_skoru ? trNum(d.fonlarca_skoru.kategori_skoru, 1) : "—";
+  const score = d.fonlarca_skoru ? d.fonlarca_skoru.kategori_skoru : null;
+  document.getElementById('hdr-score').textContent = score!=null ? trNum(score, 1) : "—";
+  document.getElementById('score-badge').style.background = tierColor(score);
 
   document.getElementById('stat-toplam').textContent = trBigMoney(d.toplam_fon_degeri);
   document.getElementById('stat-yatirimci').textContent = trInt(d.yatirimci_sayisi);
@@ -686,13 +805,19 @@ function renderAllocation(alloc){
   const values = Object.values(latest);
   new Chart(document.getElementById('alloc-latest-chart'), {
     type:'bar',
-    data:{ labels, datasets:[{data: values, backgroundColor:'#1e3a8a'}] },
+    data:{ labels, datasets:[{
+      data: values,
+      backgroundColor: labels.map((_,i)=>ALLOC_BAR_COLORS[i % ALLOC_BAR_COLORS.length]),
+      borderRadius:4, barPercentage:0.7,
+    }] },
     options:{
       indexAxis:'y',
-      plugins:{legend:{display:false}},
-      scales:{ x:{ticks:{color:'#5a6472', callback:v=>'%'+v}, grid:{color:'#e3e7ee'}},
-               y:{ticks:{color:'#20242c'}, grid:{display:false}} }
-    }
+      layout:{padding:{right:40}},
+      plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>'%'+trNum(c.raw,2)}}},
+      scales:{ x:{display:false, grid:{display:false}},
+               y:{ticks:{color:'#c9cdd6', font:{size:11}}, grid:{display:false}} }
+    },
+    plugins:[makeValueLabelPlugin(v=>'%'+trNum(v,2))]
   });
 
   allocHistory = alloc.gecmis || {tarihler:[], seriler:{}};
@@ -701,17 +826,21 @@ function renderAllocation(alloc){
     type:'line',
     data:{ labels:[], datasets:[] },
     options:{
-      plugins:{legend:{position:'bottom', labels:{color:'#5a6472', boxWidth:12, font:{size:10}}}},
-      scales:{
-        x:{ticks:{color:'#5a6472', maxTicksLimit:8}, grid:{display:false}},
-        y:{stacked:true, min:0, max:100, ticks:{color:'#5a6472', callback:v=>'%'+v}, grid:{color:'#e3e7ee'}}
+      interaction:{ mode:'index', intersect:false },
+      plugins:{
+        legend:{position:'bottom', labels:{color:'#c9cdd6', boxWidth:12, font:{size:10}}},
+        tooltip:{ mode:'index', intersect:false, callbacks:{ label:c=>`${c.dataset.label}: %${trNum(c.raw,2)}` } },
       },
-      elements:{point:{radius:0}}
+      scales:{
+        x:{ticks:{color:'#9aa0ac', maxTicksLimit:8}, grid:{color:'#1c1e26'}},
+        y:{stacked:true, min:0, max:100, ticks:{color:'#9aa0ac', callback:v=>'%'+v}, grid:{color:'#1c1e26'}}
+      },
+      elements:{point:{radius:0, hitRadius:12, hoverRadius:4}}
     }
   });
   updateAllocChange("1Y");
 }
-const STACK_COLORS = ["#5b9bd5","#f2b134","#79c26a","#a58ad1","#e0806b","#4fb8a0","#c9c9c9"];
+const STACK_COLORS = ALLOC_BAR_COLORS;
 function updateAllocChange(period){
   const months = PERIOD_MONTHS[period] || 12;
   let tarihler = allocHistory.tarihler || [];
@@ -759,24 +888,24 @@ function updateAllocChange(period){
 }
 
 /* ---------- yatırımcı / değer / nakit akışı ---------- */
-let investorsChart, totalValueChart, cashflowChart, flowsData;
+let investorsChart, totalValueChart, flowsData;
 function renderFlows(akislar){
   flowsData = akislar;
-  const empty = { labels:[], data:[] };
-  investorsChart = makeBar('investors-chart', empty, '#2f7c7a', v=>trInt(v));
-  totalValueChart = makeBar('totalvalue-chart', empty, '#2f7c7a', v=>trBigMoney(v));
-  cashflowChart = makeBar('cashflow-chart', empty, '#2f7c7a', v=>trBigMoney(v));
+  investorsChart = makeBar('investors-chart', v=>trInt(v));
+  totalValueChart = makeBar('totalvalue-chart', v=>trNum(v/1e9,2));
   updateFlows("1Y");
 }
-function makeBar(canvasId, initial, color, fmt){
+function makeBar(canvasId, fmt){
   return new Chart(document.getElementById(canvasId), {
     type:'bar',
-    data:{ labels: initial.labels, datasets:[{data: initial.data, backgroundColor: color}] },
+    data:{ labels:[], datasets:[{data:[], backgroundColor:'#3fb6ab', borderRadius:4, barPercentage:0.6}] },
     options:{
+      layout:{padding:{top:22}},
       plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>fmt(c.raw)}}},
-      scales:{ x:{ticks:{color:'#5a6472'}, grid:{display:false}},
-               y:{ticks:{color:'#5a6472', callback:v=>fmt(v)}, grid:{color:'#e3e7ee'}} }
-    }
+      scales:{ x:{ticks:{color:'#9aa0ac', font:{size:11}}, grid:{display:false}},
+               y:{display:false, grid:{display:false}} }
+    },
+    plugins:[makeValueLabelPlugin(fmt)]
   });
 }
 function updateFlows(period){
@@ -794,9 +923,35 @@ function updateFlows(period){
   totalValueChart.data.datasets[0].data = (flowsData.toplam_deger||[]).slice(start);
   totalValueChart.update();
 
-  cashflowChart.data.labels = labels;
-  cashflowChart.data.datasets[0].data = (flowsData.net_nakit_akisi||[]).slice(start);
-  cashflowChart.update();
+  renderCashflowList((flowsData.net_nakit_akisi||[]).slice(start), labels);
+}
+
+/* Nakit Giriş/Çıkış — chart yerine, her ayı satır satır gösteren,
+   büyüklüğü yatay çubukla ifade eden bir liste (fon akışı tabloları
+   yaygın olarak bu şekilde sunulur — okunması chart'tan daha kolay). */
+function renderCashflowList(values, labels){
+  const box = document.getElementById('cashflow-list');
+  const maxAbs = Math.max(1, ...values.filter(v=>v!=null).map(v=>Math.abs(v)));
+  box.innerHTML = '';
+  labels.forEach((ay, i) => {
+    const v = values[i];
+    const row = document.createElement('div');
+    row.className = 'flow-row';
+    if (v == null){
+      row.innerHTML = `<div class="ay">${ay}</div><div class="bar-track"><div class="mid-line"></div></div><div class="val">—</div>`;
+      box.appendChild(row); return;
+    }
+    const pct = Math.min(50, Math.abs(v) / maxAbs * 50);
+    const cls = v >= 0 ? 'pos' : 'neg';
+    row.innerHTML = `
+      <div class="ay">${ay}</div>
+      <div class="bar-track">
+        <div class="mid-line"></div>
+        <div class="bar-fill ${cls}" style="width:${pct}%;"></div>
+      </div>
+      <div class="val ${cls}">${v>=0?'+':''}${trBigMoney(v)} TL</div>`;
+    box.appendChild(row);
+  });
 }
 
 /* ---------- fonlarca skoru: gauge + radar ---------- */
@@ -829,7 +984,7 @@ function renderScore(skor){
     },
     options:{
       plugins:{ legend:{display:false}, tooltip:{callbacks:{label:c=> c.label + ': ' + trNum(c.raw,1)}} },
-      scales:{ r:{ min:0, max:100, angleLines:{color:'#3a3d48'}, grid:{color:'#3a3d48'},
+      scales:{ r:{ min:0, max:100, angleLines:{color:'#565c6b'}, grid:{color:'#565c6b'},
                    pointLabels:{color:'#c9cdd6', font:{size:11, weight:'600'}}, ticks:{display:false} } }
     }
   });
