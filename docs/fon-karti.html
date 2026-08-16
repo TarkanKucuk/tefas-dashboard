@@ -48,7 +48,7 @@
     gap:12px;
     flex-shrink:0;
   }
-  .score-badge .code{font-size:22px;font-weight:800;letter-spacing:.5px;}
+  .score-badge .code{font-size:26px;font-weight:800;letter-spacing:.5px;}
   .score-badge .score-box{text-align:center;line-height:1.1;}
   .score-badge .score-box .label{font-size:10px;color:#d8f2ef;text-transform:uppercase;}
   .score-badge .score-box .val{
@@ -69,8 +69,8 @@
   @media (max-width:700px){ .stat-strip{grid-template-columns:repeat(2,1fr);} }
   .stat{display:flex;align-items:center;gap:10px;min-width:0;}
   .stat .icon{font-size:20px;opacity:.85;flex-shrink:0;}
-  .stat .num{font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .stat .lbl{font-size:11px;color:var(--ink-dim);}
+  .stat .num{font-size:17px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .stat .lbl{font-size:12.5px;color:var(--ink-dim);}
 
   /* Sayfa üstü ana sekmeler */
   .page-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:4px;}
@@ -118,8 +118,8 @@
     padding:10px 6px;
     text-align:center;
   }
-  .returns .cell .h{font-size:11px;color:var(--ink-dim);margin-bottom:4px;}
-  .returns .cell .v{font-size:15px;font-weight:700;}
+  .returns .cell .h{font-size:12.5px;color:var(--ink-dim);margin-bottom:4px;}
+  .returns .cell .v{font-size:18px;font-weight:700;}
   .returns .cell .v.pos{color:var(--green);}
   .returns .cell .v.neg{color:var(--red);}
 
@@ -162,6 +162,18 @@
   .fund-compare-row input::placeholder{color:var(--ink-dim);}
   .fund-compare-error{color:var(--red); font-size:11.5px;}
 
+  /* Aylık Getiriler tablosu */
+  .monthly-table-wrap{overflow-x:auto; -webkit-overflow-scrolling:touch;}
+  .monthly-table{border-collapse:separate; border-spacing:5px; font-size:12.5px; white-space:nowrap;}
+  .monthly-table th{color:var(--ink-dim); font-weight:600; text-align:center; padding:2px 10px; font-size:11.5px;}
+  .monthly-table th:first-child, .monthly-table td:first-child{text-align:left;}
+  .monthly-table th:last-child, .monthly-table td:last-child{text-align:right; padding-right:6px;}
+  .monthly-table td{text-align:center; padding:7px 11px; border-radius:7px; background:#1c1e26; color:var(--ink-dim); font-weight:600;}
+  .monthly-table td.yil{background:transparent; color:var(--ink); font-weight:800; font-size:13.5px; padding-left:2px;}
+  .monthly-table td.pos{background:rgba(76,187,109,0.16); color:#4cbb6d;}
+  .monthly-table td.neg{background:rgba(224,90,90,0.16); color:#e05a5a;}
+  .monthly-table td.toplam{background:transparent; font-weight:800; font-size:13.5px;}
+
   .tab-clear{border-color:var(--red); color:#e8a3a3;}
   .tab-clear:hover{background:rgba(224,90,90,0.12);}
 
@@ -173,7 +185,7 @@
   }
   .tab.active{background:var(--blue);color:#fff;border-color:var(--blue);}
 
-  .row-2{display:grid;grid-template-columns:1fr 1.4fr;gap:16px;}
+  .row-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
   .row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
   @media (max-width:900px){.row-2,.row-3{grid-template-columns:1fr;}}
 
@@ -285,29 +297,35 @@
         <div id="chart-tooltip" class="chart-tooltip"></div>
       </div>
     </div>
+
+    <!-- AYLIK GETİRİLER -->
+    <div class="card">
+      <h3>Aylık Getiriler</h3>
+      <div class="monthly-table-wrap">
+        <table class="monthly-table" id="monthly-returns-table"></table>
+      </div>
+    </div>
   </div>
 
   <!-- PANEL: VARLIK DAĞILIMI -->
   <div class="page-panel" id="panel-dagilim">
-    <div class="row-2">
-      <div class="card">
-        <h3>Son Tarihli Varlık Dağılımı</h3>
-        <canvas id="alloc-latest-chart"></canvas>
+    <div class="card">
+      <h3>Son Tarihli Varlık Dağılımı</h3>
+      <canvas id="alloc-latest-chart"></canvas>
+    </div>
+    <div class="card">
+      <h3>Varlık Dağılımı Değişimi</h3>
+      <div class="tabs" data-group="alloc-change">
+        <button class="tab" data-period="1H">Haftalık</button>
+        <button class="tab" data-period="1A">Aylık</button>
+        <button class="tab" data-period="3A">3 Aylık</button>
+        <button class="tab" data-period="6A">6 Aylık</button>
+        <button class="tab" data-period="YB">Yılbaşından İtibaren</button>
+        <button class="tab active" data-period="1Y">1 Yıllık</button>
+        <button class="tab" data-period="3Y">3 Yıllık</button>
+        <button class="tab" data-period="5Y">5 Yıllık</button>
       </div>
-      <div class="card">
-        <h3>Varlık Dağılımı Değişimi</h3>
-        <div class="tabs" data-group="alloc-change">
-          <button class="tab" data-period="1H">Haftalık</button>
-          <button class="tab" data-period="1A">Aylık</button>
-          <button class="tab" data-period="3A">3 Aylık</button>
-          <button class="tab" data-period="6A">6 Aylık</button>
-          <button class="tab" data-period="YB">Yılbaşından İtibaren</button>
-          <button class="tab active" data-period="1Y">1 Yıllık</button>
-          <button class="tab" data-period="3Y">3 Yıllık</button>
-          <button class="tab" data-period="5Y">5 Yıllık</button>
-        </div>
-        <canvas id="alloc-change-chart"></canvas>
-      </div>
+      <canvas id="alloc-change-chart"></canvas>
     </div>
   </div>
 
@@ -406,8 +424,9 @@ function trPct(v, decimals=2){
 }
 function trBigMoney(v){
   if (v === null || v === undefined || isNaN(v)) return "—";
-  if (v >= 1e9) return trNum(v/1e9, 2) + " Milyar";
-  if (v >= 1e6) return trNum(v/1e6, 2) + " Milyon";
+  const abs = Math.abs(v);
+  if (abs >= 1e9) return trNum(v/1e9, 2) + " Mlr";
+  if (abs >= 1e6) return trNum(v/1e6, 2) + " Mn";
   return trInt(v);
 }
 function trDate(iso){
@@ -470,6 +489,7 @@ function renderCard(data, benchmarks, index){
   renderFundSearch(index || []);
   renderReturns(data.getiriler || {});
   renderPriceChart(data.fiyat_grafigi || [], benchmarks || {}, data.fon_kodu || FUND_CODE, index || []);
+  renderMonthlyReturnsTable(data.fiyat_grafigi || []);
   renderAllocation(data.varlik_dagilimi || {});
   renderFlows(data.akislar || {});
   renderScore(data.fonlarca_skoru || {});
@@ -543,6 +563,59 @@ function renderReturns(getiriler){
     cell.innerHTML = `<div class="h">${key}</div><div class="v ${cls}">${valTxt}</div>`;
     box.appendChild(cell);
   });
+}
+
+/* ---------- Aylık Getiriler tablosu ---------- */
+const AY_KISA = ["Oca","Şub","Mar","Nis","May","Haz","Tem","Ağu","Eyl","Eki","Kas","Ara"];
+
+function renderMonthlyReturnsTable(series){
+  const table = document.getElementById('monthly-returns-table');
+  if (!series || !series.length){ table.innerHTML = ''; return; }
+
+  // Her YYYY-MM için o aydaki SON fiyat (seri zaten tarihe göre sıralı geliyor)
+  const monthEnd = {};
+  series.forEach(p => { monthEnd[p.time.slice(0,7)] = p.value; });
+  const ymKeys = Object.keys(monthEnd).sort();
+
+  // Ardışık aylara göre aylık % getiri (takvimsel olarak gerçekten bir önceki ay değilse atla)
+  const monthlyReturn = {};
+  for (let i = 1; i < ymKeys.length; i++){
+    const [y, m] = ymKeys[i].split('-').map(Number);
+    const [py, pm] = ymKeys[i-1].split('-').map(Number);
+    const consecutive = (y===py && m===pm+1) || (y===py+1 && m===1 && pm===12);
+    if (!consecutive) continue;
+    const prev = monthEnd[ymKeys[i-1]], cur = monthEnd[ymKeys[i]];
+    if (prev) monthlyReturn[ymKeys[i]] = (cur/prev - 1) * 100;
+  }
+
+  const anchorYear = parseInt(series[series.length-1].time.slice(0,4), 10);
+  const years = [anchorYear, anchorYear-1, anchorYear-2, anchorYear-3];
+
+  function yearTotal(year){
+    let factor = 1, any = false;
+    for (let m=1; m<=12; m++){
+      const key = `${year}-${String(m).padStart(2,'0')}`;
+      if (monthlyReturn[key] != null){ factor *= (1 + monthlyReturn[key]/100); any = true; }
+    }
+    return any ? (factor - 1) * 100 : null;
+  }
+
+  const thead = `<tr><th>Yıl</th>${AY_KISA.map(a=>`<th>${a}</th>`).join('')}<th>Toplam</th></tr>`;
+  const rows = years.map(year => {
+    const cells = AY_KISA.map((_, i) => {
+      const key = `${year}-${String(i+1).padStart(2,'0')}`;
+      const v = monthlyReturn[key];
+      if (v == null) return `<td>-</td>`;
+      return `<td class="${v>=0?'pos':'neg'}">${trNum(v,2)}</td>`;
+    }).join('');
+    const total = yearTotal(year);
+    const totalCell = total == null
+      ? `<td class="toplam">-</td>`
+      : `<td class="toplam ${total>=0?'pos':'neg'}" style="background:transparent;">${trPct(total,2)}</td>`;
+    return `<tr><td class="yil">${year}</td>${cells}${totalCell}</tr>`;
+  }).join('');
+
+  table.innerHTML = thead + rows;
 }
 
 /* ---------- fiyat grafiği + çoklu benchmark / fon karşılaştırma ---------- */
