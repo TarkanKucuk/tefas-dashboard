@@ -530,7 +530,7 @@ const MOVERS_DATA = __DATA__;
 
 function fmtPct(v) { return (v >= 0 ? '+' : '') + v.toFixed(2) + '%'; }
 function fmtNum(v) { return (v >= 0 ? '+' : '') + Math.round(v).toLocaleString('tr-TR'); }
-function fonLink(kod) { return '<a href="https://fonlarca.com/fon/' + kod.toLowerCase() + '.html" target="_blank">' + kod + '</a>'; }
+function fonLink(kod) { return '<a href="fon-karti.html?kod=' + kod + '" target="_blank">' + kod + '</a>'; }
 
 const METRICS = [
     {title: 'Fiyat Hareketleri', key: 'fiyat', fmt: fmtPct, unit: 'Değişim'},
