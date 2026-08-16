@@ -336,7 +336,9 @@ $(document).ready(function() {{
     extra_style = """
 table.dataTable { font-size: 13px; }
 table.dataTable th, table.dataTable td { white-space: nowrap; }
-#tefasTable td:nth-child(2) { white-space: normal; word-break: break-word; line-height: 1.3; }
+@media (min-width: 900px) {
+  #tefasTable td:nth-child(2) { white-space: normal; overflow-wrap: break-word; line-height: 1.3; }
+}
 table.dataTable thead th {
     background: #eef2f7 !important; color: #1F4E78; font-weight: 600; border-bottom: 2px solid #d7e0ea !important;
     padding: 10px 20px !important; text-align: left; cursor: pointer; background-image: none !important;
