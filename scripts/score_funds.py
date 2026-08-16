@@ -303,36 +303,34 @@ function scoreColor(v) {{
     return "#ffc7ce";
 }}
 $(document).ready(function() {{
-var tefasTable = $('#tefasTable').DataTable({
-    pageLength: 25,
-    order: [[4, 'desc']],
-    scrollX: true,
-    scrollY: '65vh',
-    scrollCollapse: true,
-    fixedColumns: { start: 1 },
-    autoWidth: false,
-    language: { url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/tr.json' },
-    columnDefs: [
-        { targets: 0, width: '70px' },
-        { targets: 1, width: '340px' },
-        { targets: 2, width: '130px' },
-        { targets: 3, width: '80px' },
-        { targets: 4, width: '95px' },
-        { targets: [5,6,7,8,9], width: '80px' },
-        { targets: 10, width: '220px' },
-        { targets: 11, width: '150px' },
-        { targets: [4,5,6,7,8,9], createdCell: function(td, cellData) {
-            var bg = scoreColor(cellData);
-            if (bg) { $(td).html('<span class="score-badge" style="background:' + bg + '">' + cellData + '</span>'); }
-        } }
-    ]
-});
+    var tefasTable = $('#tefasTable').DataTable({{
+        pageLength: 25,
+        order: [[4, 'desc']],
+        scrollX: true,
+        scrollY: '65vh',
+        scrollCollapse: true,
+        fixedColumns: {{ start: 1 }},
+        autoWidth: false,
+        language: {{ url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/tr.json' }},
+        columnDefs: [
+            {{ targets: 0, width: '70px' }},
+            {{ targets: 1, width: '340px' }},
+            {{ targets: 2, width: '130px' }},
+            {{ targets: 3, width: '80px' }},
+            {{ targets: 4, width: '95px' }},
+            {{ targets: [5,6,7,8,9], width: '80px' }},
+            {{ targets: 10, width: '220px' }},
+            {{ targets: 11, width: '150px' }},
+            {{ targets: [4,5,6,7,8,9], createdCell: function(td, cellData) {{
+                var bg = scoreColor(cellData);
+                if (bg) {{ $(td).html('<span class="score-badge" style="background:' + bg + '">' + cellData + '</span>'); }}
+            }} }}
+        ]
+    }});
 
-// Yazı tipleri/görseller geç yüklendiğinde başlık-gövde hizası kayabiliyor —
-// sayfa tam yüklenince bir kez daha zorla hizala.
-$(window).on('load', function() {
-    tefasTable.columns.adjust().draw(false);
-});
+    $(window).on('load', function() {{
+        tefasTable.columns.adjust().draw(false);
+    }});
 }});
 </script>"""
     extra_style = """
