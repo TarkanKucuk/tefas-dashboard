@@ -296,27 +296,42 @@ function scoreColor(v) {{
     return "#ffc7ce";
 }}
 $(document).ready(function() {{
-    $('#tefasTable').DataTable({{
-        pageLength: 25,
-        order: [[4, 'desc']],
-        scrollX: true,
-        scrollY: '65vh',
-        scrollCollapse: true,
-        fixedColumns: {{ start: 1 }},
-        autoWidth: false,
-        language: {{ url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/tr.json' }},
-        columnDefs: [
-            {{ targets: [4,5,6,7,8,9], createdCell: function(td, cellData) {{
-                var bg = scoreColor(cellData);
-                if (bg) {{ $(td).html('<span class="score-badge" style="background:' + bg + '">' + cellData + '</span>'); }}
-            }} }}
-        ]
-    }});
+var tefasTable = $('#tefasTable').DataTable({
+    pageLength: 25,
+    order: [[4, 'desc']],
+    scrollX: true,
+    scrollY: '65vh',
+    scrollCollapse: true,
+    fixedColumns: { start: 1 },
+    autoWidth: false,
+    language: { url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/tr.json' },
+    columnDefs: [
+        { targets: 0, width: '70px' },
+        { targets: 1, width: '340px' },
+        { targets: 2, width: '130px' },
+        { targets: 3, width: '80px' },
+        { targets: 4, width: '95px' },
+        { targets: [5,6,7,8,9], width: '80px' },
+        { targets: 10, width: '220px' },
+        { targets: 11, width: '150px' },
+        { targets: [4,5,6,7,8,9], createdCell: function(td, cellData) {
+            var bg = scoreColor(cellData);
+            if (bg) { $(td).html('<span class="score-badge" style="background:' + bg + '">' + cellData + '</span>'); }
+        } }
+    ]
+});
+
+// Yazı tipleri/görseller geç yüklendiğinde başlık-gövde hizası kayabiliyor —
+// sayfa tam yüklenince bir kez daha zorla hizala.
+$(window).on('load', function() {
+    tefasTable.columns.adjust().draw(false);
+});
 }});
 </script>"""
     extra_style = """
 table.dataTable { font-size: 13px; }
 table.dataTable th, table.dataTable td { white-space: nowrap; }
+#tefasTable td:nth-child(2) { white-space: normal; word-break: break-word; line-height: 1.3; }
 table.dataTable thead th {
     background: #eef2f7 !important; color: #1F4E78; font-weight: 600; border-bottom: 2px solid #d7e0ea !important;
     padding: 10px 20px !important; text-align: left; cursor: pointer; background-image: none !important;
