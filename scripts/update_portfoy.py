@@ -111,9 +111,23 @@ def main():
         return
 
     # Yeni veriyi eski veriye ekle
+    hist = hist.copy()
+    hist["_kaynak"] = 0   # eski veri
+    df["_kaynak"] = 1     # yeni çekilen veri
     combined = pd.concat([hist, df], ignore_index=True)
-    # Aynı Fon Kodu + Tarih kombinasyonundan tekrarları kaldır (son geleni tut)
+
+    # ÖNEMLİ: Aynı Fon Kodu+Tarih için iki satır varsa (biri eski, biri yeni),
+    # DOLU olanı her zaman tercih et — hangisi eski hangisi yeni olduğuna bakmadan.
+    # Böylece geniş aralıklı yeniden-çekimler sırasında bazı fon/gün kombinasyonları
+    # boş dönerse bile, elimizdeki iyi (dolu) veri yanlışlıkla silinmez.
+    # İkisi de doluysa ya da ikisi de boşsa, en yeni çekimi (_kaynak=1) tercih et.
+    if sayisal_kolonlar_tr:
+        combined["_dolu"] = combined[sayisal_kolonlar_tr].notna().any(axis=1)
+    else:
+        combined["_dolu"] = False
+    combined = combined.sort_values(["Fon Kodu", "Tarih", "_dolu", "_kaynak"])
     combined = combined.drop_duplicates(subset=["Fon Kodu", "Tarih"], keep="last")
+    combined = combined.drop(columns=["_dolu", "_kaynak"])
     combined = combined.sort_values(["Fon Kodu", "Tarih"])
     combined.to_parquet(DATA_PATH, index=False)
     yeni_satir = len(df)
