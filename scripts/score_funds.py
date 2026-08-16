@@ -87,7 +87,7 @@ footer { text-align: center; color: #93a0b0; font-size: 12px; margin-top: 24px; 
 
 
 def fonlarca_link(kod):
-    return f'<a href="https://fonlarca.com/fon/{kod.lower()}.html" target="_blank">{kod}</a>'
+    return f'<a href="fon-karti.html?kod={kod}" target="_blank">{kod}</a>'
 
 
 def nav_bar(active):
