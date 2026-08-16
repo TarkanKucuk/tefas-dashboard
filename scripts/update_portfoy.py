@@ -1,10 +1,11 @@
 import pandas as pd
 from tefasfon import get_portfolio
-from datetime import datetime
+from datetime import datetime, timedelta
 import os
-
 DATA_PATH = "tefas_portfoy_dagilim.parquet"
-
+# Her çalıştırmada son kaç günü yeniden kontrol edelim (TEFAS'ın bazı günleri
+# geç yayınlaması ya da tek seferlik API hatası durumunda kendiliğinden düzelsin diye)
+GERI_GUN = 20
 # Kısaltmalardan Orijinal Türkçe Başlıklara Çeviri
 KOLON_MAP = {
 "fonKodu": "Fon Kodu",
@@ -55,10 +56,11 @@ KOLON_MAP = {
 "eut": "Euro Tahvil",
 "gyy": "G.Menk.Yat.Ort.",
 }
-
-
 def main():
-    bugun = datetime.today().strftime("%d.%m.%Y")
+    bugun_dt = datetime.today()
+    baslangic_dt = bugun_dt - timedelta(days=GERI_GUN)
+    baslangic = baslangic_dt.strftime("%d.%m.%Y")
+    bugun = bugun_dt.strftime("%d.%m.%Y")
 
     # Eski veri varsa oku
     if os.path.exists(DATA_PATH):
@@ -68,17 +70,15 @@ def main():
         hist = pd.DataFrame()
         print("Yeni veri dosyası oluşturulacak.")
 
-    print(f"Bugünün tarihi: {bugun}")
+    print(f"Kontrol edilen aralık: {baslangic} -> {bugun}")
     print("TEFAS'tan portföy dağılımı çekiliyor...")
-
     try:
-        df = get_portfolio(fund_type="SEC", start_date=bugun, end_date=bugun)
+        df = get_portfolio(fund_type="SEC", start_date=baslangic, end_date=bugun)
     except Exception as e:
         print(f"Hata oluştu (muhtemelen tatil/hafta sonu): {e}")
         return
-
     if df is None or df.empty:
-        print("Bugün için portföy verisi bulunamadı (tatil/hafta sonu olabilir).")
+        print("Bu aralık için portföy verisi bulunamadı (tatil/hafta sonu olabilir).")
         return
 
     # Sadece sayısal kolonları yüzde formatına çevir
@@ -86,28 +86,38 @@ def main():
     for kol in sayisal_kolonlar:
         if kol in df.columns:
             df[kol] = pd.to_numeric(df[kol], errors="coerce")
-
     # Türkçe başlıklara çevir
     df = df.rename(columns=KOLON_MAP)
     df["Tarih"] = pd.to_datetime(df["Tarih"])
-
     # Sadece mapping'te olan kolonları tut
     mevcut_kolonlar = [KOLON_MAP[k] for k in KOLON_MAP if k in df.columns or k in ["fonKodu", "fonUnvan", "tarih"]]
     df = df[[k for k in mevcut_kolonlar if k in df.columns]]
 
+    # --- YENİ: TEFAS'ın henüz yayınlamadığı ("içi boş") günleri tespit edip at ---
+    # Bir gün için tüm fonlarda tüm kategori kolonları boşsa, o günün verisi
+    # aslında hiç gelmemiş demektir — bu günü bu partiden çıkarıyoruz ki eski
+    # (varsa) veriyi bozmasın; TEFAS yayınladığında bir sonraki çalıştırma
+    # (GERI_GUN sayesinde) bu tarihi otomatik yakalayacak.
+    sayisal_kolonlar_tr = [KOLON_MAP[k] for k in sayisal_kolonlar if KOLON_MAP[k] in df.columns]
+    if sayisal_kolonlar_tr and "Tarih" in df.columns:
+        gun_bazinda_dolu = df.groupby("Tarih")[sayisal_kolonlar_tr].apply(lambda g: g.notna().any().any())
+        bos_gunler = gun_bazinda_dolu[~gun_bazinda_dolu].index
+        if len(bos_gunler):
+            print(f"⚠️ Şu tarihler için TEFAS verisi henüz yayınlanmamış görünüyor, atlanıyor: "
+                  f"{[d.strftime('%d.%m.%Y') for d in bos_gunler]}")
+            df = df[~df["Tarih"].isin(bos_gunler)]
+    if df.empty:
+        print("Bu aralıkta kaydedilecek dolu veri yok — hiçbir şey yazılmadı.")
+        return
+
     # Yeni veriyi eski veriye ekle
     combined = pd.concat([hist, df], ignore_index=True)
-
     # Aynı Fon Kodu + Tarih kombinasyonundan tekrarları kaldır (son geleni tut)
     combined = combined.drop_duplicates(subset=["Fon Kodu", "Tarih"], keep="last")
     combined = combined.sort_values(["Fon Kodu", "Tarih"])
-
     combined.to_parquet(DATA_PATH, index=False)
-
     yeni_satir = len(df)
     toplam_satir = len(combined)
-    print(f"✅ {yeni_satir} yeni satır eklendi. Toplam: {toplam_satir} satır.")
-
-
+    print(f"✅ {yeni_satir} satır işlendi/güncellendi. Toplam: {toplam_satir} satır.")
 if __name__ == "__main__":
     main()
