@@ -88,7 +88,13 @@ footer { text-align: center; color: #93a0b0; font-size: 12px; margin-top: 24px; 
 
 def fonlarca_link(kod):
     return f'<a href="fon-karti.html?kod={kod}" target="_blank">{kod}</a>'
-
+def kisalt_unvan(ad):
+    """Fon unvanındaki uzun parantez içi ifadeleri kısaltır (sadece görüntüleme
+    amaçlı — kaynak veriyi değiştirmez). Örn: '... (HİSSE SENEDİ YOĞUN FON)'
+    -> '... (HSYF)'."""
+    if not ad:
+        return ad
+    return ad.replace("(HİSSE SENEDİ YOĞUN FON)", "(HSYF)")
 
 def nav_bar(active):
     parts = []
@@ -267,6 +273,7 @@ def write_tum_fonlar_page(res, anchor):
 
     table = res[res['TEFAS_Skoru'].notna()].sort_values(
         ['Alt Kategori', 'TEFAS_Skoru'], ascending=[True, False])[cols].copy()
+    table['Fon Adı'] = table['Fon Adı'].apply(kisalt_unvan)
 
     for c in ['TEFAS_Skoru', 'Skor_Momentum', 'Skor_Getiri', 'Skor_ParaAkışı', 'Skor_Sharpe', 'Skor_StdDev']:
         table[c] = table[c].round(1)
@@ -426,7 +433,7 @@ def write_category_summary(res, anchor):
         def rows(sub, cls):
             out = ""
             for _, r in sub.iterrows():
-                out += (f"<tr><td>{fonlarca_link(r['Fon Kodu'])}</td><td>{r['Fon Adı']}</td>"
+                out += (f"<tr><td>{fonlarca_link(r['Fon Kodu'])}</td><td>{kisalt_unvan(r['Fon Adı'])}</td>"
                         f"<td><span class='score-badge {cls}'>{r['TEFAS_Skoru']:.1f}</span></td></tr>")
             return out
 
@@ -504,7 +511,7 @@ def write_hareketler_page(df, mapping):
         for _, r in movers.iterrows():
             recs.append({
                 'kod': r['Fon Kodu'],
-                'ad': r['Fon Adı'],
+                'ad': kisalt_unvan(r['Fon Adı']),
                 'kat': r['Alt Kategori'],
                 'fiyat': None if pd.isna(r.get('Fiyat_Değişim_%')) else round(float(r['Fiyat_Değişim_%']), 4),
                 'kisi': None if pd.isna(r.get('Kişi_Değişim')) else round(float(r['Kişi_Değişim']), 2),
@@ -628,7 +635,7 @@ def write_yeni_fonlar_page(df, mapping):
 
     rows = ""
     for _, r in yeni.iterrows():
-        rows += (f"<tr><td>{fonlarca_link(r['Fon Kodu'])}</td><td>{r['Fon Adı']}</td>"
+        rows += (f"<tr><td>{fonlarca_link(r['Fon Kodu'])}</td><td>{kisalt_unvan(r['Fon Adı'])}</td>"
                  f"<td>{r['Alt Kategori']}</td><td>{r['İlk İşlem Tarihi'].date()}</td></tr>")
 
     table_html = f"""<table class="mini" style="font-size:14px;">
