@@ -3,6 +3,9 @@ name: Kontrol
 on:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   kontrol:
     runs-on: ubuntu-latest
@@ -16,7 +19,19 @@ jobs:
           python-version: "3.11"
 
       - name: Gerekli kütüphaneleri kur
-        run: pip install pandas pyarrow
+        run: pip install pandas pyarrow tefasfon
 
-      - name: Varlık dağılımı verisini incele
+      - name: Varlık dağılımı verisini güncelle (boşlukları kapat)
+        run: python scripts/update_portfoy.py
+
+      - name: Değişiklikleri repoya kaydet
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add tefas_portfoy_dagilim.parquet
+          git diff --cached --quiet && echo "Değişiklik yok, commit atılmadı." || git commit -m "Varlık dağılımı boşluklarını kapat"
+          git pull --rebase origin main
+          git push
+
+      - name: Sonucu incele
         run: python diagnose_portfoy.py
