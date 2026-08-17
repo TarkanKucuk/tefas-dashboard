@@ -88,7 +88,18 @@ def period_return(series_dates, series_values, anchor_date, offset=None):
     latest_val = values_valid.iloc[-1]
 
     if offset is None:
-        cutoff = pd.Timestamp(year=anchor_date.year, month=1, day=1)
+        # Yılbaşı (YTD): o yılın İLK işlem günü fiyatından bugüne.
+        # TEFAS 31 Aralık fiyatını 2 Ocak'ta yayınladığı için, yıl bu yılın ilk
+        # kaydından (>= 1 Ocak) başlar — 1 Ocak'a eşit/önceki (yani geçen yılın
+        # 31 Aralık) değeri DEĞİL. Fon kartındaki aylık tablo "Toplam" ile uyumlu.
+        yil_basi = pd.Timestamp(year=anchor_date.year, month=1, day=1)
+        gelecek = values_valid[dates_valid >= yil_basi]
+        if gelecek.empty:
+            return None
+        past_val = gelecek.iloc[0]
+        if past_val == 0:
+            return None
+        return round(float((latest_val / past_val - 1) * 100), 2)
     else:
         cutoff = anchor_date - offset
     past = values_valid[dates_valid <= cutoff]
