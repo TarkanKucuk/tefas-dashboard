@@ -573,39 +573,60 @@ function renderMonthlyReturnsTable(series){
   const table = document.getElementById('monthly-returns-table');
   if (!series || !series.length){ table.innerHTML = ''; return; }
 
-  // Her YYYY-MM için o aydaki SON fiyat (seri zaten tarihe göre sıralı geliyor)
-  const monthEnd = {};
-  series.forEach(p => { monthEnd[p.time.slice(0,7)] = p.value; });
-  const ymKeys = Object.keys(monthEnd).sort();
+  // Temiz, sıralı fiyat noktaları
+  const pts = series.filter(p => p.value != null && p.value > 0)
+                    .map(p => ({ time: p.time, value: p.value }))
+                    .sort((a,b) => a.time < b.time ? -1 : 1);
+  if (pts.length < 2){ table.innerHTML = ''; return; }
 
-  // Ardışık aylara göre aylık % getiri (takvimsel olarak gerçekten bir önceki ay değilse atla)
-  const monthlyReturn = {};
-  for (let i = 1; i < ymKeys.length; i++){
-    const [y, m] = ymKeys[i].split('-').map(Number);
-    const [py, pm] = ymKeys[i-1].split('-').map(Number);
-    const consecutive = (y===py && m===pm+1) || (y===py+1 && m===1 && pm===12);
-    if (!consecutive) continue;
-    const prev = monthEnd[ymKeys[i-1]], cur = monthEnd[ymKeys[i]];
-    if (prev) monthlyReturn[ymKeys[i]] = (cur/prev - 1) * 100;
+  // Bir ayın "başlangıç fiyatı": o ayın 1'i veya SONRASINDAKİ ilk işlem günü.
+  // (TEFAS 30 Haziran fiyatını 1 Temmuz'da yayınladığı için, Temmuz getirisi
+  //  1 Temmuz -> 1 Ağustos arası fiyat değişimidir.)
+  // ym: "YYYY-MM" -> o aya ait ilk noktanın fiyatı (yoksa null)
+  function ayBasiFiyat(ym){
+    // ym'nin ilk gününden itibaren ilk noktayı bul
+    const p = pts.find(pt => pt.time.slice(0,7) === ym);
+    return p ? p.value : null;
   }
 
-  const anchorYear = parseInt(series[series.length-1].time.slice(0,4), 10);
+  const anchorYear = parseInt(pts[pts.length-1].time.slice(0,4), 10);
   const years = [anchorYear, anchorYear-1, anchorYear-2, anchorYear-3];
 
-  function yearTotal(year){
-    let factor = 1, any = false;
-    for (let m=1; m<=12; m++){
-      const key = `${year}-${String(m).padStart(2,'0')}`;
-      if (monthlyReturn[key] != null){ factor *= (1 + monthlyReturn[key]/100); any = true; }
+  // Bir ayın getirisi: (bu ayın ilk işlem günü fiyatı) -> (sonraki ayın ilk işlem günü fiyatı)
+  // İçinde bulunulan ay için sonraki ay henüz yoksa, elimizdeki EN SON fiyatı kullan
+  // (ay-sonu-henüz-gelmedi durumu — "şimdiye kadarki" getiri gösterilir).
+  const sonNokta = pts[pts.length-1];
+  function ayGetirisi(year, month){ // month: 1-12
+    const ym = `${year}-${String(month).padStart(2,'0')}`;
+    const nextY = month === 12 ? year+1 : year;
+    const nextM = month === 12 ? 1 : month+1;
+    const nextYm = `${nextY}-${String(nextM).padStart(2,'0')}`;
+    const bas = ayBasiFiyat(ym);
+    if (bas == null) return null;
+    let son = ayBasiFiyat(nextYm);
+    if (son == null){
+      // Sonraki ay verisi yok. Eğer bu ay serinin EN SON ayıysa (devam eden ay),
+      // en güncel fiyatı kullan; değilse (arada kalan eksik ay) hesaplama.
+      if (sonNokta.time.slice(0,7) === ym) son = sonNokta.value;
+      else return null;
     }
-    return any ? (factor - 1) * 100 : null;
+    return (son / bas - 1) * 100;
+  }
+
+  // Yıl toplamı (YTD): o yılın ilk işlem gününden son veri gününe doğrudan getiri.
+  // O yılın ilk noktası zaten 2 Ocak ya da sonrasındaki ilk iş günü olur.
+  function yearTotal(year){
+    const inYear = pts.filter(p => p.time.slice(0,4) === String(year));
+    if (inYear.length < 2) return null;
+    const first = inYear[0].value;
+    const last = inYear[inYear.length-1].value;
+    return (last / first - 1) * 100;
   }
 
   const thead = `<tr><th>Yıl</th>${AY_KISA.map(a=>`<th>${a}</th>`).join('')}<th>Toplam</th></tr>`;
   const rows = years.map(year => {
     const cells = AY_KISA.map((_, i) => {
-      const key = `${year}-${String(i+1).padStart(2,'0')}`;
-      const v = monthlyReturn[key];
+      const v = ayGetirisi(year, i+1);
       if (v == null) return `<td>-</td>`;
       return `<td class="${v>=0?'pos':'neg'}">${trNum(v,2)}</td>`;
     }).join('');
