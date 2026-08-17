@@ -431,10 +431,14 @@ table.dataTable thead th.sorting_desc:after { content: "▼"; opacity: 1; }
     line-height: 0 !important; font-size: 0 !important;
 }
 
-table.dataTable tbody td { padding: 8px !important; vertical-align: middle; background: var(--card); color: var(--ink); }
+table.dataTable tbody td { padding: 8px !important; vertical-align: middle; background: var(--card); color: var(--ink); border-bottom: 1px solid #2b2e37 !important; }
 table.dataTable tbody tr:hover td { background: #1a1d25 !important; }
 table.dataTable tbody td a { color: var(--teal-bright); font-weight: 600; text-decoration: underline; text-decoration-color: #3a6b68; }
 table.dataTable tbody td a:hover { color: #6fd8cd; text-decoration-color: #6fd8cd; }
+/* Dikey ızgara çizgilerini de ince ve gri yap */
+table.dataTable { border-collapse: collapse !important; }
+table.dataTable th, table.dataTable td { border-color: #2b2e37 !important; }
+table.dataTable thead th { border-bottom: 1px solid #3a3d48 !important; }
 
 /* Kolon hizalamaları: 1 Fon Kodu 2 Fon Adı(sol) 3 Alt Kategori(sol) 4 Kat.Sıra
    5 Fonlarca Skoru 6 Momentum 7 Getiri 8 Para Akışı 9 Sharpe 10 StdDev 11 Bileşenler(sol) 12 Fon Toplam Değer */
@@ -453,8 +457,11 @@ table.dataTable tbody td a:hover { color: #6fd8cd; text-decoration-color: #6fd8c
 
 /* DataTables FixedColumns dondurulmuş sütun klonu için aynı hizalama */
 .DTFC_LeftHeadWrapper th:nth-child(1), .DTFC_LeftBodyWrapper td:nth-child(1) { text-align: center; }
-.DTFC_LeftBodyWrapper td { background: var(--card); color: var(--ink); }
+.DTFC_LeftBodyWrapper td { background: var(--card); color: var(--ink); border-bottom: 1px solid #2b2e37 !important; }
 .DTFC_LeftHeadWrapper th { background: var(--panel) !important; background-image: none !important; color: var(--teal-bright); }
+/* Dondurulmuş Fon Kodu sütunundaki link koyu temada beyaz kalıyordu — düzelt */
+.DTFC_LeftBodyWrapper td a { color: var(--teal-bright) !important; font-weight: 600; text-decoration: underline; text-decoration-color: #3a6b68; }
+.DTFC_LeftBodyWrapper td a:hover { color: #6fd8cd !important; text-decoration-color: #6fd8cd; }
 
 .dataTables_wrapper .dataTables_filter input, .dataTables_wrapper .dataTables_length select {
     border: 1px solid var(--line); border-radius: 6px; padding: 4px 8px;
