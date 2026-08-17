@@ -30,15 +30,28 @@ NAV_PAGES = [
 ]
 
 BASE_STYLE = """
+:root {
+    --bg: #23252d;
+    --panel: #2c2f39;
+    --card: #12141a;
+    --ink: #eef0f4;
+    --ink-dim: #9aa0ac;
+    --line: #3a3d48;
+    --teal: #2f7c7a;
+    --teal-bright: #3fb6ab;
+    --green: #4cbb6d;
+    --red: #e05a5a;
+    --blue: #4a7fe0;
+}
 * { box-sizing: border-box; }
 body {
     font-family: -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-    margin: 0; padding: 32px 40px 60px; background: #f4f6f9; color: #1a1a1a;
+    margin: 0; padding: 32px 40px 60px; background: var(--bg); color: var(--ink);
 }
 .header {
-    background: linear-gradient(135deg, #1F4E78 0%, #2c6ba0 100%);
+    background: linear-gradient(135deg, #1a3a5c 0%, #2f7c7a 100%);
     color: white; padding: 28px 32px; border-radius: 12px; margin-bottom: 24px;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.35);
 }
 .header h1 { margin: 0; font-size: 26px; font-weight: 600; }
 .header .meta { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
@@ -56,33 +69,34 @@ body {
     .card { padding: 12px 12px 16px; }
 }
 .card {
-    background: white; border-radius: 12px; padding: 20px 24px 24px; margin-bottom: 18px;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+    padding: 20px 24px 24px; margin-bottom: 18px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.25);
 }
-.kat-card h2 { margin: 0 0 4px 0; color: #1F4E78; font-size: 18px; }
-.kat-count { color: #93a0b0; font-size: 13px; font-weight: 400; }
+.kat-card h2 { margin: 0 0 4px 0; color: var(--teal-bright); font-size: 18px; }
+.kat-count { color: var(--ink-dim); font-size: 13px; font-weight: 400; }
 .kat-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
 @media (max-width: 800px) { .kat-cols { grid-template-columns: 1fr; } }
-h3 { font-size: 13px; margin: 0 0 8px 0; }
-h3.up { color: #1a7a37; }
-h3.down { color: #b3261e; }
+h3 { font-size: 13px; margin: 0 0 8px 0; color: var(--ink); }
+h3.up { color: var(--green); }
+h3.down { color: var(--red); }
 table.mini { width: 100%; border-collapse: collapse; font-size: 13px; }
-table.mini th { text-align: left; color: #93a0b0; font-weight: 500; padding: 4px 6px; border-bottom: 1px solid #eef2f7; }
-table.mini td { padding: 5px 6px; border-bottom: 1px solid #f4f6f9; }
-table.mini td a { color: #1F4E78; font-weight: 600; text-decoration: underline; text-decoration-color: #a9c3da; }
-table.mini td a:hover { color: #14345a; text-decoration-color: #14345a; }
+table.mini th { text-align: left; color: var(--ink-dim); font-weight: 500; padding: 4px 6px; border-bottom: 1px solid var(--line); }
+table.mini td { padding: 5px 6px; border-bottom: 1px solid #1c1e26; color: var(--ink); }
+table.mini td a { color: var(--teal-bright); font-weight: 600; text-decoration: underline; text-decoration-color: #3a6b68; }
+table.mini td a:hover { color: #6fd8cd; text-decoration-color: #6fd8cd; }
 .score-badge { display: inline-block; min-width: 50px; padding: 2px 7px; border-radius: 6px; font-weight: 600; text-align: center; }
-.score-badge.good { background: #c6efce; color: #14361f; }
-.score-badge.bad { background: #ffc7ce; color: #5c1a1f; }
+.score-badge.good { background: rgba(76,187,109,0.18); color: var(--green); }
+.score-badge.bad { background: rgba(224,90,90,0.18); color: var(--red); }
 .period-tabs { display: flex; gap: 6px; margin-bottom: 18px; }
 .period-tab {
     padding: 8px 20px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;
-    background: #eef2f7; color: #5f6b7a; border: none;
+    background: var(--panel); color: var(--ink-dim); border: 1px solid var(--line);
 }
-.period-tab.active { background: #1F4E78; color: white; }
+.period-tab.active { background: var(--blue); color: white; border-color: var(--blue); }
 .period-panel { display: none; }
 .period-panel.active { display: block; }
-footer { text-align: center; color: #93a0b0; font-size: 12px; margin-top: 24px; }
+footer { text-align: center; color: var(--ink-dim); font-size: 12px; margin-top: 24px; }
 """
 
 
@@ -124,7 +138,7 @@ def page_shell(title, active, body, extra_style="", extra_head=""):
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{title}</title>
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#1F4E78">
+<meta name="theme-color" content="#12141a">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" href="icon-192.png">
 {extra_head}
@@ -298,9 +312,16 @@ def write_tum_fonlar_page(res, anchor):
 function scoreColor(v) {{
     if (v === null || v === "" || v === "—" || isNaN(v)) return null;
     v = parseFloat(v);
-    if (v >= 75) return "#c6efce";
-    if (v >= 50) return "#ffeb9c";
-    return "#ffc7ce";
+    if (v >= 75) return "rgba(76,187,109,0.22)";
+    if (v >= 50) return "rgba(224,178,63,0.22)";
+    return "rgba(224,90,90,0.22)";
+}}
+function scoreTextColor(v) {{
+    if (v === null || v === "" || v === "—" || isNaN(v)) return null;
+    v = parseFloat(v);
+    if (v >= 75) return "#4cbb6d";
+    if (v >= 50) return "#e0b23f";
+    return "#e05a5a";
 }}
 $(document).ready(function() {{
     var tefasTable = $('#tefasTable').DataTable({{
@@ -323,7 +344,8 @@ $(document).ready(function() {{
             {{ targets: 11, width: '150px' }},
             {{ targets: [4,5,6,7,8,9], createdCell: function(td, cellData) {{
                 var bg = scoreColor(cellData);
-                if (bg) {{ $(td).html('<span class="score-badge" style="background:' + bg + '">' + cellData + '</span>'); }}
+                var fg = scoreTextColor(cellData);
+                if (bg) {{ $(td).html('<span class="score-badge" style="background:' + bg + ';color:' + fg + '">' + cellData + '</span>'); }}
             }} }}
         ]
     }});
@@ -340,7 +362,7 @@ table.dataTable th, table.dataTable td { white-space: nowrap; }
   #tefasTable td:nth-child(2) { white-space: normal; overflow-wrap: break-word; line-height: 1.3; }
 }
 table.dataTable thead th {
-    background: #eef2f7 !important; color: #1F4E78; font-weight: 600; border-bottom: 2px solid #d7e0ea !important;
+    background: var(--panel) !important; color: var(--teal-bright); font-weight: 600; border-bottom: 2px solid var(--line) !important;
     padding: 10px 20px !important; text-align: left; cursor: pointer; background-image: none !important;
 }
 table.dataTable thead th.sorting:after,
@@ -363,10 +385,10 @@ table.dataTable thead th.sorting_desc:after { content: "▼"; opacity: 1; }
     line-height: 0 !important; font-size: 0 !important;
 }
 
-table.dataTable tbody td { padding: 8px !important; vertical-align: middle; background: white; }
-table.dataTable tbody tr:hover td { background: #f0f6fc !important; }
-table.dataTable tbody td a { color: #1F4E78; font-weight: 600; text-decoration: underline; text-decoration-color: #a9c3da; }
-table.dataTable tbody td a:hover { color: #14345a; text-decoration-color: #14345a; }
+table.dataTable tbody td { padding: 8px !important; vertical-align: middle; background: var(--card); color: var(--ink); }
+table.dataTable tbody tr:hover td { background: #1a1d25 !important; }
+table.dataTable tbody td a { color: var(--teal-bright); font-weight: 600; text-decoration: underline; text-decoration-color: #3a6b68; }
+table.dataTable tbody td a:hover { color: #6fd8cd; text-decoration-color: #6fd8cd; }
 
 /* Kolon hizalamaları: 1 Fon Kodu 2 Fon Adı(sol) 3 Alt Kategori(sol) 4 Kat.Sıra
    5 Fonlarca Skoru 6 Momentum 7 Getiri 8 Para Akışı 9 Sharpe 10 StdDev 11 Bileşenler(sol) 12 Fon Toplam Değer */
@@ -385,28 +407,30 @@ table.dataTable tbody td a:hover { color: #14345a; text-decoration-color: #14345
 
 /* DataTables FixedColumns dondurulmuş sütun klonu için aynı hizalama */
 .DTFC_LeftHeadWrapper th:nth-child(1), .DTFC_LeftBodyWrapper td:nth-child(1) { text-align: center; }
-.DTFC_LeftBodyWrapper td { background: white; }
-.DTFC_LeftHeadWrapper th { background: #eef2f7 !important; background-image: none !important; }
+.DTFC_LeftBodyWrapper td { background: var(--card); color: var(--ink); }
+.DTFC_LeftHeadWrapper th { background: var(--panel) !important; background-image: none !important; color: var(--teal-bright); }
 
 .dataTables_wrapper .dataTables_filter input, .dataTables_wrapper .dataTables_length select {
-    border: 1px solid #d7e0ea; border-radius: 6px; padding: 4px 8px;
+    border: 1px solid var(--line); border-radius: 6px; padding: 4px 8px;
+    background: var(--panel); color: var(--ink);
 }
-.dataTables_wrapper .dataTables_info { clear: both; margin-top: 10px; font-size: 13px; color: #5f6b7a; }
+.dataTables_wrapper .dataTables_filter label, .dataTables_wrapper .dataTables_length label { color: var(--ink-dim); }
+.dataTables_wrapper .dataTables_info { clear: both; margin-top: 10px; font-size: 13px; color: var(--ink-dim); }
 .dataTables_wrapper .dataTables_paginate {
     display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; float: none !important;
 }
 .dataTables_wrapper .dataTables_paginate .paginate_button {
-    padding: 6px 12px; margin: 0; border: 1px solid #d7e0ea !important; border-radius: 6px;
-    cursor: pointer; color: #1F4E78 !important; background: white !important;
+    padding: 6px 12px; margin: 0; border: 1px solid var(--line) !important; border-radius: 6px;
+    cursor: pointer; color: var(--teal-bright) !important; background: var(--panel) !important;
 }
 .dataTables_wrapper .dataTables_paginate .paginate_button.current {
-    background: #1F4E78 !important; color: white !important; border-color: #1F4E78 !important;
+    background: var(--blue) !important; color: white !important; border-color: var(--blue) !important;
 }
 .dataTables_wrapper .dataTables_paginate .paginate_button:hover:not(.disabled) {
-    background: #eef2f7 !important;
+    background: #363a46 !important;
 }
 .dataTables_wrapper .dataTables_paginate .paginate_button.disabled {
-    color: #c2c9d1 !important; cursor: default; background: white !important;
+    color: #5a606e !important; cursor: default; background: var(--panel) !important;
 }
 """
     extra_head = ('<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">'
@@ -539,7 +563,7 @@ def write_hareketler_page(df, mapping):
 <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:18px;">
     <div class="period-tabs" style="margin-bottom:0;">{''.join(tab_buttons)}</div>
     <div>
-        <label for="categorySelect" style="font-size:13px; color:#5f6b7a; margin-right:8px;">Kategori:</label>
+        <label for="categorySelect" style="font-size:13px; color:var(--ink-dim); margin-right:8px;">Kategori:</label>
         <select id="categorySelect" onchange="onCategoryChange()">{category_options}</select>
     </div>
 </div>"""
@@ -605,7 +629,8 @@ renderPanel('gunluk');
     script_js = script_js.replace("__DATA__", data_json)
 
     extra_style = """
-#categorySelect { border: 1px solid #d7e0ea; border-radius: 6px; padding: 5px 10px; font-size: 13px; background: white; }
+#categorySelect { border: 1px solid var(--line); border-radius: 6px; padding: 5px 10px; font-size: 13px; background: var(--panel); color: var(--ink); }
+#categorySelect option { background: var(--panel); color: var(--ink); }
 """
 
     body = f"""{page_header('index.html', 'Hareketler', anchor)}
@@ -640,12 +665,12 @@ def write_yeni_fonlar_page(df, mapping):
 
     table_html = f"""<table class="mini" style="font-size:14px;">
 <tr><th>Kod</th><th>Fon Adı</th><th>Alt Kategori</th><th>İlk İşlem Tarihi</th></tr>
-{rows if rows else '<tr><td colspan="4" style="color:#93a0b0; padding:16px;">Son 30 günde yeni eklenen fon bulunamadı.</td></tr>'}
+{rows if rows else '<tr><td colspan="4" style="color:var(--ink-dim); padding:16px;">Son 30 günde yeni eklenen fon bulunamadı.</td></tr>'}
 </table>"""
 
     body = f"""{page_header('yeni-fonlar.html', 'En Son Eklenen Fonlar', anchor)}
 <div class="card">
-    <h2 style="color:#1F4E78; margin-top:0;">Son 30 Günde TEFAS'a Açılan Fonlar <span class="kat-count">({len(yeni)} fon)</span></h2>
+    <h2 style="color:var(--teal-bright); margin-top:0;">Son 30 Günde TEFAS'a Açılan Fonlar <span class="kat-count">({len(yeni)} fon)</span></h2>
     {table_html}
 </div>"""
 
