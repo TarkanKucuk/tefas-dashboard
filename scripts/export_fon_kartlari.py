@@ -143,6 +143,23 @@ def build_compare_table(fund_prices, bench_df):
     return out
 
 
+def kisalt_unvan(ad):
+    """Fon unvanındaki uzun parantez içi ifadeyi kısaltır (sadece görüntüleme
+    amaçlı — kaynak veriyi değiştirmez). Örn: '... (HİSSE SENEDİ YOĞUN FON)'
+    -> '... (HSYF)'."""
+    if not ad:
+        return ad
+    return ad.replace("(HİSSE SENEDİ YOĞUN FON)", "(HSYF)")
+
+
+def kisalt_semsiye(s):
+    """'Şemsiye' alanındaki tekrarlayan 'Şemsiye Fonu' ibaresini kaldırır.
+    Örn: 'Hisse Senedi Şemsiye Fonu' -> 'Hisse Senedi'."""
+    if not s:
+        return s
+    return s.replace(" Şemsiye Fonu", "").replace("Şemsiye Fonu", "").strip()
+
+
 def build_price_history(fund_prices, max_points=1500):
     """Lightweight Charts formatı: [{time, value}, ...]. Çok uzun serileri seyreltir."""
     df = fund_prices[["Tarih", "Fiyat"]].dropna().sort_values("Tarih")
@@ -296,8 +313,8 @@ def main():
 
         card = {
             "fon_kodu": kod,
-            "fon_adi": map_row.get(MAPPING_COLS["ad"]),
-            "semsiye": map_row.get(MAPPING_COLS["semsiye"]),
+            "fon_adi": kisalt_unvan(map_row.get(MAPPING_COLS["ad"])),
+            "semsiye": kisalt_semsiye(map_row.get(MAPPING_COLS["semsiye"])),
             "kategori": map_row.get(MAPPING_COLS["kategori"]),
             "veri_tarihi": fund_prices["Tarih"].max().strftime("%Y-%m-%d"),
 
