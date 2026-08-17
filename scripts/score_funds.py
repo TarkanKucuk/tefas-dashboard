@@ -121,13 +121,58 @@ def nav_bar(active):
 
 def page_header(active, subtitle, anchor, extra_meta=""):
     return f"""<div class="header">
-    <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
+    <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px; flex-wrap:wrap;">
         <img src="logo.jpg" alt="Fonlarca" style="height:36px; width:36px; border-radius:8px; object-fit:cover;">
         <h1>FONLARCA <span style="font-weight:400; opacity:0.75; font-size:16px;">— {subtitle}</span></h1>
+        <div class="fund-search-wrap">
+            <input type="text" id="fundSearchInput" list="fundSearchList" placeholder="🔍 Fon ara (kod veya isim)…" autocomplete="off">
+            <datalist id="fundSearchList"></datalist>
+        </div>
     </div>
     <div class="meta"><span>Son güncelleme: {anchor.date()}</span>{extra_meta}</div>
     {nav_bar(active)}
 </div>"""
+
+
+FUND_SEARCH_STYLE = """
+.fund-search-wrap { margin-left: auto; flex: 1; min-width: 200px; max-width: 340px; }
+.fund-search-wrap input {
+    width: 100%; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3);
+    color: white; border-radius: 8px; padding: 8px 12px; font-size: 13px;
+}
+.fund-search-wrap input::placeholder { color: rgba(255,255,255,0.7); }
+@media (max-width: 640px) {
+    .fund-search-wrap { margin-left: 0; max-width: none; width: 100%; }
+}
+"""
+
+FUND_SEARCH_SCRIPT = """
+<script>
+(function() {
+    var input = document.getElementById('fundSearchInput');
+    var list = document.getElementById('fundSearchList');
+    if (!input || !list) return;
+    var funds = [];
+    fetch('data/fon-kartlari/_index.json')
+        .then(function(r) { return r.ok ? r.json() : []; })
+        .then(function(data) {
+            funds = data || [];
+            list.innerHTML = funds.map(function(f) {
+                return '<option value="' + f.kod + '">' + f.kod + ' — ' + (f.ad || '') + '</option>';
+            }).join('');
+        })
+        .catch(function() {});
+    function go() {
+        var raw = input.value.trim();
+        if (!raw) return;
+        var kod = raw.split(/[—-]/)[0].trim().toUpperCase();
+        var match = funds.find(function(f) { return f.kod.toUpperCase() === kod; });
+        if (match) window.location.href = 'fon-karti.html?kod=' + match.kod;
+    }
+    input.addEventListener('change', go);
+    input.addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); go(); } });
+})();
+</script>"""
 
 
 def page_shell(title, active, body, extra_style="", extra_head=""):
@@ -142,10 +187,11 @@ def page_shell(title, active, body, extra_style="", extra_head=""):
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" href="icon-192.png">
 {extra_head}
-<style>{BASE_STYLE}{extra_style}</style>
+<style>{BASE_STYLE}{FUND_SEARCH_STYLE}{extra_style}</style>
 </head>
 <body>
 {body}
+{FUND_SEARCH_SCRIPT}
 <script>
 if ('serviceWorker' in navigator) {{
     navigator.serviceWorker.register('sw.js');
