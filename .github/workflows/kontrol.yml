@@ -3,6 +3,9 @@ name: Kontrol
 on:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   kontrol:
     runs-on: ubuntu-latest
@@ -18,5 +21,17 @@ jobs:
       - name: Gerekli kütüphaneleri kur
         run: pip install pandas pyarrow tefasfon
 
-      - name: tefasfon ham yanıtını incele
-        run: python diagnose_tefasfon_raw.py
+      - name: Varlık dağılımı verisini güncelle (günlük, tek tek)
+        run: python scripts/update_portfoy.py
+
+      - name: Değişiklikleri repoya kaydet
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add tefas_portfoy_dagilim.parquet
+          git diff --cached --quiet && echo "Değişiklik yok, commit atılmadı." || git commit -m "Varlık dağılımını günlük/tek-tek yöntemle güncelle"
+          git pull --rebase origin main
+          git push
+
+      - name: Sonucu incele
+        run: python diagnose_portfoy.py
