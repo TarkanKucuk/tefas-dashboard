@@ -19,17 +19,20 @@ jobs:
           python-version: "3.11"
 
       - name: Gerekli kütüphaneleri kur
-        run: pip install pandas pyarrow tefasfon
+        run: pip install pandas numpy pyarrow openpyxl tefasfon
 
       - name: Varlık dağılımı verisini güncelle (günlük, tek tek)
         run: python scripts/update_portfoy.py
+
+      - name: Fon kartı JSON'larını yeniden üret
+        run: python scripts/export_fon_kartlari.py
 
       - name: Değişiklikleri repoya kaydet
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
-          git add tefas_portfoy_dagilim.parquet
-          git diff --cached --quiet && echo "Değişiklik yok, commit atılmadı." || git commit -m "Varlık dağılımını günlük/tek-tek yöntemle güncelle"
+          git add tefas_portfoy_dagilim.parquet docs/data/fon-kartlari
+          git diff --cached --quiet && echo "Değişiklik yok, commit atılmadı." || git commit -m "Varlık dağılımını güncelle ve fon kartlarını yeniden üret"
           git pull --rebase origin main
           git push
 
