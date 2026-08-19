@@ -111,6 +111,23 @@ def kisalt_unvan(ad):
         return ad
     return ad.replace("(HİSSE SENEDİ YOĞUN FON)", "(HSYF)")
 
+
+def load_fon_adlari():
+    """Fon adlarını TEFAS'ın kendi 'Fon Unvanı' verisinden (tefas_portfoy_dagilim.parquet)
+    okur — manuel eşleştirme dosyasına (fon_kategori_eslestirme.xlsx) bağımlı kalmasın diye.
+    O dosya sadece Alt Kategori (kendi sınıflandırmamız) için hâlâ gerekli."""
+    path = "tefas_portfoy_dagilim.parquet"
+    if not os.path.exists(path):
+        return {}
+    try:
+        df = pd.read_parquet(path, columns=["Fon Kodu", "Fon Unvanı", "Tarih"])
+    except Exception:
+        return {}
+    df = df.dropna(subset=["Fon Unvanı"]).sort_values("Tarih")
+    if df.empty:
+        return {}
+    return df.groupby("Fon Kodu")["Fon Unvanı"].last().to_dict()
+
 def nav_bar(active):
     parts = []
     for href, label in NAV_PAGES:
@@ -701,7 +718,8 @@ renderPanel('gunluk');
 # Sayfa 4: En Son Eklenen Fonlar
 # ------------------------------------------------------------------
 
-def write_yeni_fonlar_page(df, mapping):
+def write_yeni_fonlar_page(df, mapping, fon_adlari=None):
+    fon_adlari = fon_adlari or {}
     anchor = df['Tarih'].max()
     cutoff = anchor - pd.Timedelta(days=30)
 
@@ -709,12 +727,15 @@ def write_yeni_fonlar_page(df, mapping):
     first_dates.columns = ['Fon Kodu', 'İlk İşlem Tarihi']
     yeni = first_dates[first_dates['İlk İşlem Tarihi'] >= cutoff].copy()
     yeni = yeni.merge(mapping[['Fon Kodu', 'Fon Adı', 'Alt Kategori']], on='Fon Kodu', how='left')
+    # Eşleştirme dosyasında hiç olmayan fonlar için de, TEFAS'ın kendi
+    # unvanından ismi doldur — sadece Alt Kategori (manuel sınıflandırma) boş kalsın.
+    yeni['Fon Adı'] = yeni['Fon Adı'].fillna(yeni['Fon Kodu'].map(fon_adlari))
     yeni = yeni.sort_values('İlk İşlem Tarihi', ascending=False)
 
     rows = ""
     for _, r in yeni.iterrows():
-        # Fon henüz fon_kategori_eslestirme.xlsx'e eklenmemişse Fon Adı/Alt Kategori boş
-        # gelir — fonu listeden düşürmek yerine, boş hücrelerle birlikte gösteriyoruz
+        # Alt Kategori (manuel eşleştirme) boşsa, fon TEFAS'ta yeni açılmış ve
+        # henüz eşleştirme dosyasına eklenmemiş demektir — o sütun boş kalır
         # (kullanıcı için "eşleştirme dosyasını güncellemen lazım" sinyali).
         ad = kisalt_unvan(r['Fon Adı']) if pd.notna(r['Fon Adı']) else ''
         kat = r['Alt Kategori'] if pd.notna(r['Alt Kategori']) else ''
@@ -749,6 +770,11 @@ def main():
     df = df.sort_values(['Fon Kodu', 'Tarih'])
 
     mapping = pd.read_excel(MAPPING_PATH)
+    fon_adlari = load_fon_adlari()
+    if fon_adlari:
+        # TEFAS'ın kendi güncel unvanını tercih et; eşleştirme dosyasındaki isim
+        # sadece o fon TEFAS verisinde henüz yoksa yedek olarak kullanılır.
+        mapping['Fon Adı'] = mapping['Fon Kodu'].map(fon_adlari).combine_first(mapping['Fon Adı'])
 
     res, anchor = build_fund_metrics(df)
     res = res.merge(mapping, on='Fon Kodu', how='left')
@@ -759,7 +785,7 @@ def main():
     write_hareketler_page(df, mapping)
     write_category_summary(res, anchor)
     write_tum_fonlar_page(res, anchor)
-    write_yeni_fonlar_page(df, mapping)
+    write_yeni_fonlar_page(df, mapping, fon_adlari)
 
 
 if __name__ == "__main__":
