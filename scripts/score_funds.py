@@ -99,6 +99,8 @@ table.mini td a:hover { color: #6fd8cd; text-decoration-color: #6fd8cd; }
 .period-panel { display: none; }
 .period-panel.active { display: block; }
 footer { text-align: center; color: var(--ink-dim); font-size: 12px; margin-top: 24px; }
+.pos { color: var(--green); font-weight: 600; }
+.neg { color: var(--red); font-weight: 600; }
 """
 
 
@@ -827,11 +829,11 @@ def write_favoriler_page(anchor):
     <div class="row-2">
         <div class="card">
             <h3 style="color:var(--ink);">Nakit Giriş/Çıkış (Net TL)</h3>
-            <canvas id="fav-cashflow-chart"></canvas>
+            <div style="height:200px;"><canvas id="fav-cashflow-chart"></canvas></div>
         </div>
         <div class="card">
             <h3 style="color:var(--ink);">Yatırımcı Sayısı Değişimi (Adet)</h3>
-            <canvas id="fav-investor-chart"></canvas>
+            <div style="height:200px;"><canvas id="fav-investor-chart"></canvas></div>
         </div>
     </div>
 </div>
@@ -942,7 +944,7 @@ let cashflowChart, investorChart;
 function renderTable(favs) {{
     const cols = [
         ['Günlük','Günlük'], ['Haftalık','Haftalık'], ['Aylık','Aylık'], ['3 Ay','3 Aylık'],
-        ['6 Ay','6 Aylık'], ['Yılbaşı','YBB'], ['1 Yıl','Yıllık'], ['3 Yıl','3 Yıllık'],
+        ['6 Ay','6 Aylık'], ['Yılbaşı','YBB'], ['1 Yıl','Yıllık'],
     ];
     let thead = '<tr><th>Kod</th><th>Fon Adı</th>' + cols.map(c => '<th>' + c[1] + '</th>').join('') + '<th></th></tr>';
     let rows = favs.map(kod => {{
@@ -963,15 +965,40 @@ function renderTable(favs) {{
     document.getElementById('fav-returns-table').innerHTML = thead + rows;
 }}
 
+function valueLabelPlugin(fmt) {{
+    return {{
+        id: 'valueLabel' + Math.random().toString(36).slice(2),
+        afterDatasetsDraw(chart) {{
+            const {{ ctx }} = chart;
+            chart.data.datasets.forEach((ds, dsIndex) => {{
+                const meta = chart.getDatasetMeta(dsIndex);
+                meta.data.forEach((bar, i) => {{
+                    const v = ds.data[i];
+                    if (v == null) return;
+                    ctx.save();
+                    ctx.fillStyle = '#c9cdd6';
+                    ctx.font = '600 10px -apple-system,Segoe UI,Arial,sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = v >= 0 ? 'bottom' : 'top';
+                    ctx.fillText(fmt(v), bar.x, bar.y + (v >= 0 ? -4 : 4));
+                    ctx.restore();
+                }});
+            }});
+        }}
+    }};
+}}
 function makeChart(canvasId, label) {{
     return new Chart(document.getElementById(canvasId), {{
         type: 'bar',
         data: {{ labels: [], datasets: [{{ data: [], backgroundColor: [] }}] }},
         options: {{
+            maintainAspectRatio: false,
+            layout: {{ padding: {{ top: 16, bottom: 16 }} }},
             plugins: {{ legend: {{ display: false }}, tooltip: {{ callbacks: {{ label: c => label(c.raw) }} }} }},
-            scales: {{ x: {{ ticks: {{ color: '#9aa0ac' }}, grid: {{ display: false }} }},
-                       y: {{ ticks: {{ color: '#9aa0ac', callback: v => label(v) }}, grid: {{ color: '#1c1e26' }} }} }}
-        }}
+            scales: {{ x: {{ ticks: {{ color: '#9aa0ac', font: {{ size: 11 }} }}, grid: {{ display: false }} }},
+                       y: {{ display: false, grid: {{ display: false }} }} }}
+        }},
+        plugins: [valueLabelPlugin(label)]
     }});
 }}
 
