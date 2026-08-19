@@ -128,6 +128,22 @@ def load_fon_adlari():
         return {}
     return df.groupby("Fon Kodu")["Fon Unvanı"].last().to_dict()
 
+
+def load_acik_fon_kodlari():
+    """TEFAS'a açık (getFplFonList'te yer alan) fon kodlarının kümesini döner.
+    Dosya yoksa/boşsa None döner — bu durumda çağıran taraf hiçbir filtre
+    uygulamamalı (veri henüz toplanmamışsa 'En Son Eklenen Fonlar' boşalmasın)."""
+    path = "tefas_acik_fonlar.parquet"
+    if not os.path.exists(path):
+        return None
+    try:
+        df = pd.read_parquet(path, columns=["Fon Kodu"])
+    except Exception:
+        return None
+    if df.empty:
+        return None
+    return set(df["Fon Kodu"])
+
 def nav_bar(active):
     parts = []
     for href, label in NAV_PAGES:
@@ -718,7 +734,7 @@ renderPanel('gunluk');
 # Sayfa 4: En Son Eklenen Fonlar
 # ------------------------------------------------------------------
 
-def write_yeni_fonlar_page(df, mapping, fon_adlari=None):
+def write_yeni_fonlar_page(df, mapping, fon_adlari=None, acik_fon_kodlari=None):
     fon_adlari = fon_adlari or {}
     anchor = df['Tarih'].max()
     cutoff = anchor - pd.Timedelta(days=30)
@@ -726,6 +742,10 @@ def write_yeni_fonlar_page(df, mapping, fon_adlari=None):
     first_dates = df.groupby('Fon Kodu')['Tarih'].min().reset_index()
     first_dates.columns = ['Fon Kodu', 'İlk İşlem Tarihi']
     yeni = first_dates[first_dates['İlk İşlem Tarihi'] >= cutoff].copy()
+    # Sadece TEFAS'a açık fonları göster (getFplFonList'ten gelen liste).
+    # Liste henüz toplanmadıysa (acik_fon_kodlari None) filtre uygulanmaz.
+    if acik_fon_kodlari is not None:
+        yeni = yeni[yeni['Fon Kodu'].isin(acik_fon_kodlari)]
     yeni = yeni.merge(mapping[['Fon Kodu', 'Fon Adı', 'Alt Kategori']], on='Fon Kodu', how='left')
     # Eşleştirme dosyasında hiç olmayan fonlar için de, TEFAS'ın kendi
     # unvanından ismi doldur — sadece Alt Kategori (manuel sınıflandırma) boş kalsın.
@@ -775,6 +795,7 @@ def main():
         # TEFAS'ın kendi güncel unvanını tercih et; eşleştirme dosyasındaki isim
         # sadece o fon TEFAS verisinde henüz yoksa yedek olarak kullanılır.
         mapping['Fon Adı'] = mapping['Fon Kodu'].map(fon_adlari).combine_first(mapping['Fon Adı'])
+    acik_fon_kodlari = load_acik_fon_kodlari()
 
     res, anchor = build_fund_metrics(df)
     res = res.merge(mapping, on='Fon Kodu', how='left')
@@ -785,7 +806,7 @@ def main():
     write_hareketler_page(df, mapping)
     write_category_summary(res, anchor)
     write_tum_fonlar_page(res, anchor)
-    write_yeni_fonlar_page(df, mapping, fon_adlari)
+    write_yeni_fonlar_page(df, mapping, fon_adlari, acik_fon_kodlari)
 
 
 if __name__ == "__main__":
