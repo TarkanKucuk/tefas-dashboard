@@ -54,8 +54,9 @@ body {
     box-shadow: 0 2px 12px rgba(0,0,0,0.35);
 }
 .header h1 { margin: 0; font-size: 26px; font-weight: 600; }
-.header .meta { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-.header .meta span { background: rgba(255,255,255,0.15); padding: 4px 12px; border-radius: 20px; font-size: 13px; white-space: nowrap; }
+.header .meta { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; }
+.header .meta span { font-size: 13px; white-space: nowrap; opacity: 0.9; }
+.header .meta span:not(:last-child) { border-right: 1px solid rgba(255,255,255,0.25); padding-right: 16px; }
 .nav-bar { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
 .nav-bar a { color: white; text-decoration: none; padding: 5px 14px; border-radius: 20px; font-size: 13px; white-space: nowrap; }
 @media (max-width: 640px) {
