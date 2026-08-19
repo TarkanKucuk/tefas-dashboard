@@ -709,13 +709,17 @@ def write_yeni_fonlar_page(df, mapping):
     first_dates.columns = ['Fon Kodu', 'İlk İşlem Tarihi']
     yeni = first_dates[first_dates['İlk İşlem Tarihi'] >= cutoff].copy()
     yeni = yeni.merge(mapping[['Fon Kodu', 'Fon Adı', 'Alt Kategori']], on='Fon Kodu', how='left')
-    yeni = yeni[yeni['Alt Kategori'].notna()]
     yeni = yeni.sort_values('İlk İşlem Tarihi', ascending=False)
 
     rows = ""
     for _, r in yeni.iterrows():
-        rows += (f"<tr><td>{fonlarca_link(r['Fon Kodu'])}</td><td>{kisalt_unvan(r['Fon Adı'])}</td>"
-                 f"<td>{r['Alt Kategori']}</td><td>{r['İlk İşlem Tarihi'].date()}</td></tr>")
+        # Fon henüz fon_kategori_eslestirme.xlsx'e eklenmemişse Fon Adı/Alt Kategori boş
+        # gelir — fonu listeden düşürmek yerine, boş hücrelerle birlikte gösteriyoruz
+        # (kullanıcı için "eşleştirme dosyasını güncellemen lazım" sinyali).
+        ad = kisalt_unvan(r['Fon Adı']) if pd.notna(r['Fon Adı']) else ''
+        kat = r['Alt Kategori'] if pd.notna(r['Alt Kategori']) else ''
+        rows += (f"<tr><td>{fonlarca_link(r['Fon Kodu'])}</td><td>{ad}</td>"
+                 f"<td>{kat}</td><td>{r['İlk İşlem Tarihi'].date()}</td></tr>")
 
     table_html = f"""<table class="mini" style="font-size:14px;">
 <tr><th>Kod</th><th>Fon Adı</th><th>Alt Kategori</th><th>İlk İşlem Tarihi</th></tr>
