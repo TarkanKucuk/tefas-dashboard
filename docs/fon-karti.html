@@ -35,6 +35,15 @@
     font-weight:600; padding:4px 2px; margin-bottom:-10px;
   }
   .back-home:hover{ color:var(--ink); }
+  .top-links{ display:flex; justify-content:space-between; align-items:center; margin-bottom:-10px; }
+  .fav-link{ color:var(--ink-dim); text-decoration:none; font-size:13px; font-weight:600; padding:4px 2px; }
+  .fav-link:hover{ color:#e0b23f; }
+  .fav-toggle{
+    background:transparent; border:1px solid var(--line); color:#e0b23f; font-size:20px;
+    width:38px; height:38px; border-radius:10px; cursor:pointer; flex-shrink:0; line-height:1;
+  }
+  .fav-toggle.active{ background:rgba(224,178,63,0.15); border-color:#e0b23f; }
+  .fav-toggle:hover{ background:rgba(224,178,63,0.1); }
   .header{
     background:var(--panel);
     border-radius:14px;
@@ -239,7 +248,10 @@
 <div class="wrap">
 
   <!-- HEADER -->
-  <a href="index.html" class="back-home">← Anasayfa</a>
+  <div class="top-links">
+    <a href="index.html" class="back-home">← Anasayfa</a>
+    <a href="favoriler.html" class="fav-link">★ Favorilerim</a>
+  </div>
   <div class="header">
     <div class="score-badge" id="score-badge">
       <div class="code" id="hdr-code">PBR</div>
@@ -248,6 +260,7 @@
         <div class="val" id="hdr-score">—</div>
       </div>
     </div>
+    <button id="fav-toggle-btn" class="fav-toggle" title="Favorilere ekle/çıkar">☆</button>
     <div class="fund-name" id="hdr-name">Yükleniyor…</div>
     <div class="fund-search-wrap">
       <input type="text" id="fund-search-input" list="fund-search-list" placeholder="🔍 Fon ara (kod veya isim)…" autocomplete="off">
@@ -534,6 +547,31 @@ function wirePageTabs(){
 }
 
 /* ---------- header + stat şeridi ---------- */
+/* ---------- favoriler (cihaz-lokali, localStorage) ---------- */
+const FAV_KEY = 'fonlarca_favoriler';
+function getFavorites(){
+  try { return JSON.parse(localStorage.getItem(FAV_KEY)) || []; }
+  catch(e){ return []; }
+}
+function isFavorite(kod){ return getFavorites().includes(kod); }
+function setFavoriteState(kod, on){
+  let favs = getFavorites();
+  if (on && !favs.includes(kod)) favs.push(kod);
+  if (!on) favs = favs.filter(f => f !== kod);
+  try { localStorage.setItem(FAV_KEY, JSON.stringify(favs)); } catch(e){}
+}
+function renderFavToggle(){
+  const btn = document.getElementById('fav-toggle-btn');
+  const on = isFavorite(FUND_CODE);
+  btn.textContent = on ? '★' : '☆';
+  btn.classList.toggle('active', on);
+}
+document.getElementById('fav-toggle-btn').addEventListener('click', () => {
+  setFavoriteState(FUND_CODE, !isFavorite(FUND_CODE));
+  renderFavToggle();
+});
+renderFavToggle(); // FUND_CODE URL'den geldiği için veri yüklenmeden hemen gösterilebilir
+
 function renderHeader(d){
   document.getElementById('hdr-code').textContent = d.fon_kodu || FUND_CODE;
   document.getElementById('hdr-name').textContent = d.fon_adi || "—";
