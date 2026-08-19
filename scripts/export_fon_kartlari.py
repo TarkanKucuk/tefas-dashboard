@@ -329,9 +329,7 @@ def main():
 
     for kod, fund_prices in price_df.groupby("Fon Kodu"):
         map_row = mapping[mapping[MAPPING_COLS["kod"]] == kod]
-        if map_row.empty:
-            continue
-        map_row = map_row.iloc[0]
+        map_row = map_row.iloc[0] if not map_row.empty else None
 
         bilgi_row = None
         if not fon_bilgi.empty:
@@ -347,9 +345,9 @@ def main():
 
         card = {
             "fon_kodu": kod,
-            "fon_adi": kisalt_unvan(map_row.get(MAPPING_COLS["ad"])),
-            "semsiye": kisalt_semsiye(map_row.get(MAPPING_COLS["semsiye"])),
-            "kategori": map_row.get(MAPPING_COLS["kategori"]),
+            "fon_adi": kisalt_unvan(map_row.get(MAPPING_COLS["ad"])) if map_row is not None else None,
+            "semsiye": kisalt_semsiye(map_row.get(MAPPING_COLS["semsiye"])) if map_row is not None else None,
+            "kategori": map_row.get(MAPPING_COLS["kategori"]) if map_row is not None else None,
             "veri_tarihi": fund_prices["Tarih"].max().strftime("%Y-%m-%d"),
 
             "toplam_fon_degeri": float(fund_prices["Fon Toplam Değer"].iloc[-1])
