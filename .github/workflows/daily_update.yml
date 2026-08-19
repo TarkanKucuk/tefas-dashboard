@@ -25,12 +25,14 @@ jobs:
         run: python scripts/score_funds.py
       - name: Portfoy dagilim verisini guncelle
         run: python scripts/update_portfoy.py
+      - name: TEFAS'a acik fon listesini guncelle
+        run: python scripts/update_tefas_durum.py
       - name: Fon karti JSON'larini yeniden uret
         run: python scripts/export_fon_kartlari.py
       - name: Degisiklikleri kaydet
         run: |
           git config user.name "github-actions"
           git config user.email "actions@github.com"
-          git add tefas_gecmis_veri.parquet benchmarklar.parquet fon_bilgileri.parquet tefas_portfoy_dagilim.parquet docs/
+          git add tefas_gecmis_veri.parquet benchmarklar.parquet fon_bilgileri.parquet tefas_portfoy_dagilim.parquet tefas_acik_fonlar.parquet docs/
           git diff --quiet --cached || git commit -m "Otomatik guncelleme"
           git push
