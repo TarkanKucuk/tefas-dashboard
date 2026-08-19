@@ -20,9 +20,7 @@ jobs:
 
       - name: score_funds.py'yi simdi calistir ve sonucu kontrol et
         run: |
-          cd scripts
-          python score_funds.py
-          cd ..
+          python scripts/score_funds.py
           echo "--- docs/yeni-fonlar.html icinde KSP araniyor ---"
           if grep -q "KSP" docs/yeni-fonlar.html; then
             echo "SONUC: KSP HALA SAYFADA VAR -> bu bir KOD hatasi"
