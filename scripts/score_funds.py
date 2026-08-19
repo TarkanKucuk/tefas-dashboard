@@ -27,6 +27,7 @@ NAV_PAGES = [
     ('kategori-ozeti.html', 'Puanlama - Kategori Özeti'),
     ('tum-fonlar.html', 'Puanlama - Tüm Fonlar'),
     ('yeni-fonlar.html', 'En Son Eklenen Fonlar'),
+    ('favoriler.html', '★ Favorilerim'),
 ]
 
 BASE_STYLE = """
@@ -135,14 +136,19 @@ def load_acik_fon_kodlari():
     uygulamamalı (veri henüz toplanmamışsa 'En Son Eklenen Fonlar' boşalmasın)."""
     path = "tefas_acik_fonlar.parquet"
     if not os.path.exists(path):
+        print(f"[acik_fon] {path} bulunamadı, filtre uygulanmayacak.")
         return None
     try:
         df = pd.read_parquet(path, columns=["Fon Kodu"])
-    except Exception:
+    except Exception as e:
+        print(f"[acik_fon] {path} okunamadı ({e}), filtre uygulanmayacak.")
         return None
     if df.empty:
+        print(f"[acik_fon] {path} boş, filtre uygulanmayacak.")
         return None
-    return set(df["Fon Kodu"])
+    kodlar = set(df["Fon Kodu"])
+    print(f"[acik_fon] {len(kodlar)} açık fon kodu yüklendi. KSP içeriyor mu: {'KSP' in kodlar}")
+    return kodlar
 
 def nav_bar(active):
     parts = []
@@ -742,10 +748,16 @@ def write_yeni_fonlar_page(df, mapping, fon_adlari=None, acik_fon_kodlari=None):
     first_dates = df.groupby('Fon Kodu')['Tarih'].min().reset_index()
     first_dates.columns = ['Fon Kodu', 'İlk İşlem Tarihi']
     yeni = first_dates[first_dates['İlk İşlem Tarihi'] >= cutoff].copy()
+    print(f"[yeni_fonlar] Filtre öncesi (son 30 gün) fon sayısı: {len(yeni)}, "
+          f"KSP içeriyor mu: {'KSP' in yeni['Fon Kodu'].values}")
+    print(f"[yeni_fonlar] acik_fon_kodlari parametresi: "
+          f"{'None (filtre UYGULANMAYACAK)' if acik_fon_kodlari is None else f'{len(acik_fon_kodlari)} kod (filtre uygulanacak)'}")
     # Sadece TEFAS'a açık fonları göster (getFplFonList'ten gelen liste).
     # Liste henüz toplanmadıysa (acik_fon_kodlari None) filtre uygulanmaz.
     if acik_fon_kodlari is not None:
         yeni = yeni[yeni['Fon Kodu'].isin(acik_fon_kodlari)]
+    print(f"[yeni_fonlar] Filtre sonrası fon sayısı: {len(yeni)}, "
+          f"KSP içeriyor mu: {'KSP' in yeni['Fon Kodu'].values}")
     yeni = yeni.merge(mapping[['Fon Kodu', 'Fon Adı', 'Alt Kategori']], on='Fon Kodu', how='left')
     # Eşleştirme dosyasında hiç olmayan fonlar için de, TEFAS'ın kendi
     # unvanından ismi doldur — sadece Alt Kategori (manuel sınıflandırma) boş kalsın.
@@ -778,6 +790,68 @@ def write_yeni_fonlar_page(df, mapping, fon_adlari=None, acik_fon_kodlari=None):
     print("En Son Eklenen Fonlar sayfası oluşturuldu: docs/yeni-fonlar.html")
 
 
+# ------------------------------------------------------------------
+# Sayfa 5: Favorilerim (cihaz-lokali, localStorage — sunucu tarafında veri yok)
+# ------------------------------------------------------------------
+
+def write_favoriler_page(anchor):
+    body = f"""{page_header('favoriler.html', 'Favorilerim', anchor)}
+<div class="card">
+    <h2 style="color:var(--teal-bright); margin-top:0;">★ Favorilerim</h2>
+    <p style="color:var(--ink-dim); font-size:13px; margin-top:-6px;">
+        Bu liste sadece bu cihazda/tarayıcıda saklanır — başka bir cihazda görünmez.
+    </p>
+    <div id="fav-list"></div>
+</div>
+<script>
+const FAV_KEY = 'fonlarca_favoriler';
+function getFavorites() {{
+    try {{ return JSON.parse(localStorage.getItem(FAV_KEY)) || []; }}
+    catch(e) {{ return []; }}
+}}
+function removeFavorite(kod) {{
+    const favs = getFavorites().filter(f => f !== kod);
+    try {{ localStorage.setItem(FAV_KEY, JSON.stringify(favs)); }} catch(e) {{}}
+    renderList();
+}}
+function renderList() {{
+    const box = document.getElementById('fav-list');
+    const favs = getFavorites();
+    if (!favs.length) {{
+        box.innerHTML = '<p style="color:var(--ink-dim); padding:16px 0;">Henüz favori fon eklemediniz. Bir fon kartında ☆ butonuna basarak ekleyebilirsiniz.</p>';
+        return;
+    }}
+    box.innerHTML = '<p style="color:var(--ink-dim); font-size:13px;">Yükleniyor…</p>';
+    fetch('data/fon-kartlari/_index.json')
+        .then(r => r.ok ? r.json() : [])
+        .then(index => {{
+            const byKod = {{}};
+            index.forEach(f => {{ byKod[f.kod] = f; }});
+            let rows = '';
+            favs.forEach(kod => {{
+                const f = byKod[kod];
+                const ad = f ? f.ad : null;
+                const kat = f ? f.kategori : null;
+                rows += '<tr>' +
+                    '<td><a href="fon-karti.html?kod=' + kod + '">' + kod + '</a></td>' +
+                    '<td>' + (ad || '—') + '</td>' +
+                    '<td>' + (kat || '—') + '</td>' +
+                    '<td><button onclick="removeFavorite(\\'' + kod + '\\')" style="background:transparent;border:1px solid var(--line);color:var(--red);border-radius:6px;padding:3px 10px;cursor:pointer;">Kaldır</button></td>' +
+                    '</tr>';
+            }});
+            box.innerHTML = '<table class="mini" style="font-size:14px;">' +
+                '<tr><th>Kod</th><th>Fon Adı</th><th>Alt Kategori</th><th></th></tr>' + rows + '</table>';
+        }})
+        .catch(() => {{ box.innerHTML = '<p style="color:var(--ink-dim);">Fon listesi yüklenemedi.</p>'; }});
+}}
+renderList();
+</script>"""
+
+    with open("docs/favoriler.html", "w", encoding="utf-8") as f:
+        f.write(page_shell("FONLARCA — Favorilerim", "favoriler.html", body))
+    print("Favorilerim sayfası oluşturuldu: docs/favoriler.html")
+
+
 def main():
     df = pd.read_parquet(DATA_PATH)
     df['Tarih'] = pd.to_datetime(df['Tarih']).dt.normalize()
@@ -807,6 +881,7 @@ def main():
     write_category_summary(res, anchor)
     write_tum_fonlar_page(res, anchor)
     write_yeni_fonlar_page(df, mapping, fon_adlari, acik_fon_kodlari)
+    write_favoriler_page(anchor)
 
 
 if __name__ == "__main__":
