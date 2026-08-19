@@ -93,6 +93,12 @@ def period_return(series_dates, series_values, anchor_date, offset=None):
         # kaydından (>= 1 Ocak) başlar — 1 Ocak'a eşit/önceki (yani geçen yılın
         # 31 Aralık) değeri DEĞİL. Fon kartındaki aylık tablo "Toplam" ile uyumlu.
         yil_basi = pd.Timestamp(year=anchor_date.year, month=1, day=1)
+        # Fon/seri o yılın başında zaten var mıydı? Yoksa (yıl içinde kurulmuş
+        # bir fon gibi) "yılbaşından beri getiri" kavramı anlamsız — "-" dönmeli,
+        # kuruluş tarihini yanlışlıkla "yılbaşı fiyatı" sayıp göstermemeli.
+        ilk_veri = dates_valid.min()
+        if ilk_veri > yil_basi + pd.Timedelta(days=10):
+            return None
         gelecek = values_valid[dates_valid >= yil_basi]
         if gelecek.empty:
             return None
@@ -205,9 +211,13 @@ def build_benchmark_series(bench_df, max_points=1500):
     return out
 
 
-def build_flows_history(fund_prices):
-    """Aylık: yatırımcı sayısı, toplam değer, net nakit giriş/çıkış (TL)."""
-    df = fund_prices.copy()
+def build_flows_history(fund_prices, gunluk_gun=35):
+    """Aylık seri (uzun geçmiş için) + günlük seri (son `gunluk_gun` gün, haftalık/
+    aylık gün-gün görünüm için). Her ikisinde: yatırımcı sayısı, toplam değer,
+    net nakit giriş/çıkış (TL)."""
+    df = fund_prices.copy().sort_values("Tarih")
+
+    # --- Aylık seri (mevcut davranış) ---
     df["AyBaşı"] = df["Tarih"].values.astype("datetime64[M]")
     monthly = df.groupby("AyBaşı").agg(
         Kisi=("Kişi Sayısı", "last"),
@@ -227,11 +237,24 @@ def build_flows_history(fund_prices):
             net_akis.append(None)
     monthly["NetAkis"] = net_akis
 
+    # --- Günlük seri (son gunluk_gun gün) ---
+    d = df.dropna(subset=["Fiyat"]).copy()
+    # Net günlük akış: (bugünkü pay - dünkü pay) * bugünkü fiyat
+    d["PayOnceki"] = d["Tedavüldeki Pay Sayısı"].shift(1)
+    d["NetAkisGun"] = (d["Tedavüldeki Pay Sayısı"] - d["PayOnceki"]) * d["Fiyat"]
+    d_tail = d.tail(gunluk_gun)
+
     return {
-        "aylar": [d.strftime("%Y-%m") for d in monthly["AyBaşı"]],
+        "aylar": [dt.strftime("%Y-%m") for dt in monthly["AyBaşı"]],
         "yatirimci_sayisi": [None if pd.isna(v) else int(v) for v in monthly["Kisi"]],
         "toplam_deger": [None if pd.isna(v) else round(float(v), 2) for v in monthly["ToplamDeger"]],
         "net_nakit_akisi": [None if pd.isna(v) else round(float(v), 2) for v in monthly["NetAkis"]],
+        "gunluk": {
+            "gunler": [dt.strftime("%Y-%m-%d") for dt in d_tail["Tarih"]],
+            "yatirimci_sayisi": [None if pd.isna(v) else int(v) for v in d_tail["Kişi Sayısı"]],
+            "toplam_deger": [None if pd.isna(v) else round(float(v), 2) for v in d_tail["Fon Toplam Değer"]],
+            "net_nakit_akisi": [None if pd.isna(v) else round(float(v), 2) for v in d_tail["NetAkisGun"]],
+        },
     }
 
 
