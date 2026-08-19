@@ -33,6 +33,13 @@ jobs:
         run: |
           git config user.name "github-actions"
           git config user.email "actions@github.com"
-          git add tefas_gecmis_veri.parquet benchmarklar.parquet fon_bilgileri.parquet tefas_portfoy_dagilim.parquet tefas_acik_fonlar.parquet docs/
+          for f in tefas_gecmis_veri.parquet benchmarklar.parquet fon_bilgileri.parquet tefas_portfoy_dagilim.parquet tefas_acik_fonlar.parquet; do
+            if [ -f "$f" ]; then
+              git add "$f"
+            else
+              echo "Uyari: $f bulunamadi, atlaniyor (o gunku ilgili script basarisiz olmus olabilir)."
+            fi
+          done
+          git add docs/
           git diff --quiet --cached || git commit -m "Otomatik guncelleme"
           git push
