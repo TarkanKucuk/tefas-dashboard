@@ -30,6 +30,11 @@
   .wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:18px;}
 
   /* Header */
+  .back-home{
+    display:inline-block; color:var(--ink-dim); text-decoration:none; font-size:13px;
+    font-weight:600; padding:4px 2px; margin-bottom:-10px;
+  }
+  .back-home:hover{ color:var(--ink); }
   .header{
     background:var(--panel);
     border-radius:14px;
@@ -234,6 +239,7 @@
 <div class="wrap">
 
   <!-- HEADER -->
+  <a href="index.html" class="back-home">← Anasayfa</a>
   <div class="header">
     <div class="score-badge" id="score-badge">
       <div class="code" id="hdr-code">PBR</div>
@@ -1003,7 +1009,34 @@ function makeBar(canvasId, fmt){
     plugins:[makeValueLabelPlugin(fmt)]
   });
 }
+function gunEtiket(iso){
+  const [, m, d] = iso.split('-');
+  return `${parseInt(d,10)} ${AY_KISA[parseInt(m,10)-1]}`;
+}
+
 function updateFlows(period){
+  const gunluk = flowsData.gunluk || {gunler:[], yatirimci_sayisi:[], toplam_deger:[], net_nakit_akisi:[]};
+
+  if (period === '1H' || period === '1A'){
+    // Haftalık = son 7 gün, Aylık = son 30 gün — gün gün
+    const n = period === '1H' ? 7 : 30;
+    const gunler = gunluk.gunler || [];
+    const start = Math.max(0, gunler.length - n);
+    const labels = gunler.slice(start).map(gunEtiket);
+
+    investorsChart.data.labels = labels;
+    investorsChart.data.datasets[0].data = (gunluk.yatirimci_sayisi||[]).slice(start);
+    investorsChart.update();
+
+    totalValueChart.data.labels = labels;
+    totalValueChart.data.datasets[0].data = (gunluk.toplam_deger||[]).slice(start);
+    totalValueChart.update();
+
+    renderCashflowList((gunluk.net_nakit_akisi||[]).slice(start), labels);
+    return;
+  }
+
+  // Diğer dönemler: aylık seri (mevcut davranış)
   const months = PERIOD_MONTHS[period] || 12;
   const aylar = flowsData.aylar || [];
   const n = Math.min(aylar.length, months);
