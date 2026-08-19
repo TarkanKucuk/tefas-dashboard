@@ -21,12 +21,12 @@ jobs:
         run: python scripts/update_benchmarks.py
       - name: Fon bilgilerini guncelle (stopaj/yonetim ucreti)
         run: python scripts/update_fon_bilgileri.py
+      - name: TEFAS'a acik fon listesini guncelle
+        run: python scripts/update_tefas_durum.py
       - name: Puanlama sistemini calistir
         run: python scripts/score_funds.py
       - name: Portfoy dagilim verisini guncelle
         run: python scripts/update_portfoy.py
-      - name: TEFAS'a acik fon listesini guncelle
-        run: python scripts/update_tefas_durum.py
       - name: Fon karti JSON'larini yeniden uret
         run: python scripts/export_fon_kartlari.py
       - name: Degisiklikleri kaydet
