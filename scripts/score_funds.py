@@ -796,13 +796,47 @@ def write_yeni_fonlar_page(df, mapping, fon_adlari=None, acik_fon_kodlari=None):
 
 def write_favoriler_page(anchor):
     body = f"""{page_header('favoriler.html', 'Favorilerim', anchor)}
+
 <div class="card">
     <h2 style="color:var(--teal-bright); margin-top:0;">★ Favorilerim</h2>
     <p style="color:var(--ink-dim); font-size:13px; margin-top:-6px;">
         Bu liste sadece bu cihazda/tarayıcıda saklanır — başka bir cihazda görünmez.
     </p>
-    <div id="fav-list"></div>
+    <div id="fav-empty" style="display:none; color:var(--ink-dim); padding:16px 0;">
+        Henüz favori fon eklemediniz. Bir fon kartında ☆ butonuna basarak ekleyebilirsiniz.
+    </div>
+    <div id="fav-body" style="display:none;">
+        <div class="mini-table-wrap" style="overflow-x:auto;">
+            <table class="mini" id="fav-returns-table" style="font-size:13px; white-space:nowrap;"></table>
+        </div>
+    </div>
 </div>
+
+<div id="fav-charts" style="display:none;">
+    <div class="card">
+        <div class="period-tabs" id="fav-period-tabs">
+            <button class="period-tab active" data-p="Günlük">Günlük</button>
+            <button class="period-tab" data-p="Haftalık">Haftalık</button>
+            <button class="period-tab" data-p="Aylık">Aylık</button>
+            <button class="period-tab" data-p="3 Aylık">3 Aylık</button>
+            <button class="period-tab" data-p="6 Aylık">6 Aylık</button>
+            <button class="period-tab" data-p="YBB">YBB</button>
+            <button class="period-tab" data-p="Yıllık">Yıllık</button>
+        </div>
+    </div>
+    <div class="row-2">
+        <div class="card">
+            <h3 style="color:var(--ink);">Nakit Giriş/Çıkış (Net TL)</h3>
+            <canvas id="fav-cashflow-chart"></canvas>
+        </div>
+        <div class="card">
+            <h3 style="color:var(--ink);">Yatırımcı Sayısı Değişimi (Adet)</h3>
+            <canvas id="fav-investor-chart"></canvas>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script>
 const FAV_KEY = 'fonlarca_favoriler';
 function getFavorites() {{
@@ -812,39 +846,187 @@ function getFavorites() {{
 function removeFavorite(kod) {{
     const favs = getFavorites().filter(f => f !== kod);
     try {{ localStorage.setItem(FAV_KEY, JSON.stringify(favs)); }} catch(e) {{}}
-    renderList();
+    loadAll();
 }}
-function renderList() {{
-    const box = document.getElementById('fav-list');
+
+function fmtPct(v) {{
+    if (v == null) return '—';
+    return (v >= 0 ? '+' : '') + v.toLocaleString('tr-TR', {{minimumFractionDigits:2, maximumFractionDigits:2}}) + '%';
+}}
+function fmtTL(v) {{
+    if (v == null) return '—';
+    const abs = Math.abs(v);
+    let s;
+    if (abs >= 1e9) s = (v/1e9).toLocaleString('tr-TR', {{maximumFractionDigits:2}}) + ' Mlr';
+    else if (abs >= 1e6) s = (v/1e6).toLocaleString('tr-TR', {{maximumFractionDigits:2}}) + ' Mn';
+    else s = Math.round(v).toLocaleString('tr-TR');
+    return (v >= 0 ? '+' : '') + s + ' TL';
+}}
+function fmtInt(v) {{
+    if (v == null) return '—';
+    return (v >= 0 ? '+' : '') + Math.round(v).toLocaleString('tr-TR');
+}}
+
+/* --- dönem hesaplamaları: günlük seri (son ~35 gün) + aylık seri --- */
+function sumLastNDaily(arr, n) {{
+    if (!arr || !arr.length) return null;
+    const slice = arr.slice(-n).filter(v => v != null);
+    if (!slice.length) return null;
+    return slice.reduce((a,b) => a+b, 0);
+}}
+function sumMonthly(arr, aylar, n, ytd) {{
+    if (!arr || !arr.length) return null;
+    let idxs;
+    if (ytd) {{
+        const year = (aylar[aylar.length-1] || '').slice(0,4);
+        idxs = aylar.map((a,i) => a.startsWith(year) ? i : -1).filter(i => i >= 0);
+    }} else {{
+        idxs = [];
+        for (let i = Math.max(0, arr.length - n); i < arr.length; i++) idxs.push(i);
+    }}
+    const vals = idxs.map(i => arr[i]).filter(v => v != null);
+    if (!vals.length) return null;
+    return vals.reduce((a,b) => a+b, 0);
+}}
+function diffLastNDaily(arr, n) {{
+    if (!arr) return null;
+    const slice = arr.slice(-n).filter(v => v != null);
+    if (slice.length < 2) return null;
+    return slice[slice.length-1] - slice[0];
+}}
+function diffMonthly(arr, aylar, n, ytd) {{
+    if (!arr || !arr.length) return null;
+    let idxs;
+    if (ytd) {{
+        const year = (aylar[aylar.length-1] || '').slice(0,4);
+        idxs = aylar.map((a,i) => a.startsWith(year) ? i : -1).filter(i => i >= 0);
+        if (idxs.length) idxs = [Math.max(0, idxs[0]-1), ...idxs]; // yılbaşı öncesi bir nokta daha (başlangıç referansı)
+    }} else {{
+        idxs = [];
+        for (let i = Math.max(0, arr.length - n - 1); i < arr.length; i++) idxs.push(i);
+    }}
+    const vals = idxs.map(i => arr[i]).filter(v => v != null);
+    if (vals.length < 2) return null;
+    return vals[vals.length-1] - vals[0];
+}}
+
+function cashflowFor(d, period) {{
+    const g = (d.akislar && d.akislar.gunluk) || {{}};
+    const m = d.akislar || {{}};
+    if (period === 'Günlük') {{ const arr = g.net_nakit_akisi || []; return arr.length ? arr[arr.length-1] : null; }}
+    if (period === 'Haftalık') return sumLastNDaily(g.net_nakit_akisi, 7);
+    if (period === 'Aylık') return sumLastNDaily(g.net_nakit_akisi, 30);
+    if (period === '3 Aylık') return sumMonthly(m.net_nakit_akisi, m.aylar, 3, false);
+    if (period === '6 Aylık') return sumMonthly(m.net_nakit_akisi, m.aylar, 6, false);
+    if (period === 'YBB') return sumMonthly(m.net_nakit_akisi, m.aylar, null, true);
+    if (period === 'Yıllık') return sumMonthly(m.net_nakit_akisi, m.aylar, 12, false);
+    return null;
+}}
+function investorChangeFor(d, period) {{
+    const g = (d.akislar && d.akislar.gunluk) || {{}};
+    const m = d.akislar || {{}};
+    if (period === 'Günlük') return diffLastNDaily(g.yatirimci_sayisi, 2);
+    if (period === 'Haftalık') return diffLastNDaily(g.yatirimci_sayisi, 7);
+    if (period === 'Aylık') return diffLastNDaily(g.yatirimci_sayisi, 30);
+    if (period === '3 Aylık') return diffMonthly(m.yatirimci_sayisi, m.aylar, 3, false);
+    if (period === '6 Aylık') return diffMonthly(m.yatirimci_sayisi, m.aylar, 6, false);
+    if (period === 'YBB') return diffMonthly(m.yatirimci_sayisi, m.aylar, null, true);
+    if (period === 'Yıllık') return diffMonthly(m.yatirimci_sayisi, m.aylar, 12, false);
+    return null;
+}}
+
+let fundsData = {{}};
+let currentPeriod = 'Günlük';
+let cashflowChart, investorChart;
+
+function renderTable(favs) {{
+    const cols = [
+        ['Günlük','Günlük'], ['Haftalık','Haftalık'], ['Aylık','Aylık'], ['3 Ay','3 Aylık'],
+        ['6 Ay','6 Aylık'], ['Yılbaşı','YBB'], ['1 Yıl','Yıllık'], ['3 Yıl','3 Yıllık'],
+    ];
+    let thead = '<tr><th>Kod</th><th>Fon Adı</th>' + cols.map(c => '<th>' + c[1] + '</th>').join('') + '<th></th></tr>';
+    let rows = favs.map(kod => {{
+        const d = fundsData[kod];
+        if (!d) return '<tr><td>' + kod + '</td><td colspan="' + (cols.length+2) + '" style="color:var(--ink-dim);">Veri yüklenemedi</td></tr>';
+        const getiriler = d.getiriler || {{}};
+        const tds = cols.map(c => {{
+            const v = getiriler[c[0]];
+            const cls = v == null ? '' : (v >= 0 ? 'pos' : 'neg');
+            return '<td class="' + cls + '">' + fmtPct(v) + '</td>';
+        }}).join('');
+        return '<tr>' +
+            '<td><a href="fon-karti.html?kod=' + kod + '">' + kod + '</a></td>' +
+            '<td>' + (d.fon_adi || '—') + '</td>' + tds +
+            '<td><button onclick="removeFavorite(\\'' + kod + '\\')" style="background:transparent;border:1px solid var(--line);color:var(--red);border-radius:6px;padding:3px 10px;cursor:pointer;">Kaldır</button></td>' +
+            '</tr>';
+    }}).join('');
+    document.getElementById('fav-returns-table').innerHTML = thead + rows;
+}}
+
+function makeChart(canvasId, label) {{
+    return new Chart(document.getElementById(canvasId), {{
+        type: 'bar',
+        data: {{ labels: [], datasets: [{{ data: [], backgroundColor: [] }}] }},
+        options: {{
+            plugins: {{ legend: {{ display: false }}, tooltip: {{ callbacks: {{ label: c => label(c.raw) }} }} }},
+            scales: {{ x: {{ ticks: {{ color: '#9aa0ac' }}, grid: {{ display: false }} }},
+                       y: {{ ticks: {{ color: '#9aa0ac', callback: v => label(v) }}, grid: {{ color: '#1c1e26' }} }} }}
+        }}
+    }});
+}}
+
+function updateCharts(favs) {{
+    const cfVals = favs.map(kod => fundsData[kod] ? cashflowFor(fundsData[kod], currentPeriod) : null);
+    const ivVals = favs.map(kod => fundsData[kod] ? investorChangeFor(fundsData[kod], currentPeriod) : null);
+    const posColor = 'rgba(76,187,109,0.75)', negColor = 'rgba(224,90,90,0.75)';
+
+    cashflowChart.data.labels = favs;
+    cashflowChart.data.datasets[0].data = cfVals;
+    cashflowChart.data.datasets[0].backgroundColor = cfVals.map(v => v == null ? '#3a3d48' : (v >= 0 ? posColor : negColor));
+    cashflowChart.update();
+
+    investorChart.data.labels = favs;
+    investorChart.data.datasets[0].data = ivVals;
+    investorChart.data.datasets[0].backgroundColor = ivVals.map(v => v == null ? '#3a3d48' : (v >= 0 ? posColor : negColor));
+    investorChart.update();
+}}
+
+function loadAll() {{
     const favs = getFavorites();
     if (!favs.length) {{
-        box.innerHTML = '<p style="color:var(--ink-dim); padding:16px 0;">Henüz favori fon eklemediniz. Bir fon kartında ☆ butonuna basarak ekleyebilirsiniz.</p>';
+        document.getElementById('fav-empty').style.display = 'block';
+        document.getElementById('fav-body').style.display = 'none';
+        document.getElementById('fav-charts').style.display = 'none';
         return;
     }}
-    box.innerHTML = '<p style="color:var(--ink-dim); font-size:13px;">Yükleniyor…</p>';
-    fetch('data/fon-kartlari/_index.json')
-        .then(r => r.ok ? r.json() : [])
-        .then(index => {{
-            const byKod = {{}};
-            index.forEach(f => {{ byKod[f.kod] = f; }});
-            let rows = '';
-            favs.forEach(kod => {{
-                const f = byKod[kod];
-                const ad = f ? f.ad : null;
-                const kat = f ? f.kategori : null;
-                rows += '<tr>' +
-                    '<td><a href="fon-karti.html?kod=' + kod + '">' + kod + '</a></td>' +
-                    '<td>' + (ad || '—') + '</td>' +
-                    '<td>' + (kat || '—') + '</td>' +
-                    '<td><button onclick="removeFavorite(\\'' + kod + '\\')" style="background:transparent;border:1px solid var(--line);color:var(--red);border-radius:6px;padding:3px 10px;cursor:pointer;">Kaldır</button></td>' +
-                    '</tr>';
-            }});
-            box.innerHTML = '<table class="mini" style="font-size:14px;">' +
-                '<tr><th>Kod</th><th>Fon Adı</th><th>Alt Kategori</th><th></th></tr>' + rows + '</table>';
-        }})
-        .catch(() => {{ box.innerHTML = '<p style="color:var(--ink-dim);">Fon listesi yüklenemedi.</p>'; }});
+    document.getElementById('fav-empty').style.display = 'none';
+    document.getElementById('fav-body').style.display = 'block';
+    document.getElementById('fav-charts').style.display = 'block';
+
+    Promise.all(favs.map(kod =>
+        fetch('data/fon-kartlari/' + kod + '.json').then(r => r.ok ? r.json() : null).catch(() => null)
+    )).then(results => {{
+        fundsData = {{}};
+        favs.forEach((kod, i) => {{ fundsData[kod] = results[i]; }});
+        renderTable(favs);
+        if (!cashflowChart) {{
+            cashflowChart = makeChart('fav-cashflow-chart', fmtTL);
+            investorChart = makeChart('fav-investor-chart', fmtInt);
+        }}
+        updateCharts(favs);
+    }});
 }}
-renderList();
+
+document.getElementById('fav-period-tabs').querySelectorAll('.period-tab').forEach(btn => {{
+    btn.addEventListener('click', () => {{
+        document.querySelectorAll('#fav-period-tabs .period-tab').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentPeriod = btn.dataset.p;
+        updateCharts(getFavorites());
+    }});
+}});
+
+loadAll();
 </script>"""
 
     with open("docs/favoriler.html", "w", encoding="utf-8") as f:
