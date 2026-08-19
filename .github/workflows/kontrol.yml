@@ -16,7 +16,16 @@ jobs:
           python-version: "3.11"
 
       - name: Gerekli kütüphaneleri kur
-        run: pip install pandas pyarrow
+        run: pip install pandas pyarrow openpyxl
 
-      - name: TEFAS acik fon durumunu incele
-        run: python diagnose_acik_fon.py
+      - name: score_funds.py'yi simdi calistir ve sonucu kontrol et
+        run: |
+          cd scripts
+          python score_funds.py
+          cd ..
+          echo "--- docs/yeni-fonlar.html icinde KSP araniyor ---"
+          if grep -q "KSP" docs/yeni-fonlar.html; then
+            echo "SONUC: KSP HALA SAYFADA VAR -> bu bir KOD hatasi"
+          else
+            echo "SONUC: KSP artik sayfada YOK -> kod dogru calisiyor, onceki sorun eski/onbellek bir calistirmaydi"
+          fi
