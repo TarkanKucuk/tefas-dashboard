@@ -1,36 +1,18 @@
-const CACHE_NAME = "fonlarca-v1";
-const STATIC_ASSETS = ["icon-192.png", "icon-512.png", "apple-touch-icon.png", "logo.jpg", "manifest.json"];
-
-self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS))
-  );
+// Bu service worker artık kullanılmıyor. Tarayıcılarda daha önce kaydolmuş
+// olabilecek eski sürümlerin kendini silmesi ve tuttuğu tüm önbelleği
+// temizlemesi için buraya bilerek bırakıldı.
+self.addEventListener('install', () => {
   self.skipWaiting();
 });
 
-self.addEventListener("activate", (event) => {
+self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
-    )
+    (async () => {
+      const keys = await caches.keys();
+      await Promise.all(keys.map((k) => caches.delete(k)));
+      await self.registration.unregister();
+      const clientsList = await self.clients.matchAll({ type: 'window' });
+      clientsList.forEach((client) => client.navigate(client.url));
+    })()
   );
-  self.clients.claim();
-});
-
-// Sayfalar (HTML) her zaman ağdan taze çekilsin - veri günde birkaç kez güncelleniyor,
-// eski bir sürüm kullanıcıya cache'den gösterilmesin. Sadece statik ikon/logo dosyaları
-// cache'den hızlı yüklensin.
-self.addEventListener("fetch", (event) => {
-  const url = new URL(event.request.url);
-  const isStatic = STATIC_ASSETS.some((asset) => url.pathname.endsWith(asset));
-
-  if (isStatic) {
-    event.respondWith(
-      caches.match(event.request).then((cached) => cached || fetch(event.request))
-    );
-  } else {
-    event.respondWith(
-      fetch(event.request).catch(() => caches.match(event.request))
-    );
-  }
 });
