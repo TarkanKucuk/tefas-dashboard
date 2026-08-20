@@ -234,11 +234,6 @@ def page_shell(title, active, body, extra_style="", extra_head=""):
 <body>
 {body}
 {FUND_SEARCH_SCRIPT}
-<script>
-if ('serviceWorker' in navigator) {{
-    navigator.serviceWorker.register('sw.js');
-}}
-</script>
 </body>
 </html>"""
 
