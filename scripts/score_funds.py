@@ -1120,7 +1120,7 @@ def write_portfoyum_page(anchor):
 
 <div class="card">
     <h2 style="color:var(--teal-bright); margin-top:0;">💼 Portföyüm</h2>
-    <div class="fund-search-wrap" style="max-width:420px;">
+    <div class="fund-search-wrap" style="max-width:420px; margin-left:0;">
         <input type="text" id="pf-add-input" list="pf-add-list" placeholder="🔍 Fon ekle (kod veya isim)…" autocomplete="off">
         <datalist id="pf-add-list"></datalist>
     </div>
@@ -1161,7 +1161,7 @@ def write_portfoyum_page(anchor):
     <div class="kat-cols">
         <div class="card">
             <h3 style="color:var(--ink); margin-top:0;">Portföyün Son Tarihli Varlık Dağılımı</h3>
-            <div style="height:260px;"><canvas id="pf-alloc-chart"></canvas></div>
+            <div style="height:400px;"><canvas id="pf-alloc-chart"></canvas></div>
         </div>
         <div class="card">
             <h3 style="color:var(--ink); margin-top:0;">Portföyün Son Tarihli Risk Derecesi</h3>
@@ -1242,6 +1242,12 @@ function truncate(s, n) {{
     if (!s) return '—';
     return s.length > n ? s.slice(0, n) + '…' : s;
 }}
+function gunlukDegisimHucre(v) {{
+    if (v == null) return '—';
+    const cls = v >= 0 ? 'good' : 'bad';
+    const txt = (v >= 0 ? '+' : '') + v.toLocaleString('tr-TR', {{minimumFractionDigits:2, maximumFractionDigits:2}}) + '%';
+    return '<span class="score-badge ' + cls + '">' + txt + '</span>';
+}}
 
 function renderTable(portfoy) {{
     const kodlar = Object.keys(portfoy);
@@ -1253,11 +1259,11 @@ function renderTable(portfoy) {{
         if (fiyat != null) toplamTL += fiyat * (portfoy[k] || 0);
     }});
 
-    let thead = '<tr><th>Kod</th><th>Fon Adı</th><th>Fon Fiyatı</th><th>Risk Değeri</th>' +
+    let thead = '<tr><th>Kod</th><th>Fon Adı</th><th>Fon Fiyatı</th><th>Günlük Değişim (%)</th><th>Risk Değeri</th>' +
         '<th>Fon Pay Adedi</th><th>Toplam Değer (TL)</th><th>Portföy İçindeki Ağırlığı (%)</th><th></th></tr>';
     let rows = kodlar.map(kod => {{
         const d = fundsData[kod];
-        if (!d) return '<tr><td>' + kod + '</td><td colspan="6" style="color:var(--ink-dim);">Veri yüklenemedi</td></tr>';
+        if (!d) return '<tr><td>' + kod + '</td><td colspan="7" style="color:var(--ink-dim);">Veri yüklenemedi</td></tr>';
         const pay = portfoy[kod] || 0;
         const fiyat = d._sonFiyat;
         const deger = fiyat != null ? fiyat * pay : null;
@@ -1266,6 +1272,7 @@ function renderTable(portfoy) {{
             '<td><a href="fon-karti.html?kod=' + kod + '">' + kod + '</a></td>' +
             '<td class="fon-adi"><div class="fon-adi-inner">' + truncate(d.fon_adi, 40) + '</div></td>' +
             '<td>' + (fiyat != null ? fiyat.toLocaleString('tr-TR', {{minimumFractionDigits:4, maximumFractionDigits:4}}) : '—') + '</td>' +
+            '<td>' + gunlukDegisimHucre(d.getiriler && d.getiriler['Günlük']) + '</td>' +
             '<td>' + (d.risk_degeri != null ? Math.round(d.risk_degeri) + '/7' : '—') + '</td>' +
             '<td><input class="pf-pay-input" type="text" value="' + (pay || '') + '" placeholder="0" onchange="setPay(\\'' + kod + '\\', this.value)"></td>' +
             '<td>' + (deger != null ? fmtNum(deger, 2) : '—') + '</td>' +
@@ -1373,7 +1380,7 @@ function renderRiskGauge(risk) {{
             <circle cx="${{cx}}" cy="${{cy}}" r="7" fill="#c9cdd6" />
         </svg>
         <div style="font-size:34px; font-weight:700; color:var(--ink); margin-top:-6px;">${{rounded}}/7</div>
-        <div style="font-size:16px; font-weight:600; color:${{color}};">${{label}}</div>
+        <div style="font-size:22px; font-weight:600; color:${{color}};">${{label}}</div>
     `;
 }}
 
