@@ -53,9 +53,19 @@ def fetch_window(session, from_date, to_date, deneme=3):
     for i in range(1, deneme + 1):
         try:
             resp = session.post(CRITERIA_URL, headers=HEADERS, json=body, timeout=30)
+            print(f"  [debug] HTTP durum kodu: {resp.status_code}")
             resp.raise_for_status()
             data = resp.json()
-            return data if isinstance(data, list) else []
+            if isinstance(data, list):
+                fon_kodlu = [b for b in data if b.get("fundCode")]
+                subjects = sorted(set(b.get("subject") for b in fon_kodlu if b.get("subject")))
+                print(f"  [debug] Toplam bildirim: {len(data)}, fundCode dolu olan: {len(fon_kodlu)}")
+                print(f"  [debug] fundCode dolu bildirimlerdeki benzersiz 'subject' değerleri: {subjects[:15]}")
+                if fon_kodlu:
+                    print(f"  [debug] Örnek kayıt: {fon_kodlu[0]}")
+                return data
+            print(f"  [debug] Beklenmeyen yanıt tipi: {type(data)} -> {str(data)[:300]}")
+            return []
         except Exception as e:
             print(f"  Deneme {i}/{deneme} başarısız ({from_date}–{to_date}): {e}")
             time.sleep(2)
