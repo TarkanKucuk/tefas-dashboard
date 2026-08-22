@@ -23,6 +23,8 @@ jobs:
         run: python scripts/update_fon_bilgileri.py
       - name: TEFAS'a acik fon listesini guncelle
         run: python scripts/update_tefas_durum.py
+      - name: KAP Portfoy Dagilim Raporlarini guncelle
+        run: python scripts/update_kap_raporlari.py
       - name: Puanlama sistemini calistir
         run: python scripts/score_funds.py
       - name: Portfoy dagilim verisini guncelle
@@ -33,7 +35,7 @@ jobs:
         run: |
           git config user.name "github-actions"
           git config user.email "actions@github.com"
-          for f in tefas_gecmis_veri.parquet benchmarklar.parquet fon_bilgileri.parquet tefas_portfoy_dagilim.parquet tefas_acik_fonlar.parquet; do
+          for f in tefas_gecmis_veri.parquet benchmarklar.parquet fon_bilgileri.parquet tefas_portfoy_dagilim.parquet tefas_acik_fonlar.parquet kap_raporlari.parquet; do
             if [ -f "$f" ]; then
               git add "$f"
             else
