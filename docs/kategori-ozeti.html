@@ -69,10 +69,10 @@ table.mini td a:hover { color: #6fd8cd; text-decoration-color: #6fd8cd; }
 .score-badge { display: inline-block; min-width: 50px; padding: 2px 7px; border-radius: 6px; font-weight: 600; text-align: center; }
 .score-badge.good { background: rgba(76,187,109,0.18); color: var(--green); }
 .score-badge.bad { background: rgba(224,90,90,0.18); color: var(--red); }
-.period-tabs { display: flex; gap: 6px; margin-bottom: 18px; }
+.period-tabs { display: flex; gap: 6px; margin-bottom: 18px; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 2px; }
 .period-tab {
     padding: 8px 20px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;
-    background: var(--panel); color: var(--ink-dim); border: 1px solid var(--line);
+    background: var(--panel); color: var(--ink-dim); border: 1px solid var(--line); white-space: nowrap; flex-shrink: 0;
 }
 .period-tab.active { background: var(--blue); color: white; border-color: var(--blue); }
 .period-panel { display: none; }
