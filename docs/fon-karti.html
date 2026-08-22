@@ -293,6 +293,13 @@
     <!-- RETURNS TABLE -->
     <div class="returns" id="returns-table"></div>
 
+    <!-- KAP RAPORLARI -->
+    <div class="card" id="kap-raporlari-card" style="display:none;">
+      <h3>KAP Raporları</h3>
+      <select id="kap-raporlari-select" onchange="if(this.value) window.open(this.value, '_blank')" style="width:100%; max-width:320px; background:var(--panel); color:var(--ink); border:1px solid var(--line); border-radius:8px; padding:8px 10px; font-size:14px;">
+      </select>
+    </div>
+
     <!-- PRICE CHART -->
     <div class="card">
       <h3>Fiyat Grafiği</h3>
@@ -592,6 +599,16 @@ function renderHeader(d){
   ["tt-investors","tt-totalvalue","tt-cashflow"].forEach(id => {
     document.getElementById(id).textContent = d.fon_kodu || FUND_CODE;
   });
+
+  const kapKart = document.getElementById('kap-raporlari-card');
+  const kapSelect = document.getElementById('kap-raporlari-select');
+  const raporlar = d.kap_raporlari || [];
+  if (raporlar.length){
+    kapKart.style.display = 'block';
+    kapSelect.innerHTML = raporlar.map(r => `<option value="${r.url}">${r.etiket}</option>`).join('');
+  } else {
+    kapKart.style.display = 'none';
+  }
 }
 
 /* ---------- getiri tablosu ---------- */
