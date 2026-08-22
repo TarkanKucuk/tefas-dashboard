@@ -42,7 +42,11 @@ MAPPING_PATH = "fon_kategori_eslestirme.xlsx"
 FON_BILGI_PATH = "fon_bilgileri.parquet"
 ALLOC_PATH = "tefas_portfoy_dagilim.parquet"
 BENCHMARK_PATH = "benchmarklar.parquet"
+KAP_PATH = "kap_raporlari.parquet"
 OUT_DIR = "docs/data/fon-kartlari"
+
+AY_ADLARI = ["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran",
+             "Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"]
 
 MAPPING_COLS = {
     "kod": "Fon Kodu",
@@ -301,6 +305,20 @@ def main():
 
     fon_bilgi = pd.read_parquet(FON_BILGI_PATH) if os.path.exists(FON_BILGI_PATH) else pd.DataFrame()
 
+    # KAP Portföy Dağılım Raporu linkleri (fon koduna göre, en güncel önce)
+    kap_by_kod = {}
+    if os.path.exists(KAP_PATH):
+        kap_df = pd.read_parquet(KAP_PATH)
+        kap_df = kap_df.sort_values(["Fon Kodu", "Yil", "Ay"], ascending=[True, False, False])
+        for kod, grup in kap_df.groupby("Fon Kodu"):
+            kap_by_kod[kod] = [
+                {
+                    "etiket": f"{AY_ADLARI[int(r['Ay']) - 1]} {int(r['Yil'])}",
+                    "url": f"https://www.kap.org.tr/tr/Bildirim/{int(r['disclosureIndex'])}",
+                }
+                for _, r in grup.iterrows()
+            ]
+
     alloc_all = None
     fon_adlari = {}  # TEFAS'ın kendi 'Fon Unvanı' verisinden isim haritası —
                       # manuel eşleştirme dosyasına bağımlı kalmasın diye
@@ -374,6 +392,7 @@ def main():
             "karsilastirma": build_compare_table(fund_prices, bench_df),
             "akislar": build_flows_history(fund_prices),
             "varlik_dagilimi": build_allocation(fund_alloc),
+            "kap_raporlari": kap_by_kod.get(kod, []),
 
             "fonlarca_skoru": None if skor_row is None else {
                 "kategori_skoru": None if pd.isna(skor_row.get("TEFAS_Skoru")) else round(float(skor_row["TEFAS_Skoru"]), 1),
