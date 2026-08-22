@@ -90,10 +90,10 @@ table.mini td a:hover { color: #6fd8cd; text-decoration-color: #6fd8cd; }
 .score-badge { display: inline-block; min-width: 50px; padding: 2px 7px; border-radius: 6px; font-weight: 600; text-align: center; }
 .score-badge.good { background: rgba(76,187,109,0.18); color: var(--green); }
 .score-badge.bad { background: rgba(224,90,90,0.18); color: var(--red); }
-.period-tabs { display: flex; gap: 6px; margin-bottom: 18px; }
+.period-tabs { display: flex; gap: 6px; margin-bottom: 18px; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 2px; }
 .period-tab {
     padding: 8px 20px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;
-    background: var(--panel); color: var(--ink-dim); border: 1px solid var(--line);
+    background: var(--panel); color: var(--ink-dim); border: 1px solid var(--line); white-space: nowrap; flex-shrink: 0;
 }
 .period-tab.active { background: var(--blue); color: white; border-color: var(--blue); }
 .period-panel { display: none; }
@@ -796,15 +796,12 @@ def write_favoriler_page(anchor):
 
 <div class="card">
     <h2 style="color:var(--teal-bright); margin-top:0;">★ Favorilerim</h2>
-    <p style="color:var(--ink-dim); font-size:13px; margin-top:-6px;">
-        Bu liste sadece bu cihazda/tarayıcıda saklanır — başka bir cihazda görünmez.
-    </p>
     <div id="fav-empty" style="display:none; color:var(--ink-dim); padding:16px 0;">
         Henüz favori fon eklemediniz. Bir fon kartında ☆ butonuna basarak ekleyebilirsiniz.
     </div>
     <div id="fav-body" style="display:none;">
         <div class="mini-table-wrap" style="overflow-x:auto;">
-            <table class="mini" id="fav-returns-table" style="font-size:13px; white-space:nowrap;"></table>
+            <table class="mini fav-table" id="fav-returns-table" style="font-size:13px;"></table>
         </div>
     </div>
 </div>
@@ -821,17 +818,28 @@ def write_favoriler_page(anchor):
             <button class="period-tab" data-p="Yıllık">Yıllık</button>
         </div>
     </div>
-    <div class="row-2">
-        <div class="card">
-            <h3 style="color:var(--ink);">Nakit Giriş/Çıkış (Net TL)</h3>
-            <div style="height:200px;"><canvas id="fav-cashflow-chart"></canvas></div>
-        </div>
-        <div class="card">
-            <h3 style="color:var(--ink);">Yatırımcı Sayısı Değişimi (Adet)</h3>
-            <div style="height:200px;"><canvas id="fav-investor-chart"></canvas></div>
-        </div>
+    <div class="card">
+        <h3 style="color:var(--ink);">Nakit Giriş/Çıkış (Net TL)</h3>
+        <div style="height:240px;"><canvas id="fav-cashflow-chart"></canvas></div>
+    </div>
+    <div class="card">
+        <h3 style="color:var(--ink);">Yatırımcı Sayısı Değişimi (Adet)</h3>
+        <div style="height:240px;"><canvas id="fav-investor-chart"></canvas></div>
     </div>
 </div>
+
+<p style="color:var(--ink-dim); font-size:13px;">
+    Bu liste sadece bu cihazda/tarayıcıda saklanır — başka bir cihazda görünmez.
+</p>
+
+<style>
+.fav-table th {{ cursor: pointer; user-select: none; white-space: nowrap; }}
+.fav-table th:hover {{ color: var(--teal-bright); }}
+.fav-table th .sort-arrow {{ opacity: 0.5; font-size: 10px; margin-left: 3px; }}
+.fav-table td.fon-adi {{
+    font-size: 11px; white-space: normal; max-width: 140px; line-height: 1.3;
+}}
+</style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script>
@@ -854,10 +862,19 @@ function fmtTL(v) {{
     if (v == null) return '—';
     const abs = Math.abs(v);
     let s;
-    if (abs >= 1e9) s = (v/1e9).toLocaleString('tr-TR', {{maximumFractionDigits:2}}) + ' Mlr';
-    else if (abs >= 1e6) s = (v/1e6).toLocaleString('tr-TR', {{maximumFractionDigits:2}}) + ' Mn';
-    else s = Math.round(v).toLocaleString('tr-TR');
+    if (abs >= 1e9) s = (v/1e9).toLocaleString('tr-TR', {{minimumFractionDigits:1, maximumFractionDigits:1}}) + ' Mlr';
+    else if (abs >= 1e6) s = (v/1e6).toLocaleString('tr-TR', {{minimumFractionDigits:1, maximumFractionDigits:1}}) + ' Mn';
+    else s = v.toLocaleString('tr-TR', {{minimumFractionDigits:1, maximumFractionDigits:1}});
     return (v >= 0 ? '+' : '') + s + ' TL';
+}}
+function fmtTLLabel(v) {{
+    if (v == null) return '—';
+    const abs = Math.abs(v);
+    let s;
+    if (abs >= 1e9) s = (v/1e9).toLocaleString('tr-TR', {{minimumFractionDigits:1, maximumFractionDigits:1}}) + ' Mlr';
+    else if (abs >= 1e6) s = (v/1e6).toLocaleString('tr-TR', {{minimumFractionDigits:1, maximumFractionDigits:1}}) + ' Mn';
+    else s = v.toLocaleString('tr-TR', {{minimumFractionDigits:1, maximumFractionDigits:1}});
+    return (v >= 0 ? '+' : '') + s;
 }}
 function fmtInt(v) {{
     if (v == null) return '—';
@@ -936,28 +953,61 @@ let fundsData = {{}};
 let currentPeriod = 'Günlük';
 let cashflowChart, investorChart;
 
-function renderTable(favs) {{
-    const cols = [
-        ['Günlük','Günlük'], ['Haftalık','Haftalık'], ['Aylık','Aylık'], ['3 Ay','3 Aylık'],
-        ['6 Ay','6 Aylık'], ['Yılbaşı','YBB'], ['1 Yıl','Yıllık'],
-    ];
-    let thead = '<tr><th>Kod</th><th>Fon Adı</th>' + cols.map(c => '<th>' + c[1] + '</th>').join('') + '<th></th></tr>';
+const RETURN_COLS = [
+    ['Günlük','Günlük'], ['Haftalık','Haftalık'], ['Aylık','Aylık'], ['3 Ay','3 Aylık'],
+    ['6 Ay','6 Aylık'], ['Yılbaşı','YBB'], ['1 Yıl','Yıllık'],
+];
+let sortKey = null, sortDir = 1;
+
+function truncate(s, n) {{
+    if (!s) return '—';
+    return s.length > n ? s.slice(0, n) + '…' : s;
+}}
+
+function sortedFavs(favs) {{
+    if (!sortKey) return favs;
+    const withData = favs.map(kod => ({{ kod, v: sortKey === 'kod' ? kod :
+        (sortKey === 'ad' ? (fundsData[kod] && fundsData[kod].fon_adi) || '' :
+        (fundsData[kod] && fundsData[kod].getiriler ? fundsData[kod].getiriler[sortKey] : null)) }}));
+    withData.sort((a, b) => {{
+        if (a.v == null && b.v == null) return 0;
+        if (a.v == null) return 1;
+        if (b.v == null) return -1;
+        if (typeof a.v === 'string') return sortDir * a.v.localeCompare(b.v, 'tr');
+        return sortDir * (a.v - b.v);
+    }});
+    return withData.map(x => x.kod);
+}}
+
+function renderTable(favsRaw) {{
+    const favs = sortedFavs(favsRaw);
+    const arrow = (key) => sortKey === key ? '<span class="sort-arrow">' + (sortDir === 1 ? '▲' : '▼') + '</span>' : '';
+    let thead = '<tr>' +
+        '<th onclick="setSort(\\'kod\\')">Kod' + arrow('kod') + '</th>' +
+        '<th onclick="setSort(\\'ad\\')">Fon Adı' + arrow('ad') + '</th>' +
+        RETURN_COLS.map(c => '<th onclick="setSort(\\'' + c[0] + '\\')">' + c[1] + arrow(c[0]) + '</th>').join('') +
+        '<th></th></tr>';
     let rows = favs.map(kod => {{
         const d = fundsData[kod];
-        if (!d) return '<tr><td>' + kod + '</td><td colspan="' + (cols.length+2) + '" style="color:var(--ink-dim);">Veri yüklenemedi</td></tr>';
+        if (!d) return '<tr><td>' + kod + '</td><td colspan="' + (RETURN_COLS.length+2) + '" style="color:var(--ink-dim);">Veri yüklenemedi</td></tr>';
         const getiriler = d.getiriler || {{}};
-        const tds = cols.map(c => {{
+        const tds = RETURN_COLS.map(c => {{
             const v = getiriler[c[0]];
-            const cls = v == null ? '' : (v >= 0 ? 'pos' : 'neg');
-            return '<td class="' + cls + '">' + fmtPct(v) + '</td>';
+            if (v == null) return '<td>—</td>';
+            const cls = v >= 0 ? 'good' : 'bad';
+            return '<td><span class="score-badge ' + cls + '">' + fmtPct(v) + '</span></td>';
         }}).join('');
         return '<tr>' +
             '<td><a href="fon-karti.html?kod=' + kod + '">' + kod + '</a></td>' +
-            '<td>' + (d.fon_adi || '—') + '</td>' + tds +
+            '<td class="fon-adi">' + truncate(d.fon_adi, 40) + '</td>' + tds +
             '<td><button onclick="removeFavorite(\\'' + kod + '\\')" style="background:transparent;border:1px solid var(--line);color:var(--red);border-radius:6px;padding:3px 10px;cursor:pointer;">Kaldır</button></td>' +
             '</tr>';
     }}).join('');
     document.getElementById('fav-returns-table').innerHTML = thead + rows;
+}}
+function setSort(key) {{
+    if (sortKey === key) sortDir *= -1; else {{ sortKey = key; sortDir = 1; }}
+    renderTable(getFavorites());
 }}
 
 function valueLabelPlugin(fmt) {{
@@ -982,18 +1032,18 @@ function valueLabelPlugin(fmt) {{
         }}
     }};
 }}
-function makeChart(canvasId, label) {{
+function makeChart(canvasId, tooltipFmt, labelFmt) {{
     return new Chart(document.getElementById(canvasId), {{
         type: 'bar',
         data: {{ labels: [], datasets: [{{ data: [], backgroundColor: [] }}] }},
         options: {{
             maintainAspectRatio: false,
             layout: {{ padding: {{ top: 16, bottom: 16 }} }},
-            plugins: {{ legend: {{ display: false }}, tooltip: {{ callbacks: {{ label: c => label(c.raw) }} }} }},
+            plugins: {{ legend: {{ display: false }}, tooltip: {{ callbacks: {{ label: c => tooltipFmt(c.raw) }} }} }},
             scales: {{ x: {{ ticks: {{ color: '#9aa0ac', font: {{ size: 11 }} }}, grid: {{ display: false }} }},
                        y: {{ display: false, grid: {{ display: false }} }} }}
         }},
-        plugins: [valueLabelPlugin(label)]
+        plugins: [valueLabelPlugin(labelFmt)]
     }});
 }}
 
@@ -1032,8 +1082,8 @@ function loadAll() {{
         favs.forEach((kod, i) => {{ fundsData[kod] = results[i]; }});
         renderTable(favs);
         if (!cashflowChart) {{
-            cashflowChart = makeChart('fav-cashflow-chart', fmtTL);
-            investorChart = makeChart('fav-investor-chart', fmtInt);
+            cashflowChart = makeChart('fav-cashflow-chart', fmtTL, fmtTLLabel);
+            investorChart = makeChart('fav-investor-chart', fmtInt, fmtInt);
         }}
         updateCharts(favs);
     }});
