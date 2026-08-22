@@ -63,6 +63,12 @@ def fetch_window(session, from_date, to_date, deneme=3):
                 print(f"  [debug] fundCode dolu bildirimlerdeki benzersiz 'subject' değerleri: {subjects[:15]}")
                 if fon_kodlu:
                     print(f"  [debug] Örnek kayıt: {fon_kodlu[0]}")
+                else:
+                    from collections import Counter
+                    tur_dagilimi = Counter(b.get("disclosureType") for b in data)
+                    print(f"  [debug] fundCode hiç yok — dönen 2000 kaydın disclosureType dağılımı: {tur_dagilimi.most_common(10)}")
+                    if data:
+                        print(f"  [debug] Örnek (fon olmayan) kayıt: {data[0]}")
                 return data
             print(f"  [debug] Beklenmeyen yanıt tipi: {type(data)} -> {str(data)[:300]}")
             return []
@@ -95,22 +101,37 @@ def extract_portfoy_raporlari(bildirimler):
     return sonuc
 
 
+def is_hafta_ici(d):
+    return d.weekday() < 5  # 0=Pazartesi ... 4=Cuma
+
+
+def gunler_arasi(baslangic, bitis):
+    """[baslangic, bitis] arasındaki hafta içi günleri tek tek döner."""
+    gun = baslangic
+    while gun <= bitis:
+        if is_hafta_ici(gun):
+            yield gun
+        gun += timedelta(days=1)
+
+
 def gecmis_6_ayi_tara(session):
     """İlk çalıştırma: geçmiş 6 ayın raporlarının, YAYINLANDIKLARI ayın 1-10'u
-    aralığını tek tek tarar (her rapor bir önceki ay için olur)."""
+    aralığındaki HER İŞ GÜNÜNÜ ayrı ayrı tarar (her rapor bir önceki ay için olur).
+    Not: 10 günü tek seferde sorgulamak API'nin 2000 sonuç sınırına takılıp fon
+    bildirimlerine hiç ulaşamıyordu — bu yüzden günlük, dar pencerelerle tarıyoruz."""
     print("İlk çalıştırma tespit edildi — geçmiş 6 ay taranıyor...")
     bugun = date.today()
     tum_kayitlar = []
-    # Bu ay dahil, geriye doğru 6 "yayın ayı" tara (böylece en eski 6 raporu kapsar)
     yil, ay = bugun.year, bugun.month
     for _ in range(6):
         pencere_baslangic = date(yil, ay, 1)
         pencere_bitis = min(date(yil, ay, 10), bugun)
         if pencere_bitis >= pencere_baslangic:
-            print(f"  Taranıyor: {pencere_baslangic} – {pencere_bitis}")
-            bildirimler = fetch_window(session, pencere_baslangic, pencere_bitis)
-            tum_kayitlar.extend(extract_portfoy_raporlari(bildirimler))
-            time.sleep(1)
+            for gun in gunler_arasi(pencere_baslangic, pencere_bitis):
+                print(f"  Taranıyor: {gun}")
+                bildirimler = fetch_window(session, gun, gun)
+                tum_kayitlar.extend(extract_portfoy_raporlari(bildirimler))
+                time.sleep(1)
         ay -= 1
         if ay == 0:
             ay = 12
@@ -119,16 +140,20 @@ def gecmis_6_ayi_tara(session):
 
 
 def bu_ayi_tara(session):
-    """Günlük çalışma: sadece bugün ayın 1-10'u arasındaysa, bu ayın başından
-    bugüne kadarki dar pencereyi tarar. 11'den sonra hiç istek atmaz."""
+    """Günlük çalışma: sadece bugün ayın 1-10'u arasındaysa, ayın başından bugüne
+    kadarki her iş gününü tek tek tarar. 11'den sonra hiç istek atmaz."""
     bugun = date.today()
     if bugun.day > 10:
         print(f"Bugün ayın {bugun.day}. günü — 10'dan sonra yeni yükleme olmadığı için taranmadı.")
         return []
     pencere_baslangic = date(bugun.year, bugun.month, 1)
-    print(f"Taranıyor: {pencere_baslangic} – {bugun}")
-    bildirimler = fetch_window(session, pencere_baslangic, bugun)
-    return extract_portfoy_raporlari(bildirimler)
+    tum_kayitlar = []
+    for gun in gunler_arasi(pencere_baslangic, bugun):
+        print(f"  Taranıyor: {gun}")
+        bildirimler = fetch_window(session, gun, gun)
+        tum_kayitlar.extend(extract_portfoy_raporlari(bildirimler))
+        time.sleep(1)
+    return tum_kayitlar
 
 
 def main():
