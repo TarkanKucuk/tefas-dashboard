@@ -28,6 +28,7 @@ NAV_PAGES = [
     ('tum-fonlar.html', 'Puanlama - Tüm Fonlar'),
     ('yeni-fonlar.html', 'En Son Eklenen Fonlar'),
     ('favoriler.html', '★ Favorilerim'),
+    ('portfoyum.html', '💼 Portföyüm'),
 ]
 
 BASE_STYLE = """
@@ -1110,6 +1111,384 @@ loadAll();
     print("Favorilerim sayfası oluşturuldu: docs/favoriler.html")
 
 
+# ------------------------------------------------------------------
+# Sayfa 6: Portföyüm (cihaz-lokali, localStorage — sunucu tarafında veri yok)
+# ------------------------------------------------------------------
+
+def write_portfoyum_page(anchor):
+    body = f"""{page_header('portfoyum.html', 'Portföyüm', anchor)}
+
+<div class="card">
+    <h2 style="color:var(--teal-bright); margin-top:0;">💼 Portföyüm</h2>
+    <div class="fund-search-wrap" style="max-width:420px;">
+        <input type="text" id="pf-add-input" list="pf-add-list" placeholder="🔍 Fon ekle (kod veya isim)…" autocomplete="off">
+        <datalist id="pf-add-list"></datalist>
+    </div>
+    <div id="pf-empty" style="display:none; color:var(--ink-dim); padding:16px 0;">
+        Portföyünüz boş. Yukarıdan bir fon arayıp ekleyebilirsiniz.
+    </div>
+    <div id="pf-body" style="display:none;">
+        <div class="mini-table-wrap" style="overflow-x:auto; margin-top:14px;">
+            <table class="mini pf-table" id="pf-table" style="font-size:13px;"></table>
+        </div>
+    </div>
+</div>
+
+<div id="pf-summary-wrap" style="display:none;">
+    <div class="card">
+        <div class="period-tabs" id="pf-currency-tabs">
+            <button class="period-tab active" data-c="TL">TL</button>
+            <button class="period-tab" data-c="USD">USD</button>
+            <button class="period-tab" data-c="EUR">EUR</button>
+        </div>
+        <div style="display:flex; flex-wrap:wrap; gap:28px; align-items:center;">
+            <div>
+                <div style="color:var(--ink-dim); font-size:13px;">Portföyün Güncel Değeri</div>
+                <div id="pf-total-value" style="font-size:26px; font-weight:700;">—</div>
+            </div>
+            <div>
+                <div style="color:var(--ink-dim); font-size:13px;">Bir Önceki Güne Göre Değişim</div>
+                <div id="pf-daily-change" style="font-size:20px; font-weight:700;">—</div>
+            </div>
+            <div>
+                <div style="color:var(--ink-dim); font-size:13px;">Bir Önceki Güne Göre Değişim (%)</div>
+                <div id="pf-daily-change-pct" style="font-size:20px; font-weight:700;">—</div>
+            </div>
+            <div id="pf-mood" style="font-size:40px;">—</div>
+        </div>
+    </div>
+
+    <div class="kat-cols">
+        <div class="card">
+            <h3 style="color:var(--ink); margin-top:0;">Portföyün Son Tarihli Varlık Dağılımı</h3>
+            <div style="height:260px;"><canvas id="pf-alloc-chart"></canvas></div>
+        </div>
+        <div class="card">
+            <h3 style="color:var(--ink); margin-top:0;">Portföyün Son Tarihli Risk Derecesi</h3>
+            <div id="pf-risk-gauge" style="text-align:center; padding-top:10px;"></div>
+        </div>
+    </div>
+</div>
+
+<p style="color:var(--ink-dim); font-size:13px;">
+    Bu portföy sadece bu cihazda/tarayıcıda saklanır — başka bir cihazda görünmez.
+    Fon Fiyatı, Risk Değeri ve Varlık Dağılımı bilgileri günlük olarak güncellenir; siz sadece Fon Pay Adedi'ni giriyorsunuz.
+</p>
+
+<style>
+.pf-table td.fon-adi {{ min-width: 170px; max-width: 170px; }}
+.pf-table .fon-adi-inner {{
+    font-size: 11px; line-height: 1.3;
+    display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden;
+}}
+.pf-pay-input {{
+    width: 90px; background: var(--panel); border: 1px solid var(--line); color: var(--ink);
+    border-radius: 6px; padding: 4px 6px; font-size: 13px;
+}}
+</style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+const PORTFOY_KEY = 'fonlarca_portfoy';
+function getPortfoy() {{
+    try {{ return JSON.parse(localStorage.getItem(PORTFOY_KEY)) || {{}}; }}
+    catch(e) {{ return {{}}; }}
+}}
+function setPortfoy(p) {{
+    try {{ localStorage.setItem(PORTFOY_KEY, JSON.stringify(p)); }} catch(e) {{}}
+}}
+function removeFund(kod) {{
+    const p = getPortfoy();
+    delete p[kod];
+    setPortfoy(p);
+    render();
+}}
+function setPay(kod, val) {{
+    const p = getPortfoy();
+    const n = parseFloat(val.replace(',', '.'));
+    p[kod] = isNaN(n) ? 0 : n;
+    setPortfoy(p);
+    recalcAndRender();
+}}
+
+let fundsData = {{}};
+let benchmarks = {{}};
+let currency = 'TL';
+
+function fmtNum(v, decimals) {{
+    if (v == null || isNaN(v)) return '—';
+    return v.toLocaleString('tr-TR', {{minimumFractionDigits: decimals, maximumFractionDigits: decimals}});
+}}
+function fmtMoney(v) {{
+    if (v == null || isNaN(v)) return '—';
+    const sym = currency === 'TL' ? ' TL' : (currency === 'USD' ? ' $' : ' €');
+    return fmtNum(v, 0) + sym;
+}}
+
+// Seçili para birimi bugün için 1 birim = kaç TL (TL seçiliyse 1)
+function fxRateFor(dateStr) {{
+    if (currency === 'TL') return 1;
+    const series = benchmarks[currency];
+    if (!series || !series.length) return null;
+    // dateStr'a en yakın (o veya önceki) noktayı bul
+    let rate = null;
+    for (const p of series) {{
+        if (p.time <= dateStr) rate = p.value; else break;
+    }}
+    return rate || (series.length ? series[series.length - 1].value : null);
+}}
+
+function truncate(s, n) {{
+    if (!s) return '—';
+    return s.length > n ? s.slice(0, n) + '…' : s;
+}}
+
+function renderTable(portfoy) {{
+    const kodlar = Object.keys(portfoy);
+    let toplamTL = 0;
+    kodlar.forEach(k => {{
+        const d = fundsData[k];
+        if (!d) return;
+        const fiyat = d._sonFiyat;
+        if (fiyat != null) toplamTL += fiyat * (portfoy[k] || 0);
+    }});
+
+    let thead = '<tr><th>Kod</th><th>Fon Adı</th><th>Fon Fiyatı</th><th>Risk Değeri</th>' +
+        '<th>Fon Pay Adedi</th><th>Toplam Değer (TL)</th><th>Portföy İçindeki Ağırlığı (%)</th><th></th></tr>';
+    let rows = kodlar.map(kod => {{
+        const d = fundsData[kod];
+        if (!d) return '<tr><td>' + kod + '</td><td colspan="6" style="color:var(--ink-dim);">Veri yüklenemedi</td></tr>';
+        const pay = portfoy[kod] || 0;
+        const fiyat = d._sonFiyat;
+        const deger = fiyat != null ? fiyat * pay : null;
+        const agirlik = (deger != null && toplamTL > 0) ? (deger / toplamTL * 100) : null;
+        return '<tr>' +
+            '<td><a href="fon-karti.html?kod=' + kod + '">' + kod + '</a></td>' +
+            '<td class="fon-adi"><div class="fon-adi-inner">' + truncate(d.fon_adi, 40) + '</div></td>' +
+            '<td>' + (fiyat != null ? fiyat.toLocaleString('tr-TR', {{minimumFractionDigits:4, maximumFractionDigits:4}}) : '—') + '</td>' +
+            '<td>' + (d.risk_degeri != null ? Math.round(d.risk_degeri) + '/7' : '—') + '</td>' +
+            '<td><input class="pf-pay-input" type="text" value="' + (pay || '') + '" placeholder="0" onchange="setPay(\\'' + kod + '\\', this.value)"></td>' +
+            '<td>' + (deger != null ? fmtNum(deger, 2) : '—') + '</td>' +
+            '<td>' + (agirlik != null ? fmtNum(agirlik, 2) + '%' : '—') + '</td>' +
+            '<td><button onclick="removeFund(\\'' + kod + '\\')" style="background:transparent;border:1px solid var(--line);color:var(--red);border-radius:6px;padding:3px 10px;cursor:pointer;">Kaldır</button></td>' +
+            '</tr>';
+    }}).join('');
+    document.getElementById('pf-table').innerHTML = thead + rows;
+}}
+
+function weightedAllocation(portfoy) {{
+    const kodlar = Object.keys(portfoy);
+    let toplamTL = 0;
+    const agirliklar = {{}};
+    kodlar.forEach(k => {{
+        const d = fundsData[k];
+        if (!d || d._sonFiyat == null) return;
+        const deger = d._sonFiyat * (portfoy[k] || 0);
+        agirliklar[k] = deger;
+        toplamTL += deger;
+    }});
+    if (toplamTL <= 0) return {{}};
+    const sonuc = {{}};
+    kodlar.forEach(k => {{
+        const d = fundsData[k];
+        const w = (agirliklar[k] || 0) / toplamTL;
+        const dagilim = (d && d.varlik_dagilimi && d.varlik_dagilimi.son_tarihli) || {{}};
+        Object.keys(dagilim).forEach(kat => {{
+            sonuc[kat] = (sonuc[kat] || 0) + dagilim[kat] * w;
+        }});
+    }});
+    return sonuc;
+}}
+
+function weightedRisk(portfoy) {{
+    const kodlar = Object.keys(portfoy);
+    let toplamTL = 0, toplamRiskAgirlikli = 0;
+    kodlar.forEach(k => {{
+        const d = fundsData[k];
+        if (!d || d._sonFiyat == null || d.risk_degeri == null) return;
+        const deger = d._sonFiyat * (portfoy[k] || 0);
+        toplamTL += deger;
+        toplamRiskAgirlikli += deger * d.risk_degeri;
+    }});
+    if (toplamTL <= 0) return null;
+    return toplamRiskAgirlikli / toplamTL;
+}}
+
+let allocChart = null;
+
+function renderAllocChart(dagilim) {{
+    const entries = Object.entries(dagilim).sort((a, b) => b[1] - a[1]).filter(e => e[1] > 0);
+    const labels = entries.map(e => e[0]);
+    const data = entries.map(e => Math.round(e[1] * 100) / 100);
+    const colors = ['#4a90d9','#e0b23f','#4cbb6d','#a06fd0','#e07a5f','#4cbbb0','#d94a6f','#8ea04a','#d97a4a','#6f8ed0'];
+    if (allocChart) {{ allocChart.destroy(); }}
+    allocChart = new Chart(document.getElementById('pf-alloc-chart'), {{
+        type: 'bar',
+        data: {{ labels, datasets: [{{ data, backgroundColor: labels.map((_, i) => colors[i % colors.length]) }}] }},
+        options: {{
+            indexAxis: 'y',
+            maintainAspectRatio: false,
+            plugins: {{ legend: {{ display: false }}, tooltip: {{ callbacks: {{ label: c => '%' + fmtNum(c.raw, 2) }} }} }},
+            scales: {{
+                x: {{ display: false, grid: {{ display: false }} }},
+                y: {{ ticks: {{ color: '#c9cdd6', font: {{ size: 11 }} }}, grid: {{ display: false }} }}
+            }}
+        }},
+        plugins: [{{
+            id: 'pfAllocLabels',
+            afterDatasetsDraw(chart) {{
+                const {{ ctx }} = chart;
+                const meta = chart.getDatasetMeta(0);
+                meta.data.forEach((bar, i) => {{
+                    ctx.save();
+                    ctx.fillStyle = '#c9cdd6';
+                    ctx.font = '600 11px -apple-system,Segoe UI,Arial,sans-serif';
+                    ctx.textAlign = 'left';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('%' + fmtNum(data[i], 2), bar.x + 6, bar.y);
+                    ctx.restore();
+                }});
+            }}
+        }}]
+    }});
+}}
+
+function renderRiskGauge(risk) {{
+    const box = document.getElementById('pf-risk-gauge');
+    if (risk == null) {{ box.innerHTML = '<p style="color:var(--ink-dim);">Veri yok</p>'; return; }}
+    const rounded = Math.round(risk);
+    const label = rounded <= 2 ? 'Düşük Riskli' : (rounded <= 5 ? 'Orta Riskli' : 'Yüksek Riskli');
+    const color = rounded <= 2 ? 'var(--green)' : (rounded <= 5 ? '#e0b23f' : 'var(--red)');
+    // Yarım daire gösterge: 1..7 değeri -180..0 derece arasına eşlenir
+    const angle = -180 + ((rounded - 1) / 6) * 180;
+    const rad = angle * Math.PI / 180;
+    const cx = 110, cy = 100, r = 80;
+    const nx = cx + r * 0.85 * Math.cos(rad), ny = cy + r * 0.85 * Math.sin(rad);
+    box.innerHTML = `
+        <svg viewBox="0 0 220 130" style="max-width:260px;">
+            <path d="M 30 100 A 80 80 0 0 1 71 27" stroke="#4cbb6d" stroke-width="16" fill="none" />
+            <path d="M 71 27 A 80 80 0 0 1 149 27" stroke="#e0b23f" stroke-width="16" fill="none" />
+            <path d="M 149 27 A 80 80 0 0 1 190 100" stroke="#e05a5a" stroke-width="16" fill="none" />
+            <line x1="${{cx}}" y1="${{cy}}" x2="${{nx}}" y2="${{ny}}" stroke="#c9cdd6" stroke-width="4" />
+            <circle cx="${{cx}}" cy="${{cy}}" r="7" fill="#c9cdd6" />
+        </svg>
+        <div style="font-size:34px; font-weight:700; color:var(--ink); margin-top:-6px;">${{rounded}}/7</div>
+        <div style="font-size:16px; font-weight:600; color:${{color}};">${{label}}</div>
+    `;
+}}
+
+function recalcAndRender() {{
+    const portfoy = getPortfoy();
+    const kodlar = Object.keys(portfoy);
+    if (!kodlar.length) {{
+        document.getElementById('pf-empty').style.display = 'block';
+        document.getElementById('pf-body').style.display = 'none';
+        document.getElementById('pf-summary-wrap').style.display = 'none';
+        return;
+    }}
+    document.getElementById('pf-empty').style.display = 'none';
+    document.getElementById('pf-body').style.display = 'block';
+    document.getElementById('pf-summary-wrap').style.display = 'block';
+
+    renderTable(portfoy);
+
+    // Bugünkü ve dünkü toplam TL değeri (pay sabit varsayımıyla)
+    let toplamBugunTL = 0, toplamDunTL = 0;
+    kodlar.forEach(k => {{
+        const d = fundsData[k];
+        if (!d) return;
+        const pay = portfoy[k] || 0;
+        if (d._sonFiyat != null) toplamBugunTL += d._sonFiyat * pay;
+        if (d._oncekiFiyat != null) toplamDunTL += d._oncekiFiyat * pay;
+    }});
+
+    const bugunTarihi = Object.values(fundsData)[0] ? Object.values(fundsData).find(d => d && d._sonTarih)?._sonTarih : null;
+    const fx = fxRateFor(bugunTarihi || '9999-99-99');
+    const gosterilenToplam = (fx && currency !== 'TL') ? toplamBugunTL / fx : toplamBugunTL;
+    document.getElementById('pf-total-value').textContent = fmtMoney(gosterilenToplam);
+
+    if (toplamDunTL > 0) {{
+        const degisimTL = toplamBugunTL - toplamDunTL;
+        const degisimPct = (degisimTL / toplamDunTL) * 100;
+        const gosterilenDegisim = (fx && currency !== 'TL') ? degisimTL / fx : degisimTL;
+        document.getElementById('pf-daily-change').textContent = (degisimTL >= 0 ? '+' : '') + fmtMoney(gosterilenDegisim);
+        document.getElementById('pf-daily-change').style.color = degisimTL >= 0 ? 'var(--green)' : 'var(--red)';
+        document.getElementById('pf-daily-change-pct').textContent = (degisimPct >= 0 ? '+' : '') + fmtNum(degisimPct, 2) + '%';
+        document.getElementById('pf-daily-change-pct').style.color = degisimPct >= 0 ? 'var(--green)' : 'var(--red)';
+
+        let mood = '😞';
+        if (degisimPct >= 0.5) mood = '🏆';
+        else if (degisimPct >= 0.25) mood = '🎉';
+        else if (degisimPct >= 0) mood = '😊';
+        document.getElementById('pf-mood').textContent = mood;
+    }} else {{
+        document.getElementById('pf-daily-change').textContent = '—';
+        document.getElementById('pf-daily-change-pct').textContent = '—';
+        document.getElementById('pf-mood').textContent = '—';
+    }}
+
+    renderAllocChart(weightedAllocation(portfoy));
+    renderRiskGauge(weightedRisk(portfoy));
+}}
+
+function render() {{
+    const portfoy = getPortfoy();
+    const kodlar = Object.keys(portfoy);
+    if (!kodlar.length) {{ recalcAndRender(); return; }}
+    Promise.all(kodlar.map(kod =>
+        fetch('data/fon-kartlari/' + kod + '.json').then(r => r.ok ? r.json() : null).catch(() => null)
+    )).then(results => {{
+        fundsData = {{}};
+        kodlar.forEach((kod, i) => {{
+            const d = results[i];
+            if (!d) return;
+            const seri = d.fiyat_grafigi || [];
+            d._sonFiyat = seri.length ? seri[seri.length - 1].value : null;
+            d._oncekiFiyat = seri.length > 1 ? seri[seri.length - 2].value : null;
+            d._sonTarih = seri.length ? seri[seri.length - 1].time : null;
+            fundsData[kod] = d;
+        }});
+        recalcAndRender();
+    }});
+}}
+
+document.getElementById('pf-add-input').addEventListener('change', function() {{
+    const val = this.value.trim();
+    if (!val) return;
+    const kod = val.split(' — ')[0].toUpperCase();
+    const portfoy = getPortfoy();
+    if (portfoy[kod] !== undefined) {{
+        alert('Bu fon zaten portföyünüzde bulunuyor: ' + kod);
+        this.value = '';
+        return;
+    }}
+    portfoy[kod] = 0;
+    setPortfoy(portfoy);
+    this.value = '';
+    render();
+}});
+
+document.getElementById('pf-currency-tabs').querySelectorAll('.period-tab').forEach(btn => {{
+    btn.addEventListener('click', () => {{
+        document.querySelectorAll('#pf-currency-tabs .period-tab').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currency = btn.dataset.c;
+        recalcAndRender();
+    }});
+}});
+
+fetch('data/fon-kartlari/_benchmarks.json').then(r => r.ok ? r.json() : {{}}).then(b => {{ benchmarks = b || {{}}; render(); }}).catch(() => {{ render(); }});
+fetch('data/fon-kartlari/_index.json').then(r => r.ok ? r.json() : []).then(index => {{
+    const list = document.getElementById('pf-add-list');
+    list.innerHTML = index.map(f => '<option value="' + f.kod + ' — ' + (f.ad || '') + '">').join('');
+}}).catch(() => {{}});
+</script>"""
+
+    with open("docs/portfoyum.html", "w", encoding="utf-8") as f:
+        f.write(page_shell("FONLARCA — Portföyüm", "portfoyum.html", body))
+    print("Portföyüm sayfası oluşturuldu: docs/portfoyum.html")
+
+
 def main():
     df = pd.read_parquet(DATA_PATH)
     df['Tarih'] = pd.to_datetime(df['Tarih']).dt.normalize()
@@ -1140,6 +1519,7 @@ def main():
     write_tum_fonlar_page(res, anchor)
     write_yeni_fonlar_page(df, mapping, fon_adlari, acik_fon_kodlari)
     write_favoriler_page(anchor)
+    write_portfoyum_page(anchor)
 
 
 if __name__ == "__main__":
