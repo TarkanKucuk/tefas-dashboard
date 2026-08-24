@@ -15,18 +15,18 @@ jobs:
         run: pip install -r requirements.txt
       - name: Veriyi guncelle
         run: |
-          for deneme in 1 2 3 4; do
-            echo "Deneme $deneme/4..."
+          for deneme in 1 2 3 4 5 6; do
+            echo "Deneme $deneme/6..."
             if python scripts/update_data.py; then
               echo "Basarili."
               break
             fi
-            if [ "$deneme" -eq 4 ]; then
-              echo "4 denemeden sonra basarisiz oldu, workflow durduruluyor."
+            if [ "$deneme" -eq 6 ]; then
+              echo "6 denemeden sonra basarisiz oldu, workflow durduruluyor."
               exit 1
             fi
-            echo "Basarisiz oldu, 2 dakika beklenip tekrar denenecek..."
-            sleep 120
+            echo "Basarisiz oldu, 5 dakika beklenip tekrar denenecek..."
+            sleep 300
           done
       - name: Karsilastirma verilerini guncelle (USD/EUR/BIST100/Altin)
         env:
