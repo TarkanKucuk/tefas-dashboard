@@ -14,7 +14,20 @@ jobs:
       - name: Bagimliliklari kur
         run: pip install -r requirements.txt
       - name: Veriyi guncelle
-        run: python scripts/update_data.py
+        run: |
+          for deneme in 1 2 3 4; do
+            echo "Deneme $deneme/4..."
+            if python scripts/update_data.py; then
+              echo "Basarili."
+              break
+            fi
+            if [ "$deneme" -eq 4 ]; then
+              echo "4 denemeden sonra basarisiz oldu, workflow durduruluyor."
+              exit 1
+            fi
+            echo "Basarisiz oldu, 2 dakika beklenip tekrar denenecek..."
+            sleep 120
+          done
       - name: Karsilastirma verilerini guncelle (USD/EUR/BIST100/Altin)
         env:
           EVDS_API_KEY: ${{ secrets.EVDS_API_KEY }}
