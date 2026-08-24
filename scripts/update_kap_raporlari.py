@@ -42,12 +42,21 @@ def _warmup_session(session):
 
 
 def fetch_window(session, from_date, to_date, deneme=3):
-    """[from_date, to_date] aralığındaki tüm KAP bildirimlerini döner
-    (fon dışı bildirimler dahil — çağıran taraf filtrelemeli)."""
+    """[from_date, to_date] aralığındaki YATIRIM FONU (YF) bildirimlerini döner.
+    'fundTypeList': ['YF'] olmadan sorgu sadece BIST şirketi bildirimlerini
+    döndürüyordu — bu, KAP'ın arama arayüzü tarayıcıdan izlenerek bulundu."""
     body = {
         "fromDate": from_date.isoformat(),
         "toDate": to_date.isoformat(),
+        "discIndex": [],
+        "disclosureClass": "",
+        "fromSrc": False,
+        "fundOidList": [],
+        "fundTypeList": ["YF"],
+        "isLate": "",
         "mkkMemberOidList": [],
+        "passiveFundOidList": [],
+        "srcCategory": "",
         "subjectList": [],
     }
     for i in range(1, deneme + 1):
