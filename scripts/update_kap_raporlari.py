@@ -26,8 +26,16 @@ HEADERS = {
     "User-Agent": ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
                     "(KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36"),
     "Accept": "application/json, text/plain, */*",
+    "Accept-Language": "tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7",
     "Content-Type": "application/json",
     "Referer": f"{BASE_URL}/tr/bildirim-sorgu",
+    "Origin": BASE_URL,
+    "Sec-Fetch-Dest": "empty",
+    "Sec-Fetch-Mode": "cors",
+    "Sec-Fetch-Site": "same-origin",
+    "Sec-Ch-Ua": '"Not=A?Brand";v="99", "Google Chrome";v="128", "Chromium";v="128"',
+    "Sec-Ch-Ua-Mobile": "?0",
+    "Sec-Ch-Ua-Platform": '"Windows"',
 }
 KEEP_MONTHS = 6  # her fon için en fazla saklanacak ay sayısı
 
@@ -36,9 +44,11 @@ def _warmup_session(session):
     """KAP'ın WAF'ı, önce sıradan bir GET ile oturum/çerez oluşturulmasını
     daha toleranslı karşılıyor (aksi halde bağlantı zaman aşımına uğrayabiliyor)."""
     try:
-        session.get(f"{BASE_URL}/tr/bildirim-sorgu", headers=HEADERS, timeout=20)
-    except Exception:
-        pass
+        resp = session.get(f"{BASE_URL}/tr/bildirim-sorgu", headers=HEADERS, timeout=20)
+        print(f"  [debug] Isinma GET durum kodu: {resp.status_code}")
+        print(f"  [debug] Toplanan cerez adlari: {list(session.cookies.get_dict().keys())}")
+    except Exception as e:
+        print(f"  [debug] Isinma GET basarisiz: {e}")
 
 
 def fetch_window(session, from_date, to_date, deneme=3):
@@ -59,6 +69,7 @@ def fetch_window(session, from_date, to_date, deneme=3):
         "srcCategory": "",
         "subjectList": [],
     }
+    print(f"  [debug] İstekte gönderilecek çerez adları: {list(session.cookies.get_dict().keys())}")
     for i in range(1, deneme + 1):
         try:
             resp = session.post(CRITERIA_URL, headers=HEADERS, json=body, timeout=30)
