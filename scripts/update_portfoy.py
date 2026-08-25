@@ -2,60 +2,97 @@ import pandas as pd
 from tefasfon import get_portfolio
 from datetime import datetime, timedelta
 import os
+
 DATA_PATH = "tefas_portfoy_dagilim.parquet"
+
 # Her çalıştırmada son kaç günü yeniden kontrol edelim (TEFAS'ın bazı günleri
 # geç yayınlaması ya da tek seferlik API hatası durumunda kendiliğinden düzelsin diye)
 GERI_GUN = 20
+
 # Kısaltmalardan Orijinal Türkçe Başlıklara Çeviri
 KOLON_MAP = {
-"fonKodu": "Fon Kodu",
-"fonUnvan": "Fon Unvanı",
-"tarih": "Tarih",
-"hs": "His.Sen.",
-"dt": "Dev.Tah.",
-"hb": "Haz.Bon.",
-"vdm": "VDMK",
-"vmtl": "Mevd.(TL)",
-"tr": "Ters Repo",
-"byf": "BYF",
-"km": "Kıy.Maden",
-"kkstl": "Kam.Kira Sert. (TL)",
-"osks": "Ö.S.Kira Sert.",
-"d": "Diğer",
-"bpp": "BPP",
-"btaa": "BİST Tah.İşl.Paz.Alım",
-"btas": "BİST Tah.İşl.Paz.Satım",
-"fb": "Fin.Bon.",
-"gas": "G.Menk.Sert.",
-"gsykb": "GSYF",
-"gsyy": "Gir.Ser.Yatırımları",
-"gykb": "GYF",
-"kba": "Kam.Dış Borç.",
-"khau": "Kat.Hes.(Altın)",
-"khd": "Kat.Hes.(Döviz)",
-"khtl": "Kat.Hes.(TL)",
-"kksd": "Kam.Kira Sert. (Döviz)",
-"kksyd": "Kam.Y.Dışı Kira Sert.",
-"kmbyf": "Kıy.Mad.Cins.BYF",
-"kmkba": "Kıy.Mad.Cins.Kam.Borç.",
-"kmkks": "Kıy.Mad.Cins.Kam.Kira Sert.",
-"kibd": "Döv.Cins.Kam.İç Borç.",
-"ost": "ÖS Tahvil",
-"r": "Repo",
-"tpp": "TPP",
-"vmau": "Mevd.(Altın)",
-"vmd": "Mevd.(Döviz)",
-"vint": "Vad.İşl.Nak.Tem.",
-"ybkb": "Yab.Kamu Borç.",
-"ybosb": "Yab.ÖS Bor.",
-"ybyf": "Yab.BYF",
-"yhs": "Yab.His.Sen.",
-"yyf": "YF Kat.Pay.",
-"oksyd": "ÖS Y.Dışı Kira Sert.",
-"osdb": "ÖS Dış Borç.",
-"eut": "Euro Tahvil",
-"gyy": "G.Menk.Yat.Ort.",
+    "fonKodu": "Fon Kodu",
+    "fonUnvan": "Fon Unvanı",
+    "tarih": "Tarih",
+    "hs": "His.Sen.",
+    "dt": "Dev.Tah.",
+    "hb": "Haz.Bon.",
+    "vdm": "VDMK",
+    "vmtl": "Mevd.(TL)",
+    "tr": "Ters Repo",
+    "byf": "BYF",
+    "km": "Kıy.Maden",
+    "kkstl": "Kam.Kira Sert. (TL)",
+    "osks": "Ö.S.Kira Sert.",
+    "d": "Diğer",
+    "bpp": "BPP",
+    "btaa": "BİST Tah.İşl.Paz.Alım",
+    "btas": "BİST Tah.İşl.Paz.Satım",
+    "fb": "Fin.Bon.",
+    "gas": "G.Menk.Sert.",
+    "gsykb": "GSYF",
+    "gsyy": "Gir.Ser.Yatırımları",
+    "gykb": "GYF",
+    "kba": "Kam.Dış Borç.",
+    "khau": "Kat.Hes.(Altın)",
+    "khd": "Kat.Hes.(Döviz)",
+    "khtl": "Kat.Hes.(TL)",
+    "kksd": "Kam.Kira Sert. (Döviz)",
+    "kksyd": "Kam.Y.Dışı Kira Sert.",
+    "kmbyf": "Kıy.Mad.Cins.BYF",
+    "kmkba": "Kıy.Mad.Cins.Kam.Borç.",
+    "kmkks": "Kıy.Mad.Cins.Kam.Kira Sert.",
+    "kibd": "Döv.Cins.Kam.İç Borç.",
+    "ost": "ÖS Tahvil",
+    "r": "Repo",
+    "tpp": "TPP",
+    "vmau": "Mevd.(Altın)",
+    "vmd": "Mevd.(Döviz)",
+    "vint": "Vad.İşl.Nak.Tem.",
+    "ybkb": "Yab.Kamu Borç.",
+    "ybosb": "Yab.ÖS Bor.",
+    "ybyf": "Yab.BYF",
+    "yhs": "Yab.His.Sen.",
+    "yyf": "YF Kat.Pay.",
+    "oksyd": "ÖS Y.Dışı Kira Sert.",
+    "osdb": "ÖS Dış Borç.",
+    "eut": "Euro Tahvil",
+    "gyy": "G.Menk.Yat.Ort.",
 }
+
+# Tüm sayısal kategori kolonlarının Türkçe adları (Fon Kodu/Unvanı/Tarih hariç) —
+# hem yeni çekilen veriyi işlerken hem de "hangi günler zaten tam dolu" kontrolünde kullanılır.
+TUM_KATEGORI_KOLONLARI = [v for k, v in KOLON_MAP.items() if k not in ("fonKodu", "fonUnvan", "tarih")]
+
+
+def eksik_tarihleri_bul(hist, tarihler):
+    """`tarihler` listesindeki hangi günlerin hâlâ tekrar çekilmesi gerektiğini
+    bulur: hist'te o tarih için hiç satır yoksa, ya da satırlar VAR ama en az
+    biri boşsa (tüm kategorileri NaN), o tarih 'eksik/tamamlanmamış' sayılır
+    ve tekrar çekilir. Bir tarihteki TÜM satırlar zaten doluysa, o tarih
+    atlanır — boşuna tekrar sorulmaz. Bu, veri kalitesi güvenlik ağını
+    bozmadan (hâlâ eksik olan her şey yine denenir) gereksiz TEFAS isteklerini
+    ortadan kaldırır."""
+    if hist.empty or "Tarih" not in hist.columns:
+        return tarihler
+
+    mevcut_kolonlar = [c for c in TUM_KATEGORI_KOLONLARI if c in hist.columns]
+    if not mevcut_kolonlar:
+        return tarihler
+
+    hist_check = hist.copy()
+    hist_check["Tarih"] = pd.to_datetime(hist_check["Tarih"]).dt.normalize()
+    hist_check["_dolu"] = hist_check[mevcut_kolonlar].notna().any(axis=1)
+    gun_tam_dolu = hist_check.groupby("Tarih")["_dolu"].all()
+
+    eksikler = []
+    for t in tarihler:
+        t_norm = pd.Timestamp(t.date())
+        if t_norm not in gun_tam_dolu.index or not gun_tam_dolu.loc[t_norm]:
+            eksikler.append(t)
+    return eksikler
+
+
 def gun_verisi_cek(tarih_str):
     """Tek bir gün için portföy verisini çeker. Geniş aralıklı istekler bazı
     günleri sessizce boş döndürebiliyor (teşhis edildi) — bu yüzden her günü
@@ -73,7 +110,7 @@ def gun_verisi_cek(tarih_str):
 
 def main():
     bugun_dt = datetime.today()
-    tarihler = [(bugun_dt - timedelta(days=i)) for i in range(GERI_GUN, -1, -1)]
+    tarihler_hepsi = [(bugun_dt - timedelta(days=i)) for i in range(GERI_GUN, -1, -1)]
 
     # Eski veri varsa oku
     if os.path.exists(DATA_PATH):
@@ -83,7 +120,17 @@ def main():
         hist = pd.DataFrame()
         print("Yeni veri dosyası oluşturulacak.")
 
-    print(f"Kontrol edilen {len(tarihler)} gün: {tarihler[0].strftime('%d.%m.%Y')} -> {tarihler[-1].strftime('%d.%m.%Y')}")
+    # Zaten TAM DOLU olan günleri tekrar sorgulamaya gerek yok — sadece
+    # hiç çekilmemiş ya da hâlâ boşluk içeren günleri tekrar deniyoruz.
+    tarihler = eksik_tarihleri_bul(hist, tarihler_hepsi)
+    atlanan = len(tarihler_hepsi) - len(tarihler)
+    if atlanan:
+        print(f"{atlanan} gün zaten tam dolu olduğu için atlandı.")
+    if not tarihler:
+        print("Kontrol edilecek eksik/yeni gün yok — hiçbir istek atılmadı.")
+        return
+
+    print(f"Kontrol edilecek {len(tarihler)} gün: {tarihler[0].strftime('%d.%m.%Y')} -> {tarihler[-1].strftime('%d.%m.%Y')}")
     print("TEFAS'tan portföy dağılımı GÜNLÜK olarak çekiliyor...")
     gunluk_df_listesi = []
     for t in tarihler:
@@ -94,10 +141,12 @@ def main():
     if not gunluk_df_listesi:
         print("Hiçbir gün için veri alınamadı.")
         return
+
     df = pd.concat(gunluk_df_listesi, ignore_index=True)
 
     ozel_kolonlar = {"fonKodu", "fonUnvan", "tarih", "bilFiyat"}
     bilinen_kodlar = set(KOLON_MAP.keys())
+
     # --- YENİ: KOLON_MAP'te olmayan (TEFAS'ın sonradan eklediği) sayısal
     # kategori kolonlarını kaybetmeyelim — hepsini "Diğer"e topluyoruz.
     bilinmeyen_kolonlar = [c for c in df.columns if c not in bilinen_kodlar and c not in ozel_kolonlar]
@@ -117,9 +166,11 @@ def main():
     for kol in sayisal_kolonlar:
         if kol in df.columns:
             df[kol] = pd.to_numeric(df[kol], errors="coerce")
+
     # Türkçe başlıklara çevir
     df = df.rename(columns=KOLON_MAP)
     df["Tarih"] = pd.to_datetime(df["Tarih"])
+
     # İstemediğimiz kolonları at: fiyat bilgisi (bilFiyat) ve zaten "Diğer"e
     # topladığımız bilinmeyen ham kolonlar. Geri kalan HER ŞEYİ (Türkçeye
     # çevrilmiş tüm kategori kolonları dahil) olduğu gibi koruyoruz.
@@ -142,6 +193,7 @@ def main():
             print(f"⚠️ Şu tarihler için TEFAS verisi henüz yayınlanmamış/boş görünüyor, atlanıyor: "
                   f"{[d.strftime('%d.%m.%Y') for d in bos_gunler]}")
             df = df[~df["Tarih"].isin(bos_gunler)]
+
     if df.empty:
         print("Bu aralıkta kaydedilecek dolu veri yok — hiçbir şey yazılmadı.")
         return
@@ -167,8 +219,11 @@ def main():
     combined = combined.drop(columns=["_dolu", "_kaynak"])
     combined = combined.sort_values(["Fon Kodu", "Tarih"])
     combined.to_parquet(DATA_PATH, index=False)
+
     yeni_satir = len(df)
     toplam_satir = len(combined)
     print(f"✅ {yeni_satir} satır işlendi/güncellendi. Toplam: {toplam_satir} satır.")
+
+
 if __name__ == "__main__":
     main()
