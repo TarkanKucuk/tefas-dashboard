@@ -1004,6 +1004,11 @@ def write_portfoyum_page(anchor):
         </div>
     </div>
 
+    <div class="card">
+        <h3 style="color:var(--ink); margin-top:0;">Fon Bazında Günlük Kazanç/Kayıp</h3>
+        <div style="height:300px;"><canvas id="pf-daily-pnl-chart"></canvas></div>
+    </div>
+
     <div class="kat-cols">
         <div class="card">
             <h3 style="color:var(--ink); margin-top:0;">Portföyün Son Tarihli Varlık Dağılımı</h3>
@@ -1013,11 +1018,6 @@ def write_portfoyum_page(anchor):
             <h3 style="color:var(--ink); margin-top:0;">Portföyün Son Tarihli Risk Derecesi</h3>
             <div id="pf-risk-gauge" style="text-align:center; padding-top:10px;"></div>
         </div>
-    </div>
-
-    <div class="card">
-        <h3 style="color:var(--ink); margin-top:0;">Fon Bazında Günlük Kazanç/Kayıp</h3>
-        <div style="height:300px;"><canvas id="pf-daily-pnl-chart"></canvas></div>
     </div>
 </div>
 
