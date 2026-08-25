@@ -24,11 +24,10 @@ LABEL_MAP = {'Skor_Momentum': 'Momentum', 'Skor_Getiri': 'Getiri',
 
 NAV_PAGES = [
     ('index.html', 'Hareketler'),
-    ('kategori-ozeti.html', 'Puanlama - Kategori Özeti'),
-    ('tum-fonlar.html', 'Puanlama - Tüm Fonlar'),
-    ('yeni-fonlar.html', 'En Son Eklenen Fonlar'),
     ('favoriler.html', '★ Favorilerim'),
     ('portfoyum.html', '💼 Portföyüm'),
+    ('kategori-ozeti.html', 'Puanlama - Kategori Özeti'),
+    ('yeni-fonlar.html', 'En Son Eklenen Fonlar'),
 ]
 
 BASE_STYLE = """
@@ -358,189 +357,17 @@ def compute_scores(res):
 
 
 # ------------------------------------------------------------------
-# Sayfa 1: Tüm Fonlar (puanlama tablosu)
-# ------------------------------------------------------------------
-
-def write_tum_fonlar_page(res, anchor):
-    cols = ['Fon Kodu', 'Fon Adı', 'Alt Kategori', 'Kategori_Sırası', 'TEFAS_Skoru',
-            'Skor_Momentum', 'Skor_Getiri', 'Skor_ParaAkışı', 'Skor_Sharpe', 'Skor_StdDev',
-            'Kullanılan_Bileşenler', 'Fon Toplam Değer']
-    headers = ['Fon Kodu', 'Fon Adı', 'Alt Kategori', 'Kat. Sıra', 'Fonlarca Skoru',
-               'Momentum', 'Getiri', 'Para Akışı', 'Sharpe', 'StdDev',
-               'Kullanılan Bileşenler', 'Fon Toplam Değer']
-
-    table = res[res['TEFAS_Skoru'].notna()].sort_values(
-        ['Alt Kategori', 'TEFAS_Skoru'], ascending=[True, False])[cols].copy()
-    table['Fon Adı'] = table['Fon Adı'].apply(kisalt_unvan)
-
-    for c in ['TEFAS_Skoru', 'Skor_Momentum', 'Skor_Getiri', 'Skor_ParaAkışı', 'Skor_Sharpe', 'Skor_StdDev']:
-        table[c] = table[c].round(1)
-    table['Kategori_Sırası'] = table['Kategori_Sırası'].astype(int)
-    table['Fon Toplam Değer'] = table['Fon Toplam Değer'].apply(lambda x: f"{x:,.0f}".replace(",", "."))
-    table['Fon Kodu'] = table['Fon Kodu'].apply(fonlarca_link)
-    table.columns = headers
-
-    html_table = table.to_html(index=False, table_id="tefasTable", classes="display", escape=False, na_rep="—")
-
-    extra_meta = (f'<span>Risksiz oran (TLREF): %{RISK_FREE_RATE*100:.2f}</span>'
-                  f'<span>Toplam fon: {len(table)}</span>')
-    body = f"""{page_header('tum-fonlar.html', 'Tüm Fonlar', anchor, extra_meta)}
-<div class="card">
-{html_table}
-</div>
-<footer>Kategori içi percentile bazlı puanlama · Momentum %35 · Getiri %25 · Para Akışı %15 · Sharpe %15 · StdDev %10</footer>
-<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/fixedcolumns/4.3.0/js/dataTables.fixedColumns.min.js"></script>
-<script>
-function scoreColor(v) {{
-    if (v === null || v === "" || v === "—" || isNaN(v)) return null;
-    v = parseFloat(v);
-    if (v >= 75) return "rgba(76,187,109,0.22)";
-    if (v >= 50) return "rgba(224,178,63,0.22)";
-    return "rgba(224,90,90,0.22)";
-}}
-function scoreTextColor(v) {{
-    if (v === null || v === "" || v === "—" || isNaN(v)) return null;
-    v = parseFloat(v);
-    if (v >= 75) return "#4cbb6d";
-    if (v >= 50) return "#e0b23f";
-    return "#e05a5a";
-}}
-$(document).ready(function() {{
-    var tefasTable = $('#tefasTable').DataTable({{
-        pageLength: 25,
-        order: [[4, 'desc']],
-        scrollX: true,
-        scrollY: '65vh',
-        scrollCollapse: true,
-        fixedColumns: {{ start: 1 }},
-        autoWidth: false,
-        language: {{ url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/tr.json' }},
-        columnDefs: [
-            {{ targets: 0, width: '70px' }},
-            {{ targets: 1, width: '340px' }},
-            {{ targets: 2, width: '130px' }},
-            {{ targets: 3, width: '80px' }},
-            {{ targets: 4, width: '95px' }},
-            {{ targets: [5,6,7,8,9], width: '80px' }},
-            {{ targets: 10, width: '220px' }},
-            {{ targets: 11, width: '150px' }},
-            {{ targets: [4,5,6,7,8,9], createdCell: function(td, cellData) {{
-                var bg = scoreColor(cellData);
-                var fg = scoreTextColor(cellData);
-                if (bg) {{ $(td).html('<span class="score-badge" style="background:' + bg + ';color:' + fg + '">' + cellData + '</span>'); }}
-            }} }}
-        ]
-    }});
-
-    $(window).on('load', function() {{
-        tefasTable.columns.adjust().draw(false);
-    }});
-}});
-</script>"""
-    extra_style = """
-table.dataTable { font-size: 13px; }
-table.dataTable th, table.dataTable td { white-space: nowrap; }
-@media (min-width: 900px) {
-  #tefasTable td:nth-child(2) { white-space: normal; overflow-wrap: break-word; line-height: 1.3; }
-}
-table.dataTable thead th {
-    background: var(--panel) !important; color: var(--teal-bright); font-weight: 600; border-bottom: 2px solid var(--line) !important;
-    padding: 10px 20px !important; text-align: left; cursor: pointer; background-image: none !important;
-}
-table.dataTable thead th.sorting:after,
-table.dataTable thead th.sorting_asc:after,
-table.dataTable thead th.sorting_desc:after {
-    font-size: 11px; opacity: 0.6; margin-left: 6px;
-}
-table.dataTable thead th.sorting:after { content: "⇕"; }
-table.dataTable thead th.sorting_asc:after { content: "▲"; opacity: 1; }
-table.dataTable thead th.sorting_desc:after { content: "▼"; opacity: 1; }
-
-/* DataTables'ın scrollX/scrollY icin olusturdugu gizli "genislik esitleme" basligi
-   yukarıdaki !important kurallarindan etkilenip gorunur oluyordu - burada sifirliyoruz. */
-.dataTables_scrollBody thead th, .dataTables_scrollBody thead td {
-    padding: 0 !important; height: 0 !important; border: none !important;
-    line-height: 0 !important; font-size: 0 !important;
-}
-.DTFC_LeftBodyLiner thead th, .DTFC_LeftBodyLiner thead td {
-    padding: 0 !important; height: 0 !important; border: none !important;
-    line-height: 0 !important; font-size: 0 !important;
-}
-
-table.dataTable tbody td { padding: 8px !important; vertical-align: middle; background: var(--card); color: var(--ink); border-bottom: 1px solid #2b2e37 !important; }
-table.dataTable tbody tr:hover td { background: #1a1d25 !important; }
-table.dataTable tbody td a { color: var(--teal-bright); font-weight: 600; text-decoration: underline; text-decoration-color: #3a6b68; }
-table.dataTable tbody td a:hover { color: #6fd8cd; text-decoration-color: #6fd8cd; }
-/* Dikey ızgara çizgilerini de ince ve gri yap */
-table.dataTable { border-collapse: collapse !important; }
-table.dataTable th, table.dataTable td { border-color: #2b2e37 !important; }
-table.dataTable thead th { border-bottom: 1px solid #3a3d48 !important; }
-
-/* Kolon hizalamaları: 1 Fon Kodu 2 Fon Adı(sol) 3 Alt Kategori(sol) 4 Kat.Sıra
-   5 Fonlarca Skoru 6 Momentum 7 Getiri 8 Para Akışı 9 Sharpe 10 StdDev 11 Bileşenler(sol) 12 Fon Toplam Değer */
-#tefasTable th:nth-child(1), #tefasTable td:nth-child(1),
-#tefasTable th:nth-child(4), #tefasTable td:nth-child(4),
-#tefasTable th:nth-child(5), #tefasTable td:nth-child(5),
-#tefasTable th:nth-child(6), #tefasTable td:nth-child(6),
-#tefasTable th:nth-child(7), #tefasTable td:nth-child(7),
-#tefasTable th:nth-child(8), #tefasTable td:nth-child(8),
-#tefasTable th:nth-child(9), #tefasTable td:nth-child(9),
-#tefasTable th:nth-child(10), #tefasTable td:nth-child(10) {
-    text-align: center;
-}
-#tefasTable th:nth-child(12) { text-align: left; }
-#tefasTable td:nth-child(12) { text-align: right; }
-
-/* DataTables FixedColumns dondurulmuş sütun klonu için aynı hizalama */
-.DTFC_LeftHeadWrapper th:nth-child(1), .DTFC_LeftBodyWrapper td:nth-child(1) { text-align: center; }
-.DTFC_LeftBodyWrapper td { background: var(--card); color: var(--ink); border-bottom: 1px solid #2b2e37 !important; }
-.DTFC_LeftHeadWrapper th { background: var(--panel) !important; background-image: none !important; color: var(--teal-bright); }
-/* Dondurulmuş Fon Kodu sütunundaki link koyu temada beyaz kalıyordu — düzelt */
-.DTFC_LeftBodyWrapper td a { color: var(--teal-bright) !important; font-weight: 600; text-decoration: underline; text-decoration-color: #3a6b68; }
-.DTFC_LeftBodyWrapper td a:hover { color: #6fd8cd !important; text-decoration-color: #6fd8cd; }
-
-.dataTables_wrapper .dataTables_filter input, .dataTables_wrapper .dataTables_length select {
-    border: 1px solid var(--line); border-radius: 6px; padding: 4px 8px;
-    background: var(--panel); color: var(--ink);
-}
-.dataTables_wrapper .dataTables_filter label, .dataTables_wrapper .dataTables_length label { color: var(--ink-dim); }
-.dataTables_wrapper .dataTables_info { clear: both; margin-top: 10px; font-size: 13px; color: var(--ink-dim); }
-.dataTables_wrapper .dataTables_paginate {
-    display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; float: none !important;
-}
-.dataTables_wrapper .dataTables_paginate .paginate_button {
-    padding: 6px 12px; margin: 0; border: 1px solid var(--line) !important; border-radius: 6px;
-    cursor: pointer; color: var(--teal-bright) !important; background: var(--panel) !important;
-}
-.dataTables_wrapper .dataTables_paginate .paginate_button.current {
-    background: var(--blue) !important; color: white !important; border-color: var(--blue) !important;
-}
-.dataTables_wrapper .dataTables_paginate .paginate_button:hover:not(.disabled) {
-    background: #363a46 !important;
-}
-.dataTables_wrapper .dataTables_paginate .paginate_button.disabled {
-    color: #5a606e !important; cursor: default; background: var(--panel) !important;
-}
-"""
-    extra_head = ('<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">'
-                  '<link rel="stylesheet" href="https://cdn.datatables.net/fixedcolumns/4.3.0/css/fixedColumns.dataTables.min.css">')
-    with open("docs/tum-fonlar.html", "w", encoding="utf-8") as f:
-        f.write(page_shell("FONLARCA — Tüm Fonlar", "tum-fonlar.html", body, extra_style, extra_head))
-    print("Tüm Fonlar sayfası oluşturuldu: docs/tum-fonlar.html")
-
-
-# ------------------------------------------------------------------
 # Sayfa 2: Kategori Özeti
 # ------------------------------------------------------------------
 
 def write_category_summary(res, anchor):
     plot_df = res[res['TEFAS_Skoru'].notna()]
     sections = []
+    kategori_listesi = []
     for kat, g in plot_df.groupby('Alt Kategori', sort=True):
         if len(g) < 3:
             continue
+        kategori_listesi.append(kat)
         g_sorted = g.sort_values('TEFAS_Skoru', ascending=False)
         top5 = g_sorted.head(5)
         bottom5 = g_sorted.tail(5).sort_values('TEFAS_Skoru')
@@ -553,7 +380,7 @@ def write_category_summary(res, anchor):
             return out
 
         sections.append(f"""
-<div class="card kat-card">
+<div class="card kat-card" data-kategori="{kat}">
     <h2>{kat} <span class="kat-count">({len(g)} fon)</span></h2>
     <div class="kat-cols">
         <div>
@@ -567,7 +394,26 @@ def write_category_summary(res, anchor):
     </div>
 </div>""")
 
+    kategori_secenekleri = "".join(f'<option value="{k}">{k}</option>' for k in kategori_listesi)
+    filtre_kutusu = f"""
+<div class="card">
+    <label for="kategori-filter" style="color:var(--ink-dim); font-size:13px; margin-right:8px;">Kategori:</label>
+    <select id="kategori-filter" style="background:var(--panel); color:var(--ink); border:1px solid var(--line); border-radius:8px; padding:8px 10px; font-size:14px; min-width:220px;">
+        <option value="">Tümü</option>
+        {kategori_secenekleri}
+    </select>
+</div>
+<script>
+document.getElementById('kategori-filter').addEventListener('change', function(){{
+    const secili = this.value;
+    document.querySelectorAll('.kat-card').forEach(function(kart){{
+        kart.style.display = (!secili || kart.dataset.kategori === secili) ? '' : 'none';
+    }});
+}});
+</script>"""
+
     body = f"""{page_header('kategori-ozeti.html', 'Kategori Özeti', anchor)}
+{filtre_kutusu}
 {''.join(sections)}"""
 
     with open("docs/kategori-ozeti.html", "w", encoding="utf-8") as f:
@@ -1168,6 +1014,11 @@ def write_portfoyum_page(anchor):
             <div id="pf-risk-gauge" style="text-align:center; padding-top:10px;"></div>
         </div>
     </div>
+
+    <div class="card">
+        <h3 style="color:var(--ink); margin-top:0;">Fon Bazında Günlük Kazanç/Kayıp</h3>
+        <div style="height:300px;"><canvas id="pf-daily-pnl-chart"></canvas></div>
+    </div>
 </div>
 
 <p style="color:var(--ink-dim); font-size:13px;">
@@ -1321,6 +1172,65 @@ function weightedRisk(portfoy) {{
     return toplamRiskAgirlikli / toplamTL;
 }}
 
+function fonBazindaGunlukPnl(portfoy) {{
+    const kodlar = Object.keys(portfoy);
+    const sonuc = [];
+    kodlar.forEach(k => {{
+        const d = fundsData[k];
+        if (!d || d._sonFiyat == null || d._oncekiFiyat == null) return;
+        const pay = portfoy[k] || 0;
+        const pnlTL = (d._sonFiyat - d._oncekiFiyat) * pay;
+        sonuc.push({{ kod: k, pnlTL }});
+    }});
+    // Z-A: en yüksek kazançtan en düşük/en çok kayba doğru
+    sonuc.sort((a, b) => b.pnlTL - a.pnlTL);
+    return sonuc;
+}}
+
+let dailyPnlChart = null;
+
+function renderDailyPnlChart(portfoy) {{
+    const veriler = fonBazindaGunlukPnl(portfoy);
+    const bugunTarihi = Object.values(fundsData).find(d => d && d._sonTarih)?._sonTarih;
+    const fx = fxRateFor(bugunTarihi || '9999-99-99');
+    const labels = veriler.map(v => v.kod);
+    const data = veriler.map(v => (fx && currency !== 'TL') ? v.pnlTL / fx : v.pnlTL);
+    const posColor = 'rgba(76,187,109,0.75)', negColor = 'rgba(224,90,90,0.75)';
+    if (dailyPnlChart) {{ dailyPnlChart.destroy(); }}
+    dailyPnlChart = new Chart(document.getElementById('pf-daily-pnl-chart'), {{
+        type: 'bar',
+        data: {{ labels, datasets: [{{ data, backgroundColor: data.map(v => v >= 0 ? posColor : negColor) }}] }},
+        options: {{
+            maintainAspectRatio: false,
+            layout: {{ padding: {{ top: 16, bottom: 16 }} }},
+            plugins: {{
+                legend: {{ display: false }},
+                tooltip: {{ callbacks: {{ label: c => fmtMoney(c.raw) }} }}
+            }},
+            scales: {{
+                x: {{ ticks: {{ color: '#9aa0ac', font: {{ size: 11 }} }}, grid: {{ display: false }} }},
+                y: {{ display: false, grid: {{ display: false }} }}
+            }}
+        }},
+        plugins: [{{
+            id: 'pfDailyPnlLabels',
+            afterDatasetsDraw(chart) {{
+                const {{ ctx }} = chart;
+                const meta = chart.getDatasetMeta(0);
+                meta.data.forEach((bar, i) => {{
+                    ctx.save();
+                    ctx.fillStyle = '#c9cdd6';
+                    ctx.font = '600 10px -apple-system,Segoe UI,Arial,sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = data[i] >= 0 ? 'bottom' : 'top';
+                    ctx.fillText(fmtMoney(data[i]), bar.x, bar.y + (data[i] >= 0 ? -4 : 4));
+                    ctx.restore();
+                }});
+            }}
+        }}]
+    }});
+}}
+
 let allocChart = null;
 
 function renderAllocChart(dagilim) {{
@@ -1436,6 +1346,7 @@ function recalcAndRender() {{
 
     renderAllocChart(weightedAllocation(portfoy));
     renderRiskGauge(weightedRisk(portfoy));
+    renderDailyPnlChart(portfoy);
 }}
 
 function render() {{
@@ -1523,7 +1434,6 @@ def main():
     os.makedirs("docs", exist_ok=True)
     write_hareketler_page(df, mapping)
     write_category_summary(res, anchor)
-    write_tum_fonlar_page(res, anchor)
     write_yeni_fonlar_page(df, mapping, fon_adlari, acik_fon_kodlari)
     write_favoriler_page(anchor)
     write_portfoyum_page(anchor)
