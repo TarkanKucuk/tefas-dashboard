@@ -161,6 +161,43 @@ footer { text-align: center; color: var(--ink-dim); font-size: 12px; margin-top:
             <div id="pf-risk-gauge" style="text-align:center; padding-top:10px;"></div>
         </div>
     </div>
+
+    <div class="card">
+        <h3 style="color:var(--ink); margin-top:0;">🎯 Sharpe Optimizasyonu</h3>
+        <p style="color:var(--ink-dim); font-size:13px; margin-top:-4px;">
+            Bu bir yatırım tavsiyesi değildir — geçmiş fiyat verisine dayalı, istatistiksel bir araçtır.
+            Geçmiş performans ve fonlar arası ilişkiler gelecekte aynı kalmayabilir.
+        </p>
+        <div style="display:flex; flex-wrap:wrap; gap:16px; align-items:flex-end; margin-bottom:14px;">
+            <div>
+                <label style="color:var(--ink-dim); font-size:12px; display:block;">Min. Ağırlık (%)</label>
+                <input type="number" id="opt-min-agirlik" value="0" min="0" max="100" step="1"
+                       style="width:90px; background:var(--panel); border:1px solid var(--line); color:var(--ink); border-radius:6px; padding:6px 8px;">
+            </div>
+            <div>
+                <label style="color:var(--ink-dim); font-size:12px; display:block;">Max. Ağırlık (%)</label>
+                <input type="number" id="opt-max-agirlik" value="50" min="0" max="100" step="1"
+                       style="width:90px; background:var(--panel); border:1px solid var(--line); color:var(--ink); border-radius:6px; padding:6px 8px;">
+            </div>
+            <button onclick="optimizasyonCalistir()" style="background:var(--blue); color:white; border:none; border-radius:8px; padding:9px 18px; font-weight:600; cursor:pointer;">Optimize Et</button>
+        </div>
+        <div id="opt-durum" style="color:var(--ink-dim); font-size:13px;"></div>
+        <div id="opt-sonuc" style="display:none; margin-top:12px;">
+            <div style="display:flex; gap:28px; margin-bottom:12px;">
+                <div>
+                    <div style="color:var(--ink-dim); font-size:12px;">Mevcut Sharpe (yıllık)</div>
+                    <div id="opt-mevcut-sharpe" style="font-size:20px; font-weight:700;">—</div>
+                </div>
+                <div>
+                    <div style="color:var(--ink-dim); font-size:12px;">Önerilen Sharpe (yıllık)</div>
+                    <div id="opt-onerilen-sharpe" style="font-size:20px; font-weight:700; color:var(--green);">—</div>
+                </div>
+            </div>
+            <div class="mini-table-wrap" style="overflow-x:auto;">
+                <table class="mini" id="opt-table" style="font-size:13px;"></table>
+            </div>
+        </div>
+    </div>
 </div>
 
 <p style="color:var(--ink-dim); font-size:13px;">
@@ -183,6 +220,7 @@ footer { text-align: center; color: var(--ink-dim); font-size: 12px; margin-top:
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script>
 const PORTFOY_KEY = 'fonlarca_portfoy';
+const RISK_FREE_RATE_YILLIK = 0.3999;  // TLREF, script'te elle güncellenir
 function getPortfoy() {
     try { return JSON.parse(localStorage.getItem(PORTFOY_KEY)) || {}; }
     catch(e) { return {}; }
@@ -312,6 +350,197 @@ function weightedRisk(portfoy) {
     });
     if (toplamTL <= 0) return null;
     return toplamRiskAgirlikli / toplamTL;
+}
+
+
+/* ---------- Sharpe Optimizasyonu ---------- */
+
+function gunlukGetiriSerisi(fiyatGrafigi) {
+    // Ardışık noktalar arası GERÇEK gün farkına göre normalize edilmiş günlük
+    // eşdeğer getiri — fon kartındaki fiyat serisi çok uzun geçmişli fonlarda
+    // seyreltilmiş olabildiği için (ardışık noktalar arası >1 gün olabilir),
+    // basit fark yerine bu normalizasyon kullanılır.
+    if (!fiyatGrafigi || fiyatGrafigi.length < 2) return [];
+    const sonuc = [];
+    for (let i = 1; i < fiyatGrafigi.length; i++) {
+        const onceki = fiyatGrafigi[i - 1], simdi = fiyatGrafigi[i];
+        if (!(onceki.value > 0) || !(simdi.value > 0)) continue;
+        const gunFarki = (new Date(simdi.time) - new Date(onceki.time)) / 86400000;
+        if (!(gunFarki > 0)) continue;
+        const gunlukEsdeger = Math.pow(simdi.value / onceki.value, 1 / gunFarki) - 1;
+        sonuc.push({ date: simdi.time, getiri: gunlukEsdeger });
+    }
+    return sonuc;
+}
+
+function ortakTarihleriBul(serilerObj) {
+    const kodlar = Object.keys(serilerObj);
+    if (!kodlar.length) return [];
+    let ortak = new Set(serilerObj[kodlar[0]].map(x => x.date));
+    for (let i = 1; i < kodlar.length; i++) {
+        const buSeri = new Set(serilerObj[kodlar[i]].map(x => x.date));
+        ortak = new Set([...ortak].filter(t => buSeri.has(t)));
+    }
+    return [...ortak].sort();
+}
+
+function ortalama(arr) { return arr.reduce((a, b) => a + b, 0) / arr.length; }
+
+function kovaryansHesapla(a, b) {
+    const ma = ortalama(a), mb = ortalama(b);
+    let toplam = 0;
+    for (let i = 0; i < a.length; i++) toplam += (a[i] - ma) * (b[i] - mb);
+    return toplam / Math.max(1, a.length - 1);
+}
+
+function portfoyGetiriVeRisk(agirliklar, ortGetiriler, kovMatris) {
+    const n = agirliklar.length;
+    let getiri = 0;
+    for (let i = 0; i < n; i++) getiri += agirliklar[i] * ortGetiriler[i];
+    let varyans = 0;
+    for (let i = 0; i < n; i++)
+        for (let j = 0; j < n; j++)
+            varyans += agirliklar[i] * agirliklar[j] * kovMatris[i][j];
+    return { getiri, risk: Math.sqrt(Math.max(0, varyans)) };
+}
+
+function yillikSharpe(gunlukGetiri, gunlukRisk, gunlukRiskFree) {
+    if (!(gunlukRisk > 0)) return null;
+    // Günlük Sharpe'ı yıllıklandırma: getiri ~252 ile, risk ~sqrt(252) ile ölçeklenir
+    const yillikGetiri = gunlukGetiri * 252;
+    const yillikRisk = gunlukRisk * Math.sqrt(252);
+    const yillikRiskFree = gunlukRiskFree * 252;
+    return (yillikGetiri - yillikRiskFree) / yillikRisk;
+}
+
+function rastgeleAgirlikUret(n, minA, maxA) {
+    for (let deneme = 0; deneme < 5000; deneme++) {
+        const ham = Array.from({ length: n }, () => Math.random());
+        const toplam = ham.reduce((a, b) => a + b, 0);
+        const agirliklar = ham.map(x => x / toplam);
+        if (agirliklar.every(w => w >= minA - 1e-9 && w <= maxA + 1e-9)) return agirliklar;
+    }
+    return null;
+}
+
+function monteCarloOptimize(ortGetiriler, kovMatris, minA, maxA, gunlukRiskFree, denemeSayisi) {
+    const n = ortGetiriler.length;
+    let enIyiAgirlik = null, enIyiSharpe = -Infinity;
+    let basarili = 0;
+    for (let i = 0; i < denemeSayisi; i++) {
+        const agirliklar = rastgeleAgirlikUret(n, minA, maxA);
+        if (!agirliklar) continue;
+        basarili++;
+        const { getiri, risk } = portfoyGetiriVeRisk(agirliklar, ortGetiriler, kovMatris);
+        const sharpe = yillikSharpe(getiri, risk, gunlukRiskFree);
+        if (sharpe != null && sharpe > enIyiSharpe) {
+            enIyiSharpe = sharpe;
+            enIyiAgirlik = agirliklar;
+        }
+    }
+    return { agirliklar: enIyiAgirlik, sharpe: enIyiAgirlik ? enIyiSharpe : null, basarili };
+}
+
+/**
+ * Ortak optimizasyon çalıştırıcı. `kodlar`: fon kod listesi (fundsData'da mevcut
+ * olmalı). `mevcutAgirliklar`: {kod: agirlik(0-1)} — Portföyüm için gerçek pay
+ * bazlı ağırlıklar, Favoriler için eşit ağırlık (1/N) varsayımı geçirilir.
+ * `sonucElementIdleri`: {durum, sonuc, mevcutSharpe, onerilenSharpe, tablo} DOM id'leri.
+ */
+function sharpeOptimizasyonuCalistir(kodlar, mevcutAgirliklar, minInputId, maxInputId, elementIdleri) {
+    const durumEl = document.getElementById(elementIdleri.durum);
+    const sonucEl = document.getElementById(elementIdleri.sonuc);
+    sonucEl.style.display = 'none';
+    durumEl.textContent = '';
+
+    const gecerliKodlar = kodlar.filter(k => fundsData[k] && fundsData[k].fiyat_grafigi && fundsData[k].fiyat_grafigi.length > 1);
+    if (gecerliKodlar.length < 2) {
+        durumEl.textContent = 'Optimizasyon için en az 2 fon (fiyat verisi olan) gerekiyor.';
+        return;
+    }
+
+    const minA = (parseFloat(document.getElementById(minInputId).value) || 0) / 100;
+    const maxA = (parseFloat(document.getElementById(maxInputId).value) || 100) / 100;
+    if (minA > maxA) {
+        durumEl.textContent = 'Min. ağırlık, Max. ağırlıktan büyük olamaz.';
+        return;
+    }
+    const n = gecerliKodlar.length;
+    if (minA * n > 1 + 1e-9 || maxA * n < 1 - 1e-9) {
+        durumEl.textContent = `Girilen Min/Max ağırlıklarla ${n} fonun toplamı %100 olacak bir dağılım matematiksel olarak mümkün değil.`;
+        return;
+    }
+
+    const serilerObj = {};
+    gecerliKodlar.forEach(k => { serilerObj[k] = gunlukGetiriSerisi(fundsData[k].fiyat_grafigi); });
+    const ortakTarihler = ortakTarihleriBul(serilerObj);
+    if (ortakTarihler.length < 30) {
+        durumEl.textContent = `Fonlar arasında yeterli ortak veri yok (sadece ${ortakTarihler.length} gün) — en az 30 gün gerekiyor.`;
+        return;
+    }
+
+    const getiriMatrisi = {};
+    gecerliKodlar.forEach(k => {
+        const harita = {};
+        serilerObj[k].forEach(x => { harita[x.date] = x.getiri; });
+        getiriMatrisi[k] = ortakTarihler.map(t => harita[t]);
+    });
+    const ortGetiriler = gecerliKodlar.map(k => ortalama(getiriMatrisi[k]));
+    const kovMatris = gecerliKodlar.map(ki => gecerliKodlar.map(kj => kovaryansHesapla(getiriMatrisi[ki], getiriMatrisi[kj])));
+    const gunlukRiskFree = Math.pow(1 + RISK_FREE_RATE_YILLIK, 1 / 252) - 1;
+
+    const sonuc = monteCarloOptimize(ortGetiriler, kovMatris, minA, maxA, gunlukRiskFree, 20000);
+    if (!sonuc.agirliklar) {
+        durumEl.textContent = 'Girilen kısıtlara uyan bir ağırlık dağılımı bulunamadı — Min/Max aralığını genişletmeyi deneyin.';
+        return;
+    }
+
+    // Mevcut (gerçek ya da eşit varsayımlı) ağırlıklarla mevcut Sharpe'ı hesapla
+    const mevcutVektor = gecerliKodlar.map(k => mevcutAgirliklar[k] || 0);
+    const mevcutToplam = mevcutVektor.reduce((a, b) => a + b, 0);
+    const mevcutNormalize = mevcutToplam > 0 ? mevcutVektor.map(w => w / mevcutToplam) : gecerliKodlar.map(() => 1 / n);
+    const mevcutSonuc = portfoyGetiriVeRisk(mevcutNormalize, ortGetiriler, kovMatris);
+    const mevcutSharpe = yillikSharpe(mevcutSonuc.getiri, mevcutSonuc.risk, gunlukRiskFree);
+
+    document.getElementById(elementIdleri.mevcutSharpe).textContent = mevcutSharpe != null ? mevcutSharpe.toFixed(2) : '—';
+    document.getElementById(elementIdleri.onerilenSharpe).textContent = sonuc.sharpe.toFixed(2);
+
+    let satirlar = gecerliKodlar.map((k, i) => ({
+        kod: k,
+        mevcut: mevcutNormalize[i] * 100,
+        onerilen: sonuc.agirliklar[i] * 100,
+    }));
+    satirlar.sort((a, b) => b.onerilen - a.onerilen);
+    const mevcutBaslik = elementIdleri.mevcutEtiket || 'Mevcut Ağırlık';
+    const tabloHtml = '<tr><th>Kod</th><th>' + mevcutBaslik + '</th><th>Önerilen Ağırlık</th></tr>' +
+        satirlar.map(s => '<tr><td>' + s.kod + '</td><td>' + s.mevcut.toFixed(1) + '%</td><td><strong>' + s.onerilen.toFixed(1) + '%</strong></td></tr>').join('');
+    document.getElementById(elementIdleri.tablo).innerHTML = tabloHtml;
+
+    durumEl.textContent = '';
+    sonucEl.style.display = 'block';
+}
+
+
+
+function optimizasyonCalistir() {
+    const portfoy = getPortfoy();
+    const kodlar = Object.keys(portfoy);
+    const toplamTL = {};
+    let genelToplam = 0;
+    kodlar.forEach(k => {
+        const d = fundsData[k];
+        if (!d || d._sonFiyat == null) return;
+        const deger = d._sonFiyat * (portfoy[k] || 0);
+        toplamTL[k] = deger;
+        genelToplam += deger;
+    });
+    const mevcutAgirliklar = {};
+    kodlar.forEach(k => { mevcutAgirliklar[k] = genelToplam > 0 ? (toplamTL[k] || 0) / genelToplam : 0; });
+
+    sharpeOptimizasyonuCalistir(kodlar, mevcutAgirliklar, 'opt-min-agirlik', 'opt-max-agirlik', {
+        durum: 'opt-durum', sonuc: 'opt-sonuc',
+        mevcutSharpe: 'opt-mevcut-sharpe', onerilenSharpe: 'opt-onerilen-sharpe', tablo: 'opt-table',
+    });
 }
 
 function fonBazindaGunlukPnl(portfoy) {
