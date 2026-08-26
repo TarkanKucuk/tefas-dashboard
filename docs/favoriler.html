@@ -500,10 +500,11 @@ function portfoyGetiriVeRisk(agirliklar, ortGetiriler, kovMatris) {
 
 function yillikSharpe(gunlukGetiri, gunlukRisk, gunlukRiskFree) {
     if (!(gunlukRisk > 0)) return null;
-    // Günlük Sharpe'ı yıllıklandırma: getiri ~252 ile, risk ~sqrt(252) ile ölçeklenir
-    const yillikGetiri = gunlukGetiri * 252;
+    // Bileşik (geometrik) yıllıklandırma — score_funds.py'nin resmi Sharpe_1Y
+    // hesaplamasıyla (ann_return = (1+ort)^252 - 1) birebir aynı yöntem.
+    const yillikGetiri = Math.pow(1 + gunlukGetiri, 252) - 1;
     const yillikRisk = gunlukRisk * Math.sqrt(252);
-    const yillikRiskFree = gunlukRiskFree * 252;
+    const yillikRiskFree = Math.pow(1 + gunlukRiskFree, 252) - 1;
     return (yillikGetiri - yillikRiskFree) / yillikRisk;
 }
 
@@ -599,10 +600,21 @@ function sharpeOptimizasyonuCalistir(kodlar, mevcutAgirliklar, minInputId, maxIn
     document.getElementById(elementIdleri.mevcutSharpe).textContent = mevcutSharpe != null ? mevcutSharpe.toFixed(2) : '—';
     document.getElementById(elementIdleri.onerilenSharpe).textContent = sonuc.sharpe.toFixed(2);
 
-    // Her fonun KENDİ (tek başına %100 ağırlıkla) Sharpe oranı
-    const kendiSharpeler = gecerliKodlar.map((k, i) => {
-        const kendiRisk = Math.sqrt(Math.max(0, kovMatris[i][i]));
-        return yillikSharpe(ortGetiriler[i], kendiRisk, gunlukRiskFree);
+    // Her fonun KENDİ Sharpe oranı — kullanıcı geri bildirimiyle düzeltildi:
+    // BUNU portföydeki fonların ORTAK (kesişen) tarih penceresinden DEĞİL, o
+    // fonun KENDİ TAM geçmişinden (en fazla son ~252 iş günü, yani ~1 yıl;
+    // daha kısa geçmişi varsa elindeki kadarıyla) hesaplıyoruz. Aksi halde,
+    // portföydeki en kısa ömürlü fon, TÜM fonların Sharpe'ını kendi kısa
+    // penceresine hapsedip yanlış/yanıltıcı sonuçlar üretiyordu.
+    const kendiSharpeler = gecerliKodlar.map(k => {
+        const tamSeri = serilerObj[k].map(x => x.getiri).slice(-252);
+        // Eşik: score_funds.py'nin resmi Sharpe_1Y hesabı, son 1 yıllık
+        // penceredeki gözlem sayısının en az 100 olmasını şart koşuyor
+        // (len(daily_rets) >= 100) — aynı eşiği burada da uyguluyoruz.
+        if (tamSeri.length < 100) return null;
+        const kendiOrt = ortalama(tamSeri);
+        const kendiRisk = Math.sqrt(tamSeri.reduce((s, x) => s + (x - kendiOrt) ** 2, 0) / Math.max(1, tamSeri.length - 1));
+        return yillikSharpe(kendiOrt, kendiRisk, gunlukRiskFree);
     });
 
     let satirlar = gecerliKodlar.map((k, i) => ({
