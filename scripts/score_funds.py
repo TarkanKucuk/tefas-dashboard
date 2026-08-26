@@ -164,15 +164,25 @@ function sharpeOptimizasyonuCalistir(kodlar, mevcutAgirliklar, minInputId, maxIn
     document.getElementById(elementIdleri.mevcutSharpe).textContent = mevcutSharpe != null ? mevcutSharpe.toFixed(2) : '—';
     document.getElementById(elementIdleri.onerilenSharpe).textContent = sonuc.sharpe.toFixed(2);
 
+    // Her fonun KENDİ (tek başına %100 ağırlıkla) Sharpe oranı
+    const kendiSharpeler = gecerliKodlar.map((k, i) => {
+        const kendiRisk = Math.sqrt(Math.max(0, kovMatris[i][i]));
+        return yillikSharpe(ortGetiriler[i], kendiRisk, gunlukRiskFree);
+    });
+
     let satirlar = gecerliKodlar.map((k, i) => ({
         kod: k,
+        kendiSharpe: kendiSharpeler[i],
         mevcut: mevcutNormalize[i] * 100,
         onerilen: sonuc.agirliklar[i] * 100,
     }));
     satirlar.sort((a, b) => b.onerilen - a.onerilen);
     const mevcutBaslik = elementIdleri.mevcutEtiket || 'Mevcut Ağırlık';
-    const tabloHtml = '<tr><th>Kod</th><th>' + mevcutBaslik + '</th><th>Önerilen Ağırlık</th></tr>' +
-        satirlar.map(s => '<tr><td>' + s.kod + '</td><td>' + s.mevcut.toFixed(1) + '%</td><td><strong>' + s.onerilen.toFixed(1) + '%</strong></td></tr>').join('');
+    const tabloHtml = '<tr><th>Kod</th><th>Fonun Sharpe Rasyosu</th><th style="text-align:right;">' + mevcutBaslik + '</th><th style="text-align:right;">Önerilen Ağırlık</th></tr>' +
+        satirlar.map(s => '<tr><td><a href="fon-karti.html?kod=' + s.kod + '">' + s.kod + '</a></td>' +
+            '<td>' + (s.kendiSharpe != null ? s.kendiSharpe.toFixed(2) : '—') + '</td>' +
+            '<td style="text-align:right;">' + s.mevcut.toFixed(1) + '%</td>' +
+            '<td style="text-align:right;"><strong>' + s.onerilen.toFixed(1) + '%</strong></td></tr>').join('');
     document.getElementById(elementIdleri.tablo).innerHTML = tabloHtml;
 
     durumEl.textContent = '';
@@ -849,23 +859,26 @@ def write_favoriler_page(anchor):
     </div>
 
     <div class="card">
-        <h3 style="color:var(--ink); margin-top:0;">🎯 Sharpe Optimizasyonu</h3>
-        <p style="color:var(--ink-dim); font-size:13px; margin-top:-4px;">
+        <h3 style="color:var(--ink); margin-top:0; font-size:20px;">🎯 Fon Dağılım Optimizasyonu</h3>
+        <p style="color:var(--ink-dim); font-size:14px; margin-top:-2px;">
+            Elinizdeki fonları hangi oranlarda tutarsanız, geçmiş verilere göre daha dengeli bir risk/getiri elde edebileceğinizi hesaplar.
+        </p>
+        <p style="color:var(--ink-dim); font-size:13px; margin-top:-8px;">
             Bu bir yatırım tavsiyesi değildir — geçmiş fiyat verisine dayalı, istatistiksel bir araçtır.
             "Mevcut" ağırlık burada eşit dağılım (1/N) varsayımıyla hesaplanır — favorilerinizde gerçek bir pay bilgisi tutulmaz.
         </p>
-        <div style="display:flex; flex-wrap:wrap; gap:16px; align-items:flex-end; margin-bottom:14px;">
+        <div style="display:flex; flex-wrap:wrap; gap:20px; align-items:flex-end; margin-bottom:14px;">
             <div>
-                <label style="color:var(--ink-dim); font-size:12px; display:block;">Min. Ağırlık (%)</label>
+                <label style="color:var(--ink-dim); font-size:13px; display:block; margin-bottom:6px;">Min. Ağırlık (%)</label>
                 <input type="number" id="opt-min-agirlik" value="0" min="0" max="100" step="1"
-                       style="width:90px; background:var(--panel); border:1px solid var(--line); color:var(--ink); border-radius:6px; padding:6px 8px;">
+                       style="width:90px; background:var(--panel); border:1px solid var(--line); color:var(--ink); border-radius:6px; padding:7px 9px; font-size:14px;">
             </div>
             <div>
-                <label style="color:var(--ink-dim); font-size:12px; display:block;">Max. Ağırlık (%)</label>
+                <label style="color:var(--ink-dim); font-size:13px; display:block; margin-bottom:6px;">Max. Ağırlık (%)</label>
                 <input type="number" id="opt-max-agirlik" value="50" min="0" max="100" step="1"
-                       style="width:90px; background:var(--panel); border:1px solid var(--line); color:var(--ink); border-radius:6px; padding:6px 8px;">
+                       style="width:90px; background:var(--panel); border:1px solid var(--line); color:var(--ink); border-radius:6px; padding:7px 9px; font-size:14px;">
             </div>
-            <button onclick="optimizasyonCalistir()" style="background:var(--blue); color:white; border:none; border-radius:8px; padding:9px 18px; font-weight:600; cursor:pointer;">Optimize Et</button>
+            <button onclick="optimizasyonCalistir()" style="background:var(--blue); color:white; border:none; border-radius:8px; padding:9px 18px; font-weight:600; cursor:pointer; font-size:14px;">Optimize Et</button>
         </div>
         <div id="opt-durum" style="color:var(--ink-dim); font-size:13px;"></div>
         <div id="opt-sonuc" style="display:none; margin-top:12px;">
@@ -1248,23 +1261,26 @@ def write_portfoyum_page(anchor):
     </div>
 
     <div class="card">
-        <h3 style="color:var(--ink); margin-top:0;">🎯 Sharpe Optimizasyonu</h3>
-        <p style="color:var(--ink-dim); font-size:13px; margin-top:-4px;">
+        <h3 style="color:var(--ink); margin-top:0; font-size:20px;">🎯 Fon Dağılım Optimizasyonu</h3>
+        <p style="color:var(--ink-dim); font-size:14px; margin-top:-2px;">
+            Elinizdeki fonları hangi oranlarda tutarsanız, geçmiş verilere göre daha dengeli bir risk/getiri elde edebileceğinizi hesaplar.
+        </p>
+        <p style="color:var(--ink-dim); font-size:13px; margin-top:-8px;">
             Bu bir yatırım tavsiyesi değildir — geçmiş fiyat verisine dayalı, istatistiksel bir araçtır.
             Geçmiş performans ve fonlar arası ilişkiler gelecekte aynı kalmayabilir.
         </p>
-        <div style="display:flex; flex-wrap:wrap; gap:16px; align-items:flex-end; margin-bottom:14px;">
+        <div style="display:flex; flex-wrap:wrap; gap:20px; align-items:flex-end; margin-bottom:14px;">
             <div>
-                <label style="color:var(--ink-dim); font-size:12px; display:block;">Min. Ağırlık (%)</label>
+                <label style="color:var(--ink-dim); font-size:13px; display:block; margin-bottom:6px;">Min. Ağırlık (%)</label>
                 <input type="number" id="opt-min-agirlik" value="0" min="0" max="100" step="1"
-                       style="width:90px; background:var(--panel); border:1px solid var(--line); color:var(--ink); border-radius:6px; padding:6px 8px;">
+                       style="width:90px; background:var(--panel); border:1px solid var(--line); color:var(--ink); border-radius:6px; padding:7px 9px; font-size:14px;">
             </div>
             <div>
-                <label style="color:var(--ink-dim); font-size:12px; display:block;">Max. Ağırlık (%)</label>
+                <label style="color:var(--ink-dim); font-size:13px; display:block; margin-bottom:6px;">Max. Ağırlık (%)</label>
                 <input type="number" id="opt-max-agirlik" value="50" min="0" max="100" step="1"
-                       style="width:90px; background:var(--panel); border:1px solid var(--line); color:var(--ink); border-radius:6px; padding:6px 8px;">
+                       style="width:90px; background:var(--panel); border:1px solid var(--line); color:var(--ink); border-radius:6px; padding:7px 9px; font-size:14px;">
             </div>
-            <button onclick="optimizasyonCalistir()" style="background:var(--blue); color:white; border:none; border-radius:8px; padding:9px 18px; font-weight:600; cursor:pointer;">Optimize Et</button>
+            <button onclick="optimizasyonCalistir()" style="background:var(--blue); color:white; border:none; border-radius:8px; padding:9px 18px; font-weight:600; cursor:pointer; font-size:14px;">Optimize Et</button>
         </div>
         <div id="opt-durum" style="color:var(--ink-dim); font-size:13px;"></div>
         <div id="opt-sonuc" style="display:none; margin-top:12px;">
