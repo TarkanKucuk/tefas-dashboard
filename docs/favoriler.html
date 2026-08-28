@@ -450,19 +450,19 @@ function loadAll() {
 /* ---------- Sharpe Optimizasyonu ---------- */
 
 function gunlukGetiriSerisi(fiyatGrafigi) {
-    // Ardışık noktalar arası GERÇEK gün farkına göre normalize edilmiş günlük
-    // eşdeğer getiri — fon kartındaki fiyat serisi çok uzun geçmişli fonlarda
-    // seyreltilmiş olabildiği için (ardışık noktalar arası >1 gün olabilir),
-    // basit fark yerine bu normalizasyon kullanılır.
+    // Basit ardışık-nokta getirisi (pct_change) — score_funds.py'nin resmi
+    // Sharpe_1Y hesabıyla BİREBİR aynı yöntem. Önceden buradaki "gün farkına
+    // göre normalize etme" mantığı, normal hafta sonu/tatil boşluklarını
+    // (Cuma→Pazartesi gibi, her fonda her hafta olan gayet normal bir durum)
+    // yanlışlıkla "seyreltilmiş veri" sayıp getiriyi günlere bölüyordu — bu,
+    // volatiliteyi yapay olarak çok küçültüp Sharpe'ı anlamsız uç değerlere
+    // (örn. BGP için -39) savuruyordu. Basit fark, doğru ve script'le tutarlı.
     if (!fiyatGrafigi || fiyatGrafigi.length < 2) return [];
     const sonuc = [];
     for (let i = 1; i < fiyatGrafigi.length; i++) {
         const onceki = fiyatGrafigi[i - 1], simdi = fiyatGrafigi[i];
         if (!(onceki.value > 0) || !(simdi.value > 0)) continue;
-        const gunFarki = (new Date(simdi.time) - new Date(onceki.time)) / 86400000;
-        if (!(gunFarki > 0)) continue;
-        const gunlukEsdeger = Math.pow(simdi.value / onceki.value, 1 / gunFarki) - 1;
-        sonuc.push({ date: simdi.time, getiri: gunlukEsdeger });
+        sonuc.push({ date: simdi.time, getiri: simdi.value / onceki.value - 1 });
     }
     return sonuc;
 }
