@@ -942,21 +942,22 @@ function renderAllocation(alloc){
   const latest = alloc.son_tarihli || {};
   const labels = Object.keys(latest);
   const values = Object.values(latest);
+  const yuzdeEtiket = v => (v < 0 ? '-%' + trNum(Math.abs(v), 2) : '%' + trNum(v, 2));
   new Chart(document.getElementById('alloc-latest-chart'), {
     type:'bar',
     data:{ labels, datasets:[{
       data: values,
-      backgroundColor: labels.map((_,i)=>ALLOC_BAR_COLORS[i % ALLOC_BAR_COLORS.length]),
+      backgroundColor: labels.map((l,i)=> latest[l] < 0 ? '#e05a5a' : ALLOC_BAR_COLORS[i % ALLOC_BAR_COLORS.length]),
       borderRadius:4, barPercentage:0.7,
     }] },
     options:{
       indexAxis:'y',
       layout:{padding:{right:40}},
-      plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>'%'+trNum(c.raw,2)}}},
+      plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>yuzdeEtiket(c.raw)}}},
       scales:{ x:{display:false, grid:{display:false}},
                y:{ticks:{color:'#c9cdd6', font:{size:11}}, grid:{display:false}} }
     },
-    plugins:[makeValueLabelPlugin(v=>'%'+trNum(v,2))]
+    plugins:[makeValueLabelPlugin(yuzdeEtiket)]
   });
 
   allocHistory = alloc.gecmis || {tarihler:[], seriler:{}};
