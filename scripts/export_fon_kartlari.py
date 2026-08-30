@@ -275,9 +275,9 @@ def build_allocation(alloc_df):
         latest = {
             c: round(float(latest_row[c]), 2)
             for c in cat_cols
-            if pd.notna(latest_row[c]) and latest_row[c] > 0
+            if pd.notna(latest_row[c]) and latest_row[c] != 0
         }
-        latest = dict(sorted(latest.items(), key=lambda kv: -kv[1]))
+        latest = dict(sorted(latest.items(), key=lambda kv: -abs(kv[1])))
 
     history = {
         "tarihler": [d.strftime("%Y-%m-%d") for d in alloc_df["Tarih"]],
