@@ -340,6 +340,11 @@ def main():
     res, anchor = build_fund_metrics(price_df)
     res = res.merge(mapping, on=MAPPING_COLS["kod"], how="left")
     res = res[res[MAPPING_COLS["kategori"]].notna()]
+    # Kapalı fonlar puanlamaya girmez — score_funds.py ile birebir tutarlı olsun diye
+    # skor hesabından önce çıkarılır; kartlarında skor "None" olur (aşağıda skor_row
+    # bulunamayınca zaten fonlarca_skoru=None yazılıyor).
+    if acik_fon_kodlari is not None:
+        res = res[res[MAPPING_COLS["kod"]].isin(acik_fon_kodlari)]
     res = compute_scores(res)
     res_by_kod = res.set_index("Fon Kodu")
 
