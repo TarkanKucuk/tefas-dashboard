@@ -7,6 +7,15 @@ import os
 # https://www.borsaistanbul.com/endeksler/tlref adresinden en son değeri al
 RISK_FREE_RATE = 0.3999  # 17 Temmuz 2026 itibarıyla %39,99
 
+# "Hareketler" ve "Puanlama - Kategori Özeti" sayfalarında gösterilen uyarı:
+# bu iki sayfanın hesaplamaları yalnızca TEFAS'a açık fonları baz alır.
+ACIK_FON_UYARISI = (
+    '<div style="background:rgba(120,140,180,0.12); border:1px solid var(--line); '
+    'border-radius:8px; padding:10px 14px; margin-bottom:16px; color:var(--ink-dim); font-size:13px;">'
+    "ℹ️ Bu sayfadaki hesaplamalar yalnızca TEFAS'a açık (alım-satıma açık) fonları baz alır."
+    '</div>'
+)
+
 # Portföyüm ve Favorilerim sayfalarında ORTAK kullanılan Sharpe optimizasyonu JS
 # mantığı — kod tekrarını önlemek için tek yerde tanımlanıp iki sayfaya da f-string
 # içinde {SHARPE_OPT_JS} olarak enjekte edilir. Bu DÜZ bir string (f-string DEĞİL),
@@ -396,14 +405,15 @@ FUND_SEARCH_SCRIPT = """
         .then(function(data) {
             funds = data || [];
             list.innerHTML = funds.map(function(f) {
-                return '<option value="' + f.kod + '">' + f.kod + ' — ' + (f.ad || '') + '</option>';
+                var isaret = (f.acik === false) ? ' 🔴' : '';
+                return '<option value="' + f.kod + '">' + f.kod + ' — ' + (f.ad || '') + isaret + '</option>';
             }).join('');
         })
         .catch(function() {});
     function go() {
         var raw = input.value.trim();
         if (!raw) return;
-        var kod = raw.split(/[—-]/)[0].trim().toUpperCase();
+        var kod = raw.split(/[—-]/)[0].replace(/[^A-Za-z]/g, '').toUpperCase();
         var match = funds.find(function(f) { return f.kod.toUpperCase() === kod; });
         if (match) window.location.href = 'fon-karti.html?kod=' + match.kod;
     }
@@ -609,6 +619,7 @@ document.getElementById('kategori-filter').addEventListener('change', function()
 </script>"""
 
     body = f"""{page_header('kategori-ozeti.html', 'Kategori Özeti', anchor)}
+{ACIK_FON_UYARISI}
 {filtre_kutusu}
 {''.join(sections)}"""
 
@@ -767,6 +778,7 @@ renderPanel('gunluk');
 """
 
     body = f"""{page_header('index.html', 'Hareketler', anchor)}
+{ACIK_FON_UYARISI}
 {controls}
 {''.join(panels)}
 {script_js}"""
