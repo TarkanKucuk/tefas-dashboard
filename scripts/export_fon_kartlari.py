@@ -49,6 +49,7 @@ MAPPING_COLS = {
     "ad": "Fon Adı",
     "semsiye": "Şemsiye Fon Türü",
     "kategori": "Alt Kategori",
+    "pys": "Portföy Yönetim Şirketi",
 }
 
 ALLOC_EXCLUDE_COLS = {"Fon Kodu", "Tarih", "Fon Unvanı"}
@@ -175,6 +176,22 @@ def kisalt_semsiye(s):
     if not s:
         return s
     return s.replace(" Şemsiye Fonu", "").replace("Şemsiye Fonu", "").strip()
+
+
+def pys_bul(mapping_pys, fon_adi):
+    """Portföy Yönetim Şirketi'ni belirler. Önce eşleştirme dosyasındaki değeri
+    kullanır; boşsa fon adından türetir — Türk fonları '<ŞİRKET> PORTFÖY ...'
+    biçiminde olduğundan, şirket adı 'PORTFÖY' kelimesine kadar olan kısımdır.
+    (Örn: 'PUSULA PORTFÖY HİSSE SENEDİ FONU' -> 'PUSULA PORTFÖY')."""
+    if mapping_pys is not None:
+        s = str(mapping_pys).strip()
+        if s and s.lower() != "nan":
+            return s
+    if fon_adi:
+        idx = fon_adi.upper().find("PORTFÖY")
+        if idx != -1:
+            return fon_adi[:idx + len("PORTFÖY")].strip()
+    return None
 
 
 def build_price_history(fund_prices, max_points=1500):
@@ -349,6 +366,7 @@ def main():
     res_by_kod = res.set_index("Fon Kodu")
 
     index_list = []
+    listeleme_list = []
 
     for kod, fund_prices in price_df.groupby("Fon Kodu"):
         map_row = mapping[mapping[MAPPING_COLS["kod"]] == kod]
@@ -414,10 +432,29 @@ def main():
         index_list.append({"kod": kod, "ad": card["fon_adi"], "kategori": card["kategori"],
                             "acik": card["tefas_acik"]})
 
+        skor_obj = card["fonlarca_skoru"]
+        listeleme_list.append({
+            "kod": kod,
+            "ad": card["fon_adi"],
+            "kategori": card["kategori"],
+            "semsiye": card["semsiye"],
+            "pys": pys_bul(map_row.get(MAPPING_COLS["pys"]) if map_row is not None else None,
+                            card["fon_adi"]),
+            "risk": (None if card["risk_degeri"] is None else int(card["risk_degeri"])),
+            "acik": card["tefas_acik"],
+            "getiriler": card["getiriler"],
+            "skor": None if skor_obj is None else skor_obj["kategori_skoru"],
+            "sira": None if skor_obj is None else skor_obj["kategori_sirasi"],
+        })
+
     with open(os.path.join(OUT_DIR, "_index.json"), "w", encoding="utf-8") as f:
         json.dump(index_list, f, ensure_ascii=False)
 
+    with open(os.path.join(OUT_DIR, "fon-listeleme.json"), "w", encoding="utf-8") as f:
+        json.dump(listeleme_list, f, ensure_ascii=False, allow_nan=False)
+
     print(f"{len(index_list)} fon için kart JSON'u üretildi -> {OUT_DIR}/")
+    print(f"Fon Listeleme veri dosyası yazıldı: {len(listeleme_list)} fon -> {OUT_DIR}/fon-listeleme.json")
 
 
 def _rnd(v):
