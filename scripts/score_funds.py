@@ -3,9 +3,11 @@ import numpy as np
 import os
 
 # ============================================================
-# BU SATIRI ELLE GÜNCELLE: TLREF (Borsa İstanbul TL Referans Faiz Oranı)
-# https://www.borsaistanbul.com/endeksler/tlref adresinden en son değeri al
-RISK_FREE_RATE = 0.3999  # 17 Temmuz 2026 itibarıyla %39,99
+# TLREF (Borsa İstanbul TL Referans Faiz Endeksi) — Sharpe için risksiz oran.
+# Artık otomatik: benchmarklar.parquet'teki TLREF_Endeks'in son 1 yıllık getirisi
+# kullanılır (bkz. tlref_yillik_oran). Aşağıdaki sabit yalnızca TLREF verisi hiç
+# yoksa/yetersizse devreye giren YEDEK değerdir.
+RISK_FREE_RATE = 0.3999  # yedek (fallback) — TLREF verisi yoksa kullanılır
 
 # "Hareketler" ve "Puanlama - Kategori Özeti" sayfalarında gösterilen uyarı:
 # bu iki sayfanın hesaplamaları yalnızca TEFAS'a açık fonları baz alır.
@@ -215,6 +217,7 @@ function sharpeOptimizasyonuCalistir(kodlar, mevcutAgirliklar, minInputId, maxIn
 
 DATA_PATH = "tefas_gecmis_veri.parquet"
 MAPPING_PATH = "fon_kategori_eslestirme.xlsx"
+BENCHMARK_PATH = "benchmarklar.parquet"
 
 WEIGHTS = {
     'Skor_Momentum': 0.35,
@@ -461,8 +464,33 @@ def pct_rank_within(df, col, ascending=True):
     return out
 
 
-def build_fund_metrics(df):
+def tlref_yillik_oran(bench_df, anchor):
+    """TLREF endeksinin, anchor tarihine kadarki son 1 yıllık getirisini (risksiz
+    oran, kesir olarak; örn. 0.42 = %42) döndürür. Bu, o gün itibarıyla TLREF'te
+    duran birinin son 1 yılda elde ettiği gerçekleşmiş getiridir. Veri yetersizse
+    yedek RISK_FREE_RATE sabitine düşer — böylece hiçbir durumda hesap kırılmaz."""
+    if bench_df is None or "TLREF_Endeks" not in getattr(bench_df, "columns", []):
+        return RISK_FREE_RATE
+    b = bench_df[["Tarih", "TLREF_Endeks"]].dropna()
+    b = b[b["Tarih"] <= anchor].sort_values("Tarih")
+    if len(b) < 2:
+        return RISK_FREE_RATE
+    son_deger = float(b.iloc[-1]["TLREF_Endeks"])
+    cutoff = anchor - pd.DateOffset(years=1)
+    gecmis = b[b["Tarih"] <= cutoff]
+    if gecmis.empty:
+        return RISK_FREE_RATE
+    onceki_deger = float(gecmis.iloc[-1]["TLREF_Endeks"])
+    if son_deger <= 0 or onceki_deger <= 0:
+        return RISK_FREE_RATE
+    return son_deger / onceki_deger - 1
+
+
+def build_fund_metrics(df, bench_df=None):
     anchor = df['Tarih'].max()
+    # Sharpe risksiz oranı: TLREF endeksinin anchor'a kadarki son 1 yıllık getirisi.
+    # bench_df verilmezse (veya TLREF verisi yoksa) yedek sabit kullanılır.
+    risk_free = tlref_yillik_oran(bench_df, anchor)
     records = []
 
     for fon_kodu, g in df.groupby('Fon Kodu'):
@@ -510,7 +538,7 @@ def build_fund_metrics(df):
                 ann_return = (1 + daily_rets.mean()) ** 252 - 1
                 ann_vol = daily_rets.std() * np.sqrt(252)
                 rec['StdDev_1Y_%'] = ann_vol * 100
-                rec['Sharpe_1Y'] = (ann_return - RISK_FREE_RATE) / ann_vol if ann_vol > 0 else np.nan
+                rec['Sharpe_1Y'] = (ann_return - risk_free) / ann_vol if ann_vol > 0 else np.nan
 
         records.append(rec)
 
@@ -846,7 +874,7 @@ def write_yeni_fonlar_page(df, mapping, fon_adlari=None, acik_fon_kodlari=None):
 # Sayfa 5: Favorilerim (cihaz-lokali, localStorage — sunucu tarafında veri yok)
 # ------------------------------------------------------------------
 
-def write_favoriler_page(anchor):
+def write_favoriler_page(anchor, risk_free=RISK_FREE_RATE):
     body = f"""{page_header('favoriler.html', 'Favorilerim', anchor)}
 
 <div class="card">
@@ -943,7 +971,7 @@ def write_favoriler_page(anchor):
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script>
 const FAV_KEY = 'fonlarca_favoriler';
-const RISK_FREE_RATE_YILLIK = {RISK_FREE_RATE};  // TLREF, script'te elle güncellenir
+const RISK_FREE_RATE_YILLIK = {risk_free:.6f};  // TLREF endeksinin son 1 yıllık getirisi (otomatik)
 function getFavorites() {{
     try {{ return JSON.parse(localStorage.getItem(FAV_KEY)) || []; }}
     catch(e) {{ return []; }}
@@ -1225,7 +1253,7 @@ loadAll();
 # Sayfa 6: Portföyüm (cihaz-lokali, localStorage — sunucu tarafında veri yok)
 # ------------------------------------------------------------------
 
-def write_portfoyum_page(anchor):
+def write_portfoyum_page(anchor, risk_free=RISK_FREE_RATE):
     body = f"""{page_header('portfoyum.html', 'Portföyüm', anchor)}
 
 <div class="card">
@@ -1345,7 +1373,7 @@ def write_portfoyum_page(anchor):
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script>
 const PORTFOY_KEY = 'fonlarca_portfoy';
-const RISK_FREE_RATE_YILLIK = {RISK_FREE_RATE};  // TLREF, script'te elle güncellenir
+const RISK_FREE_RATE_YILLIK = {risk_free:.6f};  // TLREF endeksinin son 1 yıllık getirisi (otomatik)
 function getPortfoy() {{
     try {{ return JSON.parse(localStorage.getItem(PORTFOY_KEY)) || {{}}; }}
     catch(e) {{ return {{}}; }}
@@ -1754,7 +1782,17 @@ def main():
         mapping['Fon Adı'] = mapping['Fon Kodu'].map(fon_adlari).combine_first(mapping['Fon Adı'])
     acik_fon_kodlari = load_acik_fon_kodlari()
 
-    res, anchor = build_fund_metrics(df)
+    # TLREF endeksi (Sharpe risksiz oranı için). Yoksa build_fund_metrics yedek sabite düşer.
+    bench_df = None
+    if os.path.exists(BENCHMARK_PATH):
+        bench_df = pd.read_parquet(BENCHMARK_PATH)
+        bench_df['Tarih'] = pd.to_datetime(bench_df['Tarih']).dt.normalize()
+        bench_df = bench_df.sort_values('Tarih').reset_index(drop=True)
+
+    res, anchor = build_fund_metrics(df, bench_df)
+    # Tarayıcı tarafı portföy optimizasyonuna enjekte edilecek GÜNCEL risksiz oran
+    guncel_risk_free = tlref_yillik_oran(bench_df, anchor)
+    print(f"[skor] Sharpe risksiz oranı (TLREF son 1 yıl): %{guncel_risk_free*100:.2f}")
     res = res.merge(mapping, on='Fon Kodu', how='left')
     res = res[res['Alt Kategori'].notna()]
     # Kapalı (TEFAS'a alım-satıma kapalı) fonlar puanlamaya HİÇ girmez: ne kendileri
@@ -1771,8 +1809,8 @@ def main():
     write_hareketler_page(df, mapping)
     write_category_summary(res, anchor)
     write_yeni_fonlar_page(df, mapping, fon_adlari, acik_fon_kodlari)
-    write_favoriler_page(anchor)
-    write_portfoyum_page(anchor)
+    write_favoriler_page(anchor, guncel_risk_free)
+    write_portfoyum_page(anchor, guncel_risk_free)
 
 
 if __name__ == "__main__":
