@@ -301,6 +301,19 @@ def main():
 
     fon_bilgi = pd.read_parquet(FON_BILGI_PATH) if os.path.exists(FON_BILGI_PATH) else pd.DataFrame()
 
+    # TEFAS'a açık fon kodları — her fonun açık/kapalı durumunu işaretlemek için.
+    # Dosya yoksa (veya boşsa) None kalır ve durum bilgisi "bilinmiyor" (None) olur.
+    acik_fon_kodlari = None
+    ACIK_PATH = "tefas_acik_fonlar.parquet"
+    if os.path.exists(ACIK_PATH):
+        try:
+            acik_df = pd.read_parquet(ACIK_PATH)
+            if not acik_df.empty and "Fon Kodu" in acik_df.columns:
+                acik_fon_kodlari = set(acik_df["Fon Kodu"].dropna().astype(str))
+                print(f"[export] {len(acik_fon_kodlari)} açık fon kodu yüklendi.")
+        except Exception as e:
+            print(f"[export] {ACIK_PATH} okunamadı ({e}), açık/kapalı durumu işaretlenmeyecek.")
+
     alloc_all = None
     fon_adlari = {}  # TEFAS'ın kendi 'Fon Unvanı' verisinden isim haritası —
                       # manuel eşleştirme dosyasına bağımlı kalmasın diye
@@ -357,6 +370,8 @@ def main():
             "kategori": map_row.get(MAPPING_COLS["kategori"]) if map_row is not None else None,
             "veri_tarihi": fund_prices["Tarih"].max().strftime("%Y-%m-%d"),
 
+            "tefas_acik": (None if acik_fon_kodlari is None else (kod in acik_fon_kodlari)),
+
             "toplam_fon_degeri": float(fund_prices["Fon Toplam Değer"].iloc[-1])
                 if pd.notna(fund_prices["Fon Toplam Değer"].iloc[-1]) else None,
             "yatirimci_sayisi": int(fund_prices["Kişi Sayısı"].iloc[-1])
@@ -391,7 +406,8 @@ def main():
         with open(os.path.join(OUT_DIR, f"{kod}.json"), "w", encoding="utf-8") as f:
             json.dump(card, f, ensure_ascii=False, indent=None, default=str, allow_nan=False)
 
-        index_list.append({"kod": kod, "ad": card["fon_adi"], "kategori": card["kategori"]})
+        index_list.append({"kod": kod, "ad": card["fon_adi"], "kategori": card["kategori"],
+                            "acik": card["tefas_acik"]})
 
     with open(os.path.join(OUT_DIR, "_index.json"), "w", encoding="utf-8") as f:
         json.dump(index_list, f, ensure_ascii=False)
