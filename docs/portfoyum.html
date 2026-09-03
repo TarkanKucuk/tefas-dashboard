@@ -809,14 +809,15 @@ fetch('data/fon-kartlari/_index.json').then(r => r.ok ? r.json() : []).then(inde
         .then(function(data) {
             funds = data || [];
             list.innerHTML = funds.map(function(f) {
-                return '<option value="' + f.kod + '">' + f.kod + ' — ' + (f.ad || '') + '</option>';
+                var isaret = (f.acik === false) ? ' 🔴' : '';
+                return '<option value="' + f.kod + '">' + f.kod + ' — ' + (f.ad || '') + isaret + '</option>';
             }).join('');
         })
         .catch(function() {});
     function go() {
         var raw = input.value.trim();
         if (!raw) return;
-        var kod = raw.split(/[—-]/)[0].trim().toUpperCase();
+        var kod = raw.split(/[—-]/)[0].replace(/[^A-Za-z]/g, '').toUpperCase();
         var match = funds.find(function(f) { return f.kod.toUpperCase() === kod; });
         if (match) window.location.href = 'fon-karti.html?kod=' + match.kod;
     }
