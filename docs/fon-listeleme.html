@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FONLARCA — Fon Listeleme</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#12141a">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
+
+<style>
+:root {
+    --bg: #23252d;
+    --panel: #2c2f39;
+    --card: #12141a;
+    --ink: #eef0f4;
+    --ink-dim: #9aa0ac;
+    --line: #3a3d48;
+    --teal: #2f7c7a;
+    --teal-bright: #3fb6ab;
+    --green: #4cbb6d;
+    --red: #e05a5a;
+    --blue: #4a7fe0;
+}
+* { box-sizing: border-box; }
+body {
+    font-family: -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    margin: 0; padding: 32px 40px 60px; background: var(--bg); color: var(--ink);
+}
+.header {
+    background: linear-gradient(135deg, #1a3a5c 0%, #2f7c7a 100%);
+    color: white; padding: 28px 32px; border-radius: 12px; margin-bottom: 24px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.35);
+}
+.header h1 { margin: 0; font-size: 26px; font-weight: 600; }
+.header .meta { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; }
+.header .meta span { font-size: 13px; white-space: nowrap; opacity: 0.9; }
+.header .meta span:not(:last-child) { border-right: 1px solid rgba(255,255,255,0.25); padding-right: 16px; }
+.nav-bar { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+.nav-bar a { color: white; text-decoration: none; padding: 5px 14px; border-radius: 20px; font-size: 13px; white-space: nowrap; }
+@media (max-width: 640px) {
+    body { padding: 14px 12px 40px; }
+    .header { padding: 14px 16px; margin-bottom: 14px; }
+    .header h1 { font-size: 17px; line-height: 1.3; }
+    .header h1 span { display: block; font-size: 12px; margin-top: 2px; }
+    .header img { height: 28px !important; width: 28px !important; }
+    .header .meta { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 2px; }
+    .nav-bar { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-top: 8px; padding-bottom: 2px; }
+    .card { padding: 12px 12px 16px; }
+}
+.card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+    padding: 20px 24px 24px; margin-bottom: 18px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.25);
+}
+.kat-card h2 { margin: 0 0 4px 0; color: var(--teal-bright); font-size: 18px; }
+.kat-count { color: var(--ink-dim); font-size: 13px; font-weight: 400; }
+.kat-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+@media (max-width: 800px) { .kat-cols { grid-template-columns: 1fr; } }
+h3 { font-size: 13px; margin: 0 0 8px 0; color: var(--ink); }
+h3.up { color: var(--green); }
+h3.down { color: var(--red); }
+table.mini { width: 100%; border-collapse: collapse; font-size: 13px; }
+table.mini th { text-align: left; color: var(--ink-dim); font-weight: 500; padding: 4px 6px; border-bottom: 1px solid var(--line); }
+table.mini td { padding: 5px 6px; border-bottom: 1px solid #1c1e26; color: var(--ink); }
+table.mini td a { color: var(--teal-bright); font-weight: 600; text-decoration: underline; text-decoration-color: #3a6b68; }
+table.mini td a:hover { color: #6fd8cd; text-decoration-color: #6fd8cd; }
+.score-badge { display: inline-block; min-width: 50px; padding: 2px 7px; border-radius: 6px; font-weight: 600; text-align: center; }
+.score-badge.good { background: rgba(76,187,109,0.18); color: var(--green); }
+.score-badge.bad { background: rgba(224,90,90,0.18); color: var(--red); }
+.period-tabs { display: flex; gap: 6px; margin-bottom: 18px; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 2px; }
+.period-tab {
+    padding: 8px 20px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;
+    background: var(--panel); color: var(--ink-dim); border: 1px solid var(--line); white-space: nowrap; flex-shrink: 0;
+}
+.period-tab.active { background: var(--blue); color: white; border-color: var(--blue); }
+.period-panel { display: none; }
+.period-panel.active { display: block; }
+footer { text-align: center; color: var(--ink-dim); font-size: 12px; margin-top: 24px; }
+.pos { color: var(--green); font-weight: 600; }
+.neg { color: var(--red); font-weight: 600; }
+
+.fund-search-wrap { margin-left: auto; flex: 1; min-width: 200px; max-width: 340px; }
+.fund-search-wrap input {
+    width: 100%; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3);
+    color: white; border-radius: 8px; padding: 8px 12px; font-size: 13px;
+}
+.fund-search-wrap input::placeholder { color: rgba(255,255,255,0.7); }
+@media (max-width: 640px) {
+    .fund-search-wrap { margin-left: 0; max-width: none; width: 100%; }
+}
+
+.fl-filtreler { display:flex; flex-direction:column; gap:12px; }
+.fl-satir { display:flex; flex-wrap:wrap; gap:14px; align-items:flex-end; }
+.fl-satir label { display:flex; flex-direction:column; gap:4px; font-size:12px; color:var(--ink-dim); }
+.fl-satir select, .fl-satir input[type=date] {
+  background:var(--panel); color:var(--ink); border:1px solid var(--line);
+  border-radius:8px; padding:8px 10px; font-size:14px; min-width:150px;
+}
+.fl-btn { background:var(--blue); color:#fff; border:none; border-radius:8px; padding:9px 16px; font-weight:600; cursor:pointer; font-size:14px; }
+.fl-btn.sec { background:var(--panel); color:var(--ink); border:1px solid var(--line); }
+.fl-kolonlar-kutu { margin-top:2px; }
+.fl-kolonlar-kutu summary { cursor:pointer; color:var(--ink-dim); font-size:13px; }
+#fl-kolonlar { display:flex; flex-wrap:wrap; gap:10px 18px; margin-top:10px; }
+#fl-kolonlar label { font-size:13px; color:var(--ink); display:flex; align-items:center; gap:5px; cursor:pointer; }
+.fl-tablo-sar { overflow-x:auto; margin-top:6px; }
+#fl-tablo { width:100%; border-collapse:collapse; font-size:13px; white-space:nowrap; }
+#fl-tablo th, #fl-tablo td { padding:7px 10px; border-bottom:1px solid var(--line); }
+#fl-tablo .fl-left { text-align:left; }
+#fl-tablo .fl-right { text-align:right; }
+#fl-tablo th { color:var(--ink-dim); font-weight:600; cursor:pointer; user-select:none; position:sticky; top:0; background:var(--bg); }
+#fl-tablo th.nosort { cursor:default; }
+#fl-tablo tbody tr:hover { background:rgba(255,255,255,0.03); }
+.fl-yildiz { cursor:pointer; font-size:16px; color:var(--amber, #e0b23f); }
+.fl-badge { display:inline-block; min-width:40px; padding:2px 7px; border-radius:6px; font-weight:600; text-align:center; }
+.fl-kod-link { color:var(--blue); text-decoration:none; font-weight:600; }
+.fl-mesaj { color:var(--ink-dim); font-size:13px; min-height:18px; margin:6px 2px; }
+.fl-sayfalama { display:flex; gap:8px; align-items:center; justify-content:center; margin-top:14px; flex-wrap:wrap; color:var(--ink-dim); font-size:13px; }
+.fl-sayfalama button { background:var(--panel); color:var(--ink); border:1px solid var(--line); border-radius:6px; padding:6px 11px; cursor:pointer; font-size:13px; }
+.fl-sayfalama button:disabled { opacity:0.4; cursor:default; }
+</style>
+</head>
+<body>
+<div class="header">
+    <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px; flex-wrap:wrap;">
+        <img src="logo.jpg" alt="Fonlarca" style="height:36px; width:36px; border-radius:8px; object-fit:cover;">
+        <h1>FONLARCA <span style="font-weight:400; opacity:0.75; font-size:16px;">— Fon Listeleme</span></h1>
+        <div class="fund-search-wrap">
+            <input type="text" id="fundSearchInput" list="fundSearchList" placeholder="🔍 Fon ara (kod veya isim)…" autocomplete="off">
+            <datalist id="fundSearchList"></datalist>
+        </div>
+    </div>
+    <div class="meta"><span>Son güncelleme: 2026-09-03</span></div>
+    <div class="nav-bar"><a href="index.html" style="background:rgba(255,255,255,0.12);">Hareketler</a><a href="fon-listeleme.html" style="background:rgba(255,255,255,0.28); font-weight:600;">Fon Listeleme</a><a href="favoriler.html" style="background:rgba(255,255,255,0.12);">★ Favorilerim</a><a href="portfoyum.html" style="background:rgba(255,255,255,0.12);">💼 Portföyüm</a><a href="kategori-ozeti.html" style="background:rgba(255,255,255,0.12);">Puanlama - Kategori Özeti</a><a href="yeni-fonlar.html" style="background:rgba(255,255,255,0.12);">En Son Eklenen Fonlar</a></div>
+</div>
+<div class="card fl-filtreler">
+  <div class="fl-satir">
+    <label>TEFAS İşlem Durumu
+      <select id="fl-durum">
+        <option value="acik" selected>Açık</option>
+        <option value="tumu">Tümü</option>
+        <option value="kapali">Kapalı</option>
+      </select>
+    </label>
+    <label>Portföy Yönetim Şirketi
+      <select id="fl-pys"><option value="">Tümü</option></select>
+    </label>
+    <label>Şemsiye Fon Türü
+      <select id="fl-semsiye"><option value="">Tümü</option></select>
+    </label>
+    <label>Risk Değeri
+      <select id="fl-risk">
+        <option value="">Tümü</option>
+        <option>1</option><option>2</option><option>3</option><option>4</option>
+        <option>5</option><option>6</option><option>7</option>
+      </select>
+    </label>
+  </div>
+  <div class="fl-satir">
+    <label>İki Tarih Arası Getiri — Başlangıç
+      <input type="date" id="fl-t1">
+    </label>
+    <label>Bitiş
+      <input type="date" id="fl-t2">
+    </label>
+    <button class="fl-btn" id="fl-hesapla">Hesapla</button>
+    <button class="fl-btn sec" id="fl-normal" style="display:none;">← Normal Görünüme Dön</button>
+  </div>
+  <details class="fl-kolonlar-kutu">
+    <summary>Listeleme Ayarları — gösterilecek kolonlar</summary>
+    <div id="fl-kolonlar"></div>
+  </details>
+</div>
+
+<div class="card">
+  <div class="fl-mesaj" id="fl-mesaj"></div>
+  <div class="fl-tablo-sar">
+    <table id="fl-tablo"><thead id="fl-thead"></thead><tbody id="fl-tbody"></tbody></table>
+  </div>
+  <div class="fl-sayfalama" id="fl-sayfalama"></div>
+</div>
+<script>const FL_SON_TARIH="2026-09-03";</script>
+<script>
+(function(){
+  var FAV_KEY = 'fonlarca_favoriler';
+  var SAYFA_BOYUT = 25;
+
+  var NORMAL_KOLON = [
+    {key:'fav', label:'', hizala:'left', sortable:false},
+    {key:'kod', label:'Fon Kodu', hizala:'left', tip:'kod'},
+    {key:'ad', label:'Fon Adı', hizala:'left', tip:'text'},
+    {key:'kategori', label:'Kategori', hizala:'left', tip:'text'},
+    {key:'risk', label:'Risk Değeri', hizala:'right', tip:'risk'},
+    {key:'Günlük', label:'Günlük', hizala:'right', tip:'pct'},
+    {key:'Haftalık', label:'Haftalık', hizala:'right', tip:'pct'},
+    {key:'Aylık', label:'Aylık', hizala:'right', tip:'pct'},
+    {key:'3 Ay', label:'3 Aylık', hizala:'right', tip:'pct'},
+    {key:'6 Ay', label:'6 Aylık', hizala:'right', tip:'pct'},
+    {key:'Yılbaşı', label:'YBB', hizala:'right', tip:'pct'},
+    {key:'1 Yıl', label:'Yıllık', hizala:'right', tip:'pct'},
+    {key:'3 Yıl', label:'3 Yıllık', hizala:'right', tip:'pct'},
+    {key:'skor', label:'Kategori Skoru', hizala:'right', tip:'skor'},
+    {key:'sira', label:'Sıra No', hizala:'right', tip:'num'}
+  ];
+  var IKITARIH_KOLON = [
+    {key:'fav', label:'', hizala:'left', sortable:false},
+    {key:'kod', label:'Fon Kodu', hizala:'left', tip:'kod'},
+    {key:'ad', label:'Fon Adı', hizala:'left', tip:'text'},
+    {key:'kategori', label:'Kategori', hizala:'left', tip:'text'},
+    {key:'risk', label:'Fon Risk Değeri', hizala:'right', tip:'risk'},
+    {key:'ikitarih', label:'İki Tarih Arası Getiri (%)', hizala:'right', tip:'pct'},
+    {key:'skor', label:'Kategori Skoru', hizala:'right', tip:'skor'},
+    {key:'sira', label:'Sıra No', hizala:'right', tip:'num'}
+  ];
+  var METIN_KOLON = {kod:1, ad:1, kategori:1};
+
+  var tumFonlar = [];
+  var mod = 'normal';
+  var sortKey = '1 Yıl';
+  var sortDir = 'desc';
+  var sayfa = 1;
+  var kolonGorunur = {};
+  var ikitarihGetiri = {};
+  var favSet = new Set();
+
+  function $(id){ return document.getElementById(id); }
+  function mesaj(t){ $('fl-mesaj').textContent = t || ''; }
+
+  function getFav(){ try { return JSON.parse(localStorage.getItem(FAV_KEY)) || []; } catch(e){ return []; } }
+  function setFav(a){ try { localStorage.setItem(FAV_KEY, JSON.stringify(a)); } catch(e){} }
+  function toggleFav(kod){
+    var a = getFav(); var i = a.indexOf(kod);
+    if(i === -1) a.push(kod); else a.splice(i,1);
+    setFav(a);
+  }
+
+  function trNum(v, dec){
+    if(v === null || v === undefined || isNaN(v)) return '—';
+    return Number(v).toLocaleString('tr-TR', {minimumFractionDigits:dec, maximumFractionDigits:dec});
+  }
+  function yuzde(v){
+    if(v === null || v === undefined || isNaN(v)) return '—';
+    return (v < 0 ? '-' : '') + '%' + trNum(Math.abs(v), 2);
+  }
+  function skorRenk(v){
+    if(v >= 75) return ['rgba(76,187,109,0.22)', '#4cbb6d'];
+    if(v >= 50) return ['rgba(224,178,63,0.22)', '#e0b23f'];
+    return ['rgba(224,90,90,0.22)', '#e05a5a'];
+  }
+  function riskRenk(v){
+    if(v <= 2) return ['rgba(76,187,109,0.22)', '#4cbb6d'];
+    if(v <= 5) return ['rgba(224,178,63,0.22)', '#e0b23f'];
+    return ['rgba(224,90,90,0.22)', '#e05a5a'];
+  }
+
+  function deger(f, key){
+    if(key === 'ikitarih'){ var x = ikitarihGetiri[f.kod]; return (x === undefined ? null : x); }
+    if(f.getiriler && (key in f.getiriler)) return f.getiriler[key];
+    return f[key];
+  }
+
+  function uygula(){
+    var durum = $('fl-durum').value, pys = $('fl-pys').value,
+        sem = $('fl-semsiye').value, risk = $('fl-risk').value;
+    return tumFonlar.filter(function(f){
+      if(durum === 'acik' && f.acik !== true) return false;
+      if(durum === 'kapali' && f.acik !== false) return false;
+      if(pys && f.pys !== pys) return false;
+      if(sem && f.semsiye !== sem) return false;
+      if(risk && String(f.risk) !== risk) return false;
+      return true;
+    });
+  }
+
+  function sirala(veri){
+    var key = sortKey, dir = sortDir, metin = !!METIN_KOLON[key];
+    return veri.slice().sort(function(a, b){
+      var av = deger(a, key), bv = deger(b, key);
+      if(metin){
+        av = (av || '').toString(); bv = (bv || '').toString();
+        return dir === 'asc' ? av.localeCompare(bv, 'tr') : bv.localeCompare(av, 'tr');
+      }
+      var an = (av === null || av === undefined || isNaN(av));
+      var bn = (bv === null || bv === undefined || isNaN(bv));
+      if(an && bn) return 0; if(an) return 1; if(bn) return -1;
+      return dir === 'asc' ? av - bv : bv - av;
+    });
+  }
+
+  function aktifKolonlar(){
+    var kaynak = (mod === 'ikitarih') ? IKITARIH_KOLON : NORMAL_KOLON;
+    return kaynak.filter(function(k){
+      if(k.key === 'fav') return true;
+      if(mod === 'ikitarih') return true;
+      return kolonGorunur[k.key] !== false;
+    });
+  }
+
+  function hucre(f, k){
+    var cls = (k.hizala === 'left') ? 'fl-left' : 'fl-right';
+    if(k.key === 'fav'){
+      var favli = favSet.has(f.kod);
+      return '<td class="' + cls + '"><span class="fl-yildiz" data-kod="' + f.kod + '">' + (favli ? '★' : '☆') + '</span></td>';
+    }
+    if(k.key === 'kod'){
+      return '<td class="' + cls + '"><a class="fl-kod-link" href="fon-karti.html?kod=' + f.kod + '">' + f.kod + '</a>' + (f.acik === false ? ' 🔴' : '') + '</td>';
+    }
+    if(k.key === 'ad') return '<td class="' + cls + '">' + (f.ad || '') + '</td>';
+    if(k.key === 'kategori') return '<td class="' + cls + '">' + (f.kategori || '—') + '</td>';
+    if(k.tip === 'risk'){
+      var rv = f.risk;
+      if(rv === null || rv === undefined) return '<td class="' + cls + '">—</td>';
+      var rr = riskRenk(rv);
+      return '<td class="' + cls + '"><span class="fl-badge" style="background:' + rr[0] + ';color:' + rr[1] + '">' + rv + '</span></td>';
+    }
+    if(k.tip === 'skor'){
+      var sv = f.skor;
+      if(sv === null || sv === undefined) return '<td class="' + cls + '">—</td>';
+      var sr = skorRenk(sv);
+      return '<td class="' + cls + '"><span class="fl-badge" style="background:' + sr[0] + ';color:' + sr[1] + '">' + trNum(sv, 1) + '</span></td>';
+    }
+    if(k.key === 'sira') return '<td class="' + cls + '">' + (f.sira === null || f.sira === undefined ? '—' : f.sira) + '</td>';
+    if(k.tip === 'pct') return '<td class="' + cls + '">' + yuzde(deger(f, k.key)) + '</td>';
+    var dv = deger(f, k.key);
+    return '<td class="' + cls + '">' + (dv === null || dv === undefined ? '—' : dv) + '</td>';
+  }
+
+  function render(){
+    favSet = new Set(getFav());
+    var kolonlar = aktifKolonlar();
+    var veri = sirala(uygula());
+    var toplam = veri.length;
+    var toplamSayfa = Math.max(1, Math.ceil(toplam / SAYFA_BOYUT));
+    if(sayfa > toplamSayfa) sayfa = toplamSayfa;
+    if(sayfa < 1) sayfa = 1;
+    var dilim = veri.slice((sayfa - 1) * SAYFA_BOYUT, sayfa * SAYFA_BOYUT);
+
+    // Başlık
+    var thead = $('fl-thead');
+    thead.innerHTML = '<tr>' + kolonlar.map(function(k){
+      var aktif = (k.key === sortKey);
+      var ok = aktif ? (sortDir === 'asc' ? ' ▲' : ' ▼') : '';
+      var cls = (k.hizala === 'left' ? 'fl-left' : 'fl-right') + (k.sortable === false ? ' nosort' : '');
+      return '<th class="' + cls + '" data-key="' + k.key + '">' + (k.label || '') + ok + '</th>';
+    }).join('') + '</tr>';
+    thead.querySelectorAll('th[data-key]').forEach(function(th){
+      var key = th.getAttribute('data-key');
+      var kdef = kolonlar.find(function(k){ return k.key === key; });
+      if(!kdef || kdef.sortable === false) return;
+      th.onclick = function(){
+        if(sortKey === key){ sortDir = (sortDir === 'asc' ? 'desc' : 'asc'); }
+        else { sortKey = key; sortDir = METIN_KOLON[key] ? 'asc' : 'desc'; }
+        render();
+      };
+    });
+
+    // Gövde
+    var tbody = $('fl-tbody');
+    if(!dilim.length){
+      tbody.innerHTML = '<tr><td class="fl-left" style="padding:16px; color:var(--ink-dim);">Filtreye uyan fon bulunamadı.</td></tr>';
+    } else {
+      tbody.innerHTML = dilim.map(function(f){
+        return '<tr>' + kolonlar.map(function(k){ return hucre(f, k); }).join('') + '</tr>';
+      }).join('');
+      tbody.querySelectorAll('.fl-yildiz').forEach(function(y){
+        y.onclick = function(){ toggleFav(y.getAttribute('data-kod')); render(); };
+      });
+    }
+
+    // Sayfalama
+    var bas = toplam === 0 ? 0 : (sayfa - 1) * SAYFA_BOYUT + 1;
+    var son = Math.min(sayfa * SAYFA_BOYUT, toplam);
+    var sp = $('fl-sayfalama');
+    sp.innerHTML =
+      '<button ' + (sayfa <= 1 ? 'disabled' : '') + ' data-git="ilk">« İlk</button>' +
+      '<button ' + (sayfa <= 1 ? 'disabled' : '') + ' data-git="onceki">‹ Önceki</button>' +
+      '<span>' + bas + '–' + son + ' / ' + toplam + ' fon (Sayfa ' + sayfa + '/' + toplamSayfa + ')</span>' +
+      '<button ' + (sayfa >= toplamSayfa ? 'disabled' : '') + ' data-git="sonraki">Sonraki ›</button>' +
+      '<button ' + (sayfa >= toplamSayfa ? 'disabled' : '') + ' data-git="son">Son »</button>';
+    sp.querySelectorAll('button[data-git]').forEach(function(btn){
+      btn.onclick = function(){
+        var g = btn.getAttribute('data-git');
+        if(g === 'ilk') sayfa = 1;
+        else if(g === 'onceki') sayfa = Math.max(1, sayfa - 1);
+        else if(g === 'sonraki') sayfa = Math.min(toplamSayfa, sayfa + 1);
+        else if(g === 'son') sayfa = toplamSayfa;
+        render();
+      };
+    });
+  }
+
+  function doldurDropdown(id, arr){
+    var s = $(id);
+    arr.forEach(function(v){
+      var o = document.createElement('option'); o.value = v; o.textContent = v; s.appendChild(o);
+    });
+  }
+
+  function kolonSeciciKur(){
+    var c = $('fl-kolonlar');
+    c.innerHTML = NORMAL_KOLON.filter(function(k){ return k.key !== 'fav'; }).map(function(k){
+      kolonGorunur[k.key] = true;
+      return '<label><input type="checkbox" data-key="' + k.key + '" checked> ' + k.label + '</label>';
+    }).join('');
+    c.querySelectorAll('input[type=checkbox]').forEach(function(cb){
+      cb.onchange = function(){ kolonGorunur[cb.getAttribute('data-key')] = cb.checked; render(); };
+    });
+  }
+
+  // İki tarih arası getiri
+  function fiyatAt(grafik, tarih){
+    if(!grafik || !grafik.length) return null;
+    var bulunan = null;
+    for(var i = 0; i < grafik.length; i++){
+      if(grafik[i].time <= tarih) bulunan = grafik[i].value; else break;
+    }
+    return bulunan;
+  }
+  function ikiTarihGetiriHesapla(grafik, t1, t2){
+    var p1 = fiyatAt(grafik, t1), p2 = fiyatAt(grafik, t2);
+    if(p1 === null || p2 === null || !(p1 > 0)) return null;
+    return (p2 / p1 - 1) * 100;
+  }
+
+  function hesapla(){
+    var t1 = $('fl-t1').value, t2 = $('fl-t2').value;
+    if(!t1 || !t2){ mesaj('Lütfen başlangıç ve bitiş tarihlerini seçin.'); return; }
+    if(t1 > t2){ mesaj('Başlangıç tarihi bitiş tarihinden sonra olamaz.'); return; }
+    var hedef = uygula();
+    if(!hedef.length){ mesaj('Filtreye uyan fon yok — önce filtreleri gevşetin.'); return; }
+    ikitarihGetiri = {};
+    var toplam = hedef.length, tamam = 0;
+    var kuyruk = hedef.slice();
+    mesaj('Hesaplanıyor… 0/' + toplam + ' (bu işlem filtredeki fon sayısına göre biraz sürebilir)');
+    function isci(){
+      if(!kuyruk.length) return Promise.resolve();
+      var f = kuyruk.shift();
+      return fetch('data/fon-kartlari/' + f.kod + '.json')
+        .then(function(r){ return r.ok ? r.json() : null; })
+        .then(function(c){ ikitarihGetiri[f.kod] = c ? ikiTarihGetiriHesapla(c.fiyat_grafigi, t1, t2) : null; })
+        .catch(function(){ ikitarihGetiri[f.kod] = null; })
+        .then(function(){
+          tamam++;
+          if(tamam % 10 === 0 || tamam === toplam) mesaj('Hesaplanıyor… ' + tamam + '/' + toplam);
+          return isci();
+        });
+    }
+    var esZamanli = Math.min(8, toplam);
+    var isciler = [];
+    for(var i = 0; i < esZamanli; i++) isciler.push(isci());
+    Promise.all(isciler).then(function(){
+      mod = 'ikitarih'; sortKey = 'ikitarih'; sortDir = 'desc'; sayfa = 1;
+      $('fl-normal').style.display = '';
+      mesaj(toplam + ' fon için ' + t1 + ' → ' + t2 + ' arası getiri hesaplandı.');
+      render();
+    });
+  }
+
+  function normaleDon(){
+    mod = 'normal'; sortKey = '1 Yıl'; sortDir = 'desc'; sayfa = 1;
+    $('fl-normal').style.display = 'none';
+    mesaj('');
+    render();
+  }
+
+  // Başlat
+  fetch('data/fon-kartlari/fon-listeleme.json')
+    .then(function(r){ return r.ok ? r.json() : []; })
+    .then(function(d){
+      tumFonlar = d || [];
+      var pysler = Array.from(new Set(tumFonlar.map(function(f){ return f.pys; }).filter(Boolean)));
+      pysler.sort(function(a, b){ return a.localeCompare(b, 'tr'); });
+      doldurDropdown('fl-pys', pysler);
+      var semler = Array.from(new Set(tumFonlar.map(function(f){ return f.semsiye; }).filter(Boolean)));
+      semler.sort(function(a, b){ return a.localeCompare(b, 'tr'); });
+      doldurDropdown('fl-semsiye', semler);
+      kolonSeciciKur();
+      if(typeof FL_SON_TARIH === 'string'){
+        $('fl-t2').value = FL_SON_TARIH;
+        var d1 = new Date(FL_SON_TARIH); d1.setFullYear(d1.getFullYear() - 1);
+        $('fl-t1').value = d1.toISOString().slice(0, 10);
+      }
+      ['fl-durum', 'fl-pys', 'fl-semsiye', 'fl-risk'].forEach(function(id){
+        $(id).addEventListener('change', function(){ sayfa = 1; render(); });
+      });
+      $('fl-hesapla').addEventListener('click', hesapla);
+      $('fl-normal').addEventListener('click', normaleDon);
+      render();
+    })
+    .catch(function(){ mesaj('Fon listesi yüklenemedi.'); });
+})();
+</script>
+
+
+<script>
+(function() {
+    var input = document.getElementById('fundSearchInput');
+    var list = document.getElementById('fundSearchList');
+    if (!input || !list) return;
+    var funds = [];
+    fetch('data/fon-kartlari/_index.json')
+        .then(function(r) { return r.ok ? r.json() : []; })
+        .then(function(data) {
+            funds = data || [];
+            list.innerHTML = funds.map(function(f) {
+                var isaret = (f.acik === false) ? ' 🔴' : '';
+                return '<option value="' + f.kod + '">' + f.kod + ' — ' + (f.ad || '') + isaret + '</option>';
+            }).join('');
+        })
+        .catch(function() {});
+    function go() {
+        var raw = input.value.trim();
+        if (!raw) return;
+        var kod = raw.split(/[—-]/)[0].replace(/[^A-Za-z]/g, '').toUpperCase();
+        var match = funds.find(function(f) { return f.kod.toUpperCase() === kod; });
+        if (match) window.location.href = 'fon-karti.html?kod=' + match.kod;
+    }
+    input.addEventListener('change', go);
+    input.addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); go(); } });
+})();
+</script>
+</body>
+</html>
