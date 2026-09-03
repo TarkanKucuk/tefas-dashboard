@@ -232,6 +232,7 @@ LABEL_MAP = {'Skor_Momentum': 'Momentum', 'Skor_Getiri': 'Getiri',
 
 NAV_PAGES = [
     ('index.html', 'Hareketler'),
+    ('fon-listeleme.html', 'Fon Listeleme'),
     ('favoriler.html', '★ Favorilerim'),
     ('portfoyum.html', '💼 Portföyüm'),
     ('kategori-ozeti.html', 'Puanlama - Kategori Özeti'),
@@ -1763,6 +1764,410 @@ fetch('data/fon-kartlari/_index.json').then(r => r.ok ? r.json() : []).then(inde
     print("Portföyüm sayfası oluşturuldu: docs/portfoyum.html")
 
 
+FON_LISTELEME_STYLE = """
+.fl-filtreler { display:flex; flex-direction:column; gap:12px; }
+.fl-satir { display:flex; flex-wrap:wrap; gap:14px; align-items:flex-end; }
+.fl-satir label { display:flex; flex-direction:column; gap:4px; font-size:12px; color:var(--ink-dim); }
+.fl-satir select, .fl-satir input[type=date] {
+  background:var(--panel); color:var(--ink); border:1px solid var(--line);
+  border-radius:8px; padding:8px 10px; font-size:14px; min-width:150px;
+}
+.fl-btn { background:var(--blue); color:#fff; border:none; border-radius:8px; padding:9px 16px; font-weight:600; cursor:pointer; font-size:14px; }
+.fl-btn.sec { background:var(--panel); color:var(--ink); border:1px solid var(--line); }
+.fl-kolonlar-kutu { margin-top:2px; }
+.fl-kolonlar-kutu summary { cursor:pointer; color:var(--ink-dim); font-size:13px; }
+#fl-kolonlar { display:flex; flex-wrap:wrap; gap:10px 18px; margin-top:10px; }
+#fl-kolonlar label { font-size:13px; color:var(--ink); display:flex; align-items:center; gap:5px; cursor:pointer; }
+.fl-tablo-sar { overflow-x:auto; margin-top:6px; }
+#fl-tablo { width:100%; border-collapse:collapse; font-size:13px; white-space:nowrap; }
+#fl-tablo th, #fl-tablo td { padding:7px 10px; border-bottom:1px solid var(--line); }
+#fl-tablo .fl-left { text-align:left; }
+#fl-tablo .fl-right { text-align:right; }
+#fl-tablo th { color:var(--ink-dim); font-weight:600; cursor:pointer; user-select:none; position:sticky; top:0; background:var(--bg); }
+#fl-tablo th.nosort { cursor:default; }
+#fl-tablo tbody tr:hover { background:rgba(255,255,255,0.03); }
+.fl-yildiz { cursor:pointer; font-size:16px; color:var(--amber, #e0b23f); }
+.fl-badge { display:inline-block; min-width:40px; padding:2px 7px; border-radius:6px; font-weight:600; text-align:center; }
+.fl-kod-link { color:var(--blue); text-decoration:none; font-weight:600; }
+.fl-mesaj { color:var(--ink-dim); font-size:13px; min-height:18px; margin:6px 2px; }
+.fl-sayfalama { display:flex; gap:8px; align-items:center; justify-content:center; margin-top:14px; flex-wrap:wrap; color:var(--ink-dim); font-size:13px; }
+.fl-sayfalama button { background:var(--panel); color:var(--ink); border:1px solid var(--line); border-radius:6px; padding:6px 11px; cursor:pointer; font-size:13px; }
+.fl-sayfalama button:disabled { opacity:0.4; cursor:default; }
+"""
+
+FON_LISTELEME_HTML = """
+<div class="card fl-filtreler">
+  <div class="fl-satir">
+    <label>TEFAS İşlem Durumu
+      <select id="fl-durum">
+        <option value="acik" selected>Açık</option>
+        <option value="tumu">Tümü</option>
+        <option value="kapali">Kapalı</option>
+      </select>
+    </label>
+    <label>Portföy Yönetim Şirketi
+      <select id="fl-pys"><option value="">Tümü</option></select>
+    </label>
+    <label>Şemsiye Fon Türü
+      <select id="fl-semsiye"><option value="">Tümü</option></select>
+    </label>
+    <label>Risk Değeri
+      <select id="fl-risk">
+        <option value="">Tümü</option>
+        <option>1</option><option>2</option><option>3</option><option>4</option>
+        <option>5</option><option>6</option><option>7</option>
+      </select>
+    </label>
+  </div>
+  <div class="fl-satir">
+    <label>İki Tarih Arası Getiri — Başlangıç
+      <input type="date" id="fl-t1">
+    </label>
+    <label>Bitiş
+      <input type="date" id="fl-t2">
+    </label>
+    <button class="fl-btn" id="fl-hesapla">Hesapla</button>
+    <button class="fl-btn sec" id="fl-normal" style="display:none;">← Normal Görünüme Dön</button>
+  </div>
+  <details class="fl-kolonlar-kutu">
+    <summary>Listeleme Ayarları — gösterilecek kolonlar</summary>
+    <div id="fl-kolonlar"></div>
+  </details>
+</div>
+
+<div class="card">
+  <div class="fl-mesaj" id="fl-mesaj"></div>
+  <div class="fl-tablo-sar">
+    <table id="fl-tablo"><thead id="fl-thead"></thead><tbody id="fl-tbody"></tbody></table>
+  </div>
+  <div class="fl-sayfalama" id="fl-sayfalama"></div>
+</div>
+"""
+
+FON_LISTELEME_JS = """
+<script>
+(function(){
+  var FAV_KEY = 'fonlarca_favoriler';
+  var SAYFA_BOYUT = 25;
+
+  var NORMAL_KOLON = [
+    {key:'fav', label:'', hizala:'left', sortable:false},
+    {key:'kod', label:'Fon Kodu', hizala:'left', tip:'kod'},
+    {key:'ad', label:'Fon Adı', hizala:'left', tip:'text'},
+    {key:'kategori', label:'Kategori', hizala:'left', tip:'text'},
+    {key:'risk', label:'Risk Değeri', hizala:'right', tip:'risk'},
+    {key:'Günlük', label:'Günlük', hizala:'right', tip:'pct'},
+    {key:'Haftalık', label:'Haftalık', hizala:'right', tip:'pct'},
+    {key:'Aylık', label:'Aylık', hizala:'right', tip:'pct'},
+    {key:'3 Ay', label:'3 Aylık', hizala:'right', tip:'pct'},
+    {key:'6 Ay', label:'6 Aylık', hizala:'right', tip:'pct'},
+    {key:'Yılbaşı', label:'YBB', hizala:'right', tip:'pct'},
+    {key:'1 Yıl', label:'Yıllık', hizala:'right', tip:'pct'},
+    {key:'3 Yıl', label:'3 Yıllık', hizala:'right', tip:'pct'},
+    {key:'skor', label:'Kategori Skoru', hizala:'right', tip:'skor'},
+    {key:'sira', label:'Sıra No', hizala:'right', tip:'num'}
+  ];
+  var IKITARIH_KOLON = [
+    {key:'fav', label:'', hizala:'left', sortable:false},
+    {key:'kod', label:'Fon Kodu', hizala:'left', tip:'kod'},
+    {key:'ad', label:'Fon Adı', hizala:'left', tip:'text'},
+    {key:'kategori', label:'Kategori', hizala:'left', tip:'text'},
+    {key:'risk', label:'Fon Risk Değeri', hizala:'right', tip:'risk'},
+    {key:'ikitarih', label:'İki Tarih Arası Getiri (%)', hizala:'right', tip:'pct'},
+    {key:'skor', label:'Kategori Skoru', hizala:'right', tip:'skor'},
+    {key:'sira', label:'Sıra No', hizala:'right', tip:'num'}
+  ];
+  var METIN_KOLON = {kod:1, ad:1, kategori:1};
+
+  var tumFonlar = [];
+  var mod = 'normal';
+  var sortKey = '1 Yıl';
+  var sortDir = 'desc';
+  var sayfa = 1;
+  var kolonGorunur = {};
+  var ikitarihGetiri = {};
+  var favSet = new Set();
+
+  function $(id){ return document.getElementById(id); }
+  function mesaj(t){ $('fl-mesaj').textContent = t || ''; }
+
+  function getFav(){ try { return JSON.parse(localStorage.getItem(FAV_KEY)) || []; } catch(e){ return []; } }
+  function setFav(a){ try { localStorage.setItem(FAV_KEY, JSON.stringify(a)); } catch(e){} }
+  function toggleFav(kod){
+    var a = getFav(); var i = a.indexOf(kod);
+    if(i === -1) a.push(kod); else a.splice(i,1);
+    setFav(a);
+  }
+
+  function trNum(v, dec){
+    if(v === null || v === undefined || isNaN(v)) return '—';
+    return Number(v).toLocaleString('tr-TR', {minimumFractionDigits:dec, maximumFractionDigits:dec});
+  }
+  function yuzde(v){
+    if(v === null || v === undefined || isNaN(v)) return '—';
+    return (v < 0 ? '-' : '') + '%' + trNum(Math.abs(v), 2);
+  }
+  function skorRenk(v){
+    if(v >= 75) return ['rgba(76,187,109,0.22)', '#4cbb6d'];
+    if(v >= 50) return ['rgba(224,178,63,0.22)', '#e0b23f'];
+    return ['rgba(224,90,90,0.22)', '#e05a5a'];
+  }
+  function riskRenk(v){
+    if(v <= 2) return ['rgba(76,187,109,0.22)', '#4cbb6d'];
+    if(v <= 5) return ['rgba(224,178,63,0.22)', '#e0b23f'];
+    return ['rgba(224,90,90,0.22)', '#e05a5a'];
+  }
+
+  function deger(f, key){
+    if(key === 'ikitarih'){ var x = ikitarihGetiri[f.kod]; return (x === undefined ? null : x); }
+    if(f.getiriler && (key in f.getiriler)) return f.getiriler[key];
+    return f[key];
+  }
+
+  function uygula(){
+    var durum = $('fl-durum').value, pys = $('fl-pys').value,
+        sem = $('fl-semsiye').value, risk = $('fl-risk').value;
+    return tumFonlar.filter(function(f){
+      if(durum === 'acik' && f.acik !== true) return false;
+      if(durum === 'kapali' && f.acik !== false) return false;
+      if(pys && f.pys !== pys) return false;
+      if(sem && f.semsiye !== sem) return false;
+      if(risk && String(f.risk) !== risk) return false;
+      return true;
+    });
+  }
+
+  function sirala(veri){
+    var key = sortKey, dir = sortDir, metin = !!METIN_KOLON[key];
+    return veri.slice().sort(function(a, b){
+      var av = deger(a, key), bv = deger(b, key);
+      if(metin){
+        av = (av || '').toString(); bv = (bv || '').toString();
+        return dir === 'asc' ? av.localeCompare(bv, 'tr') : bv.localeCompare(av, 'tr');
+      }
+      var an = (av === null || av === undefined || isNaN(av));
+      var bn = (bv === null || bv === undefined || isNaN(bv));
+      if(an && bn) return 0; if(an) return 1; if(bn) return -1;
+      return dir === 'asc' ? av - bv : bv - av;
+    });
+  }
+
+  function aktifKolonlar(){
+    var kaynak = (mod === 'ikitarih') ? IKITARIH_KOLON : NORMAL_KOLON;
+    return kaynak.filter(function(k){
+      if(k.key === 'fav') return true;
+      if(mod === 'ikitarih') return true;
+      return kolonGorunur[k.key] !== false;
+    });
+  }
+
+  function hucre(f, k){
+    var cls = (k.hizala === 'left') ? 'fl-left' : 'fl-right';
+    if(k.key === 'fav'){
+      var favli = favSet.has(f.kod);
+      return '<td class="' + cls + '"><span class="fl-yildiz" data-kod="' + f.kod + '">' + (favli ? '★' : '☆') + '</span></td>';
+    }
+    if(k.key === 'kod'){
+      return '<td class="' + cls + '"><a class="fl-kod-link" href="fon-karti.html?kod=' + f.kod + '">' + f.kod + '</a>' + (f.acik === false ? ' 🔴' : '') + '</td>';
+    }
+    if(k.key === 'ad') return '<td class="' + cls + '">' + (f.ad || '') + '</td>';
+    if(k.key === 'kategori') return '<td class="' + cls + '">' + (f.kategori || '—') + '</td>';
+    if(k.tip === 'risk'){
+      var rv = f.risk;
+      if(rv === null || rv === undefined) return '<td class="' + cls + '">—</td>';
+      var rr = riskRenk(rv);
+      return '<td class="' + cls + '"><span class="fl-badge" style="background:' + rr[0] + ';color:' + rr[1] + '">' + rv + '</span></td>';
+    }
+    if(k.tip === 'skor'){
+      var sv = f.skor;
+      if(sv === null || sv === undefined) return '<td class="' + cls + '">—</td>';
+      var sr = skorRenk(sv);
+      return '<td class="' + cls + '"><span class="fl-badge" style="background:' + sr[0] + ';color:' + sr[1] + '">' + trNum(sv, 1) + '</span></td>';
+    }
+    if(k.key === 'sira') return '<td class="' + cls + '">' + (f.sira === null || f.sira === undefined ? '—' : f.sira) + '</td>';
+    if(k.tip === 'pct') return '<td class="' + cls + '">' + yuzde(deger(f, k.key)) + '</td>';
+    var dv = deger(f, k.key);
+    return '<td class="' + cls + '">' + (dv === null || dv === undefined ? '—' : dv) + '</td>';
+  }
+
+  function render(){
+    favSet = new Set(getFav());
+    var kolonlar = aktifKolonlar();
+    var veri = sirala(uygula());
+    var toplam = veri.length;
+    var toplamSayfa = Math.max(1, Math.ceil(toplam / SAYFA_BOYUT));
+    if(sayfa > toplamSayfa) sayfa = toplamSayfa;
+    if(sayfa < 1) sayfa = 1;
+    var dilim = veri.slice((sayfa - 1) * SAYFA_BOYUT, sayfa * SAYFA_BOYUT);
+
+    // Başlık
+    var thead = $('fl-thead');
+    thead.innerHTML = '<tr>' + kolonlar.map(function(k){
+      var aktif = (k.key === sortKey);
+      var ok = aktif ? (sortDir === 'asc' ? ' ▲' : ' ▼') : '';
+      var cls = (k.hizala === 'left' ? 'fl-left' : 'fl-right') + (k.sortable === false ? ' nosort' : '');
+      return '<th class="' + cls + '" data-key="' + k.key + '">' + (k.label || '') + ok + '</th>';
+    }).join('') + '</tr>';
+    thead.querySelectorAll('th[data-key]').forEach(function(th){
+      var key = th.getAttribute('data-key');
+      var kdef = kolonlar.find(function(k){ return k.key === key; });
+      if(!kdef || kdef.sortable === false) return;
+      th.onclick = function(){
+        if(sortKey === key){ sortDir = (sortDir === 'asc' ? 'desc' : 'asc'); }
+        else { sortKey = key; sortDir = METIN_KOLON[key] ? 'asc' : 'desc'; }
+        render();
+      };
+    });
+
+    // Gövde
+    var tbody = $('fl-tbody');
+    if(!dilim.length){
+      tbody.innerHTML = '<tr><td class="fl-left" style="padding:16px; color:var(--ink-dim);">Filtreye uyan fon bulunamadı.</td></tr>';
+    } else {
+      tbody.innerHTML = dilim.map(function(f){
+        return '<tr>' + kolonlar.map(function(k){ return hucre(f, k); }).join('') + '</tr>';
+      }).join('');
+      tbody.querySelectorAll('.fl-yildiz').forEach(function(y){
+        y.onclick = function(){ toggleFav(y.getAttribute('data-kod')); render(); };
+      });
+    }
+
+    // Sayfalama
+    var bas = toplam === 0 ? 0 : (sayfa - 1) * SAYFA_BOYUT + 1;
+    var son = Math.min(sayfa * SAYFA_BOYUT, toplam);
+    var sp = $('fl-sayfalama');
+    sp.innerHTML =
+      '<button ' + (sayfa <= 1 ? 'disabled' : '') + ' data-git="ilk">« İlk</button>' +
+      '<button ' + (sayfa <= 1 ? 'disabled' : '') + ' data-git="onceki">‹ Önceki</button>' +
+      '<span>' + bas + '–' + son + ' / ' + toplam + ' fon (Sayfa ' + sayfa + '/' + toplamSayfa + ')</span>' +
+      '<button ' + (sayfa >= toplamSayfa ? 'disabled' : '') + ' data-git="sonraki">Sonraki ›</button>' +
+      '<button ' + (sayfa >= toplamSayfa ? 'disabled' : '') + ' data-git="son">Son »</button>';
+    sp.querySelectorAll('button[data-git]').forEach(function(btn){
+      btn.onclick = function(){
+        var g = btn.getAttribute('data-git');
+        if(g === 'ilk') sayfa = 1;
+        else if(g === 'onceki') sayfa = Math.max(1, sayfa - 1);
+        else if(g === 'sonraki') sayfa = Math.min(toplamSayfa, sayfa + 1);
+        else if(g === 'son') sayfa = toplamSayfa;
+        render();
+      };
+    });
+  }
+
+  function doldurDropdown(id, arr){
+    var s = $(id);
+    arr.forEach(function(v){
+      var o = document.createElement('option'); o.value = v; o.textContent = v; s.appendChild(o);
+    });
+  }
+
+  function kolonSeciciKur(){
+    var c = $('fl-kolonlar');
+    c.innerHTML = NORMAL_KOLON.filter(function(k){ return k.key !== 'fav'; }).map(function(k){
+      kolonGorunur[k.key] = true;
+      return '<label><input type="checkbox" data-key="' + k.key + '" checked> ' + k.label + '</label>';
+    }).join('');
+    c.querySelectorAll('input[type=checkbox]').forEach(function(cb){
+      cb.onchange = function(){ kolonGorunur[cb.getAttribute('data-key')] = cb.checked; render(); };
+    });
+  }
+
+  // İki tarih arası getiri
+  function fiyatAt(grafik, tarih){
+    if(!grafik || !grafik.length) return null;
+    var bulunan = null;
+    for(var i = 0; i < grafik.length; i++){
+      if(grafik[i].time <= tarih) bulunan = grafik[i].value; else break;
+    }
+    return bulunan;
+  }
+  function ikiTarihGetiriHesapla(grafik, t1, t2){
+    var p1 = fiyatAt(grafik, t1), p2 = fiyatAt(grafik, t2);
+    if(p1 === null || p2 === null || !(p1 > 0)) return null;
+    return (p2 / p1 - 1) * 100;
+  }
+
+  function hesapla(){
+    var t1 = $('fl-t1').value, t2 = $('fl-t2').value;
+    if(!t1 || !t2){ mesaj('Lütfen başlangıç ve bitiş tarihlerini seçin.'); return; }
+    if(t1 > t2){ mesaj('Başlangıç tarihi bitiş tarihinden sonra olamaz.'); return; }
+    var hedef = uygula();
+    if(!hedef.length){ mesaj('Filtreye uyan fon yok — önce filtreleri gevşetin.'); return; }
+    ikitarihGetiri = {};
+    var toplam = hedef.length, tamam = 0;
+    var kuyruk = hedef.slice();
+    mesaj('Hesaplanıyor… 0/' + toplam + ' (bu işlem filtredeki fon sayısına göre biraz sürebilir)');
+    function isci(){
+      if(!kuyruk.length) return Promise.resolve();
+      var f = kuyruk.shift();
+      return fetch('data/fon-kartlari/' + f.kod + '.json')
+        .then(function(r){ return r.ok ? r.json() : null; })
+        .then(function(c){ ikitarihGetiri[f.kod] = c ? ikiTarihGetiriHesapla(c.fiyat_grafigi, t1, t2) : null; })
+        .catch(function(){ ikitarihGetiri[f.kod] = null; })
+        .then(function(){
+          tamam++;
+          if(tamam % 10 === 0 || tamam === toplam) mesaj('Hesaplanıyor… ' + tamam + '/' + toplam);
+          return isci();
+        });
+    }
+    var esZamanli = Math.min(8, toplam);
+    var isciler = [];
+    for(var i = 0; i < esZamanli; i++) isciler.push(isci());
+    Promise.all(isciler).then(function(){
+      mod = 'ikitarih'; sortKey = 'ikitarih'; sortDir = 'desc'; sayfa = 1;
+      $('fl-normal').style.display = '';
+      mesaj(toplam + ' fon için ' + t1 + ' → ' + t2 + ' arası getiri hesaplandı.');
+      render();
+    });
+  }
+
+  function normaleDon(){
+    mod = 'normal'; sortKey = '1 Yıl'; sortDir = 'desc'; sayfa = 1;
+    $('fl-normal').style.display = 'none';
+    mesaj('');
+    render();
+  }
+
+  // Başlat
+  fetch('data/fon-kartlari/fon-listeleme.json')
+    .then(function(r){ return r.ok ? r.json() : []; })
+    .then(function(d){
+      tumFonlar = d || [];
+      var pysler = Array.from(new Set(tumFonlar.map(function(f){ return f.pys; }).filter(Boolean)));
+      pysler.sort(function(a, b){ return a.localeCompare(b, 'tr'); });
+      doldurDropdown('fl-pys', pysler);
+      var semler = Array.from(new Set(tumFonlar.map(function(f){ return f.semsiye; }).filter(Boolean)));
+      semler.sort(function(a, b){ return a.localeCompare(b, 'tr'); });
+      doldurDropdown('fl-semsiye', semler);
+      kolonSeciciKur();
+      if(typeof FL_SON_TARIH === 'string'){
+        $('fl-t2').value = FL_SON_TARIH;
+        var d1 = new Date(FL_SON_TARIH); d1.setFullYear(d1.getFullYear() - 1);
+        $('fl-t1').value = d1.toISOString().slice(0, 10);
+      }
+      ['fl-durum', 'fl-pys', 'fl-semsiye', 'fl-risk'].forEach(function(id){
+        $(id).addEventListener('change', function(){ sayfa = 1; render(); });
+      });
+      $('fl-hesapla').addEventListener('click', hesapla);
+      $('fl-normal').addEventListener('click', normaleDon);
+      render();
+    })
+    .catch(function(){ mesaj('Fon listesi yüklenemedi.'); });
+})();
+</script>
+"""
+
+
+def write_fon_listeleme_page(anchor):
+    body = (page_header('fon-listeleme.html', 'Fon Listeleme', anchor)
+            + FON_LISTELEME_HTML
+            + f'<script>const FL_SON_TARIH="{anchor.date()}";</script>'
+            + FON_LISTELEME_JS)
+    with open("docs/fon-listeleme.html", "w", encoding="utf-8") as f:
+        f.write(page_shell("FONLARCA — Fon Listeleme", "fon-listeleme.html", body, FON_LISTELEME_STYLE))
+    print("Fon Listeleme sayfası oluşturuldu: docs/fon-listeleme.html")
+
+
 def main():
     df = pd.read_parquet(DATA_PATH)
     df['Tarih'] = pd.to_datetime(df['Tarih']).dt.normalize()
@@ -1807,6 +2212,7 @@ def main():
 
     os.makedirs("docs", exist_ok=True)
     write_hareketler_page(df, mapping)
+    write_fon_listeleme_page(anchor)
     write_category_summary(res, anchor)
     write_yeni_fonlar_page(df, mapping, fon_adlari, acik_fon_kodlari)
     write_favoriler_page(anchor, guncel_risk_free)
