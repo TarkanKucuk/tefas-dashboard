@@ -1757,6 +1757,14 @@ def main():
     res, anchor = build_fund_metrics(df)
     res = res.merge(mapping, on='Fon Kodu', how='left')
     res = res[res['Alt Kategori'].notna()]
+    # Kapalı (TEFAS'a alım-satıma kapalı) fonlar puanlamaya HİÇ girmez: ne kendileri
+    # skor alır, ne de kategori içi yüzdelik sıralamayı (pct_rank_within) etkiler.
+    # Liste henüz toplanmadıysa (acik_fon_kodlari None) filtre uygulanmaz.
+    if acik_fon_kodlari is not None:
+        onceki = len(res)
+        res = res[res['Fon Kodu'].isin(acik_fon_kodlari)]
+        print(f"[skor] Kapalı fonlar puanlamadan çıkarıldı: {onceki - len(res)} fon "
+              f"(kalan {len(res)} açık fon puanlanacak).")
     res = compute_scores(res)
 
     os.makedirs("docs", exist_ok=True)
