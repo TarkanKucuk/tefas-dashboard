@@ -200,7 +200,7 @@ footer { text-align: center; color: var(--ink-dim); font-size: 12px; margin-top:
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script>
 const FAV_KEY = 'fonlarca_favoriler';
-const RISK_FREE_RATE_YILLIK = 0.3999;  // TLREF, script'te elle güncellenir
+const RISK_FREE_RATE_YILLIK = 0.479181;  // TLREF endeksinin son 1 yıllık getirisi (otomatik)
 function getFavorites() {
     try { return JSON.parse(localStorage.getItem(FAV_KEY)) || []; }
     catch(e) { return []; }
