@@ -288,6 +288,7 @@
       <div class="stat"><span class="icon">☂️</span><div><div class="num" id="stat-semsiye">—</div><div class="lbl">Şemsiye</div></div></div>
       <div class="stat"><span class="icon">🗂️</span><div><div class="num" id="stat-kategori">—</div><div class="lbl">Kategori</div></div></div>
       <div class="stat"><span class="icon">📅</span><div><div class="num" id="stat-tarih">—</div><div class="lbl">Veri Tarihi</div></div></div>
+      <div class="stat"><span class="icon" id="stat-acik-icon">🟢</span><div><div class="num" id="stat-acik">—</div><div class="lbl">TEFAS Durumu</div></div></div>
     </div>
 
     <!-- RETURNS TABLE -->
@@ -588,6 +589,19 @@ function renderHeader(d){
   document.getElementById('stat-semsiye').textContent = d.semsiye || "—";
   document.getElementById('stat-kategori').textContent = d.kategori || "—";
   document.getElementById('stat-tarih').textContent = trDate(d.veri_tarihi);
+
+  const acikIcon = document.getElementById('stat-acik-icon');
+  const acikNum = document.getElementById('stat-acik');
+  if (d.tefas_acik === true){
+    acikIcon.textContent = '🟢';
+    acikNum.textContent = 'Açık';
+  } else if (d.tefas_acik === false){
+    acikIcon.textContent = '🔴';
+    acikNum.textContent = 'Kapalı';
+  } else {
+    acikIcon.textContent = '⚪';
+    acikNum.textContent = '—';
+  }
 
   ["tt-investors","tt-totalvalue","tt-cashflow"].forEach(id => {
     document.getElementById(id).textContent = d.fon_kodu || FUND_CODE;
