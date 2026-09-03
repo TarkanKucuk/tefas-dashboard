@@ -337,7 +337,7 @@ def main():
         json.dump(build_benchmark_series(bench_df), f, ensure_ascii=False, allow_nan=False)
 
     # Fonlarca Skoru + alt skorlar (score_funds.py'deki aynı hesap)
-    res, anchor = build_fund_metrics(price_df)
+    res, anchor = build_fund_metrics(price_df, bench_df)
     res = res.merge(mapping, on=MAPPING_COLS["kod"], how="left")
     res = res[res[MAPPING_COLS["kategori"]].notna()]
     # Kapalı fonlar puanlamaya girmez — score_funds.py ile birebir tutarlı olsun diye
