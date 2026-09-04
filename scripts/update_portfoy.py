@@ -2,12 +2,19 @@ import pandas as pd
 from tefasfon import get_portfolio
 from datetime import datetime, timedelta
 import os
+import time
 
 DATA_PATH = "tefas_portfoy_dagilim.parquet"
 
 # Her çalıştırmada son kaç günü yeniden kontrol edelim (TEFAS'ın bazı günleri
 # geç yayınlaması ya da tek seferlik API hatası durumunda kendiliğinden düzelsin diye)
 GERI_GUN = 20
+
+# "Bu gün için normalde kaç fon veri vermeliydi" tahmininde kullanılan pencere
+# ve eşik — hem eksik gün tespitinde hem de aynı çalıştırma içindeki tekrar
+# deneme mantığında (aşağıda) kullanılır.
+BEKLENEN_PENCERE = 15
+FON_ESIK_ORANI = 0.95
 
 # Kısaltmalardan Orijinal Türkçe Başlıklara Çeviri
 KOLON_MAP = {
@@ -65,6 +72,19 @@ KOLON_MAP = {
 TUM_KATEGORI_KOLONLARI = [v for k, v in KOLON_MAP.items() if k not in ("fonKodu", "fonUnvan", "tarih")]
 
 
+def beklenen_fon_sayisi_hesapla(hist, pencere_gun=15):
+    """Son `pencere_gun` gün içinde en az bir kez veri vermiş benzersiz fon
+    sayısını döndürür — "bu gün için normalde kaç fon veri vermeliydi"
+    tahminimiz budur."""
+    if hist.empty or "Tarih" not in hist.columns:
+        return 0
+    hist = hist.copy()
+    hist["Tarih"] = pd.to_datetime(hist["Tarih"]).dt.normalize()
+    son_tarih = hist["Tarih"].max()
+    pencere_baslangic = son_tarih - pd.Timedelta(days=pencere_gun)
+    return hist[hist["Tarih"] >= pencere_baslangic]["Fon Kodu"].nunique()
+
+
 def eksik_tarihleri_bul(hist, tarihler):
     """`tarihler` listesindeki hangi günlerin hâlâ tekrar çekilmesi gerektiğini
     bulur: hist'te o tarih için hiç satır yoksa, satırlar VAR ama en az biri
@@ -95,12 +115,7 @@ def eksik_tarihleri_bul(hist, tarihler):
     # "Beklenen" fon kümesi: son BEKLENEN_PENCERE gün içinde en az bir kez veri
     # vermiş tüm fonlar. Bir tarihte bu kümenin çoğu için satır yoksa, o tarih
     # "genel olarak dolu" görünse bile (var olan satırlar dolu diye) eksik sayılır.
-    BEKLENEN_PENCERE = 15
-    FON_ESIK_ORANI = 0.95
-    son_tarih = hist_check["Tarih"].max()
-    pencere_baslangic = son_tarih - pd.Timedelta(days=BEKLENEN_PENCERE)
-    beklenen_fonlar = set(hist_check[hist_check["Tarih"] >= pencere_baslangic]["Fon Kodu"].unique())
-    beklenen_sayi = len(beklenen_fonlar) if beklenen_fonlar else 0
+    beklenen_sayi = beklenen_fon_sayisi_hesapla(hist_check, BEKLENEN_PENCERE)
     gun_fon_sayisi = hist_check.groupby("Tarih")["Fon Kodu"].nunique()
 
     eksikler = []
@@ -155,11 +170,32 @@ def main():
 
     print(f"Kontrol edilecek {len(tarihler)} gün: {tarihler[0].strftime('%d.%m.%Y')} -> {tarihler[-1].strftime('%d.%m.%Y')}")
     print("TEFAS'tan portföy dağılımı GÜNLÜK olarak çekiliyor...")
+    beklenen_sayi = beklenen_fon_sayisi_hesapla(hist, BEKLENEN_PENCERE)
     gunluk_df_listesi = []
     for t in tarihler:
-        df_gun = gun_verisi_cek(t.strftime("%d.%m.%Y"))
-        if df_gun is not None:
-            gunluk_df_listesi.append(df_gun)
+        tarih_str = t.strftime("%d.%m.%Y")
+        en_iyi_df = None
+        en_iyi_fon_sayisi = -1
+        for deneme in range(3):  # ilk deneme + 2 ek tekrar
+            df_gun = gun_verisi_cek(tarih_str)
+            if df_gun is None:
+                break  # kesin "veri yok" (tatil/hafta sonu) — tekrar denemeye değmez
+            fon_sayisi = df_gun["fonKodu"].nunique()
+            if fon_sayisi > en_iyi_fon_sayisi:
+                en_iyi_df, en_iyi_fon_sayisi = df_gun, fon_sayisi
+            # Yeterince dolu geldiyse (ya da beklenen sayı bilinmiyorsa) daha
+            # fazla denemeye gerek yok.
+            if beklenen_sayi == 0 or fon_sayisi >= beklenen_sayi * FON_ESIK_ORANI:
+                break
+            if deneme < 2:
+                print(f"  {tarih_str}: sadece {fon_sayisi}/{beklenen_sayi} fon geldi, "
+                      f"TEFAS'ın eksik yayınlamış olabileceğinden 15 sn sonra tekrar denenecek...")
+                time.sleep(15)
+        if en_iyi_df is not None and en_iyi_fon_sayisi < beklenen_sayi * FON_ESIK_ORANI and beklenen_sayi > 0:
+            print(f"  {tarih_str}: 3 denemeden sonra hâlâ eksik ({en_iyi_fon_sayisi}/{beklenen_sayi} fon) — "
+                  f"yine de gelen veri kaydedilecek, sonraki çalıştırmalarda tekrar denenecek.")
+        if en_iyi_df is not None:
+            gunluk_df_listesi.append(en_iyi_df)
 
     if not gunluk_df_listesi:
         print("Hiçbir gün için veri alınamadı.")
