@@ -1,0 +1,26 @@
+name: Portfoy Dagilim Bir Kerelik Duzeltme
+on:
+  workflow_dispatch: {}
+permissions:
+  contents: write
+jobs:
+  duzelt:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Bagimliliklari kur
+        run: pip install -r requirements.txt
+      - name: Portfoy dagilimini 25 Agustos'tan bugune zorla yeniden cek
+        run: python scripts/duzelt_portfoy_bir_kerelik.py
+      - name: Degisiklikleri kaydet
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          if [ -f "tefas_portfoy_dagilim.parquet" ]; then
+            git add tefas_portfoy_dagilim.parquet
+          fi
+          git diff --quiet --cached || git commit -m "Portfoy dagilimi bir kerelik duzeltme (25 Agustos+)"
+          git push
