@@ -7,14 +7,14 @@ import os
 # Artık otomatik: benchmarklar.parquet'teki TLREF_Endeks'in son 1 yıllık getirisi
 # kullanılır (bkz. tlref_yillik_oran). Aşağıdaki sabit yalnızca TLREF verisi hiç
 # yoksa/yetersizse devreye giren YEDEK değerdir.
-RISK_FREE_RATE = 0.3999  # yedek (fallback) — TLREF verisi yoksa kullanılır
+RISK_FREE_RATE = 0.37  # yedek (fallback) — TLREF verisi yoksa kullanılır
 
 # "Hareketler" ve "Puanlama - Kategori Özeti" sayfalarında gösterilen uyarı:
 # bu iki sayfanın hesaplamaları yalnızca TEFAS'a açık fonları baz alır.
 ACIK_FON_UYARISI = (
     '<div style="background:rgba(120,140,180,0.12); border:1px solid var(--line); '
     'border-radius:8px; padding:10px 14px; margin-bottom:16px; color:var(--ink-dim); font-size:13px;">'
-    "ℹ️ Bu sayfadaki hesaplamalar yalnızca TEFAS'a açık (alım-satıma açık) fonları baz alır."
+    "ℹ️ Sadece TEFAS'a açık fonlar baz alınmıştır."
     '</div>'
 )
 
