@@ -134,16 +134,24 @@ def eksik_tarihleri_bul(hist, tarihler):
 def gun_verisi_cek(tarih_str):
     """Tek bir gün için portföy verisini çeker. Geniş aralıklı istekler bazı
     günleri sessizce boş döndürebiliyor (teşhis edildi) — bu yüzden her günü
-    ayrı ayrı, tek başına istiyoruz; bu şekilde güvenilir çalıştığı doğrulandı."""
+    ayrı ayrı, tek başına istiyoruz; bu şekilde güvenilir çalıştığı doğrulandı.
+
+    Dönüş: (df, hata_oldu_mu)
+    - (None, False): TEFAS bu gün için gerçekten veri yok dedi (tatil/hafta
+      sonu) — tekrar denemek anlamsız.
+    - (None, True): istek sırasında bağlantı hatası/zaman aşımı oluştu —
+      GEÇİCİ bir sorun olabilir, tekrar denemeye değer.
+    - (DataFrame, False): başarılı.
+    """
     try:
         df = get_portfolio(fund_type="SEC", start_date=tarih_str, end_date=tarih_str)
     except Exception as e:
         print(f"  {tarih_str}: HATA ({e})")
-        return None
+        return None, True
     if df is None or df.empty:
         print(f"  {tarih_str}: veri yok (tatil/hafta sonu olabilir)")
-        return None
-    return df
+        return None, False
+    return df, False
 
 
 def main():
@@ -177,9 +185,15 @@ def main():
         en_iyi_df = None
         en_iyi_fon_sayisi = -1
         for deneme in range(3):  # ilk deneme + 2 ek tekrar
-            df_gun = gun_verisi_cek(tarih_str)
+            df_gun, hata_oldu = gun_verisi_cek(tarih_str)
             if df_gun is None:
-                break  # kesin "veri yok" (tatil/hafta sonu) — tekrar denemeye değmez
+                if not hata_oldu:
+                    break  # kesin "veri yok" (tatil/hafta sonu) — tekrar denemeye değmez
+                # Bağlantı hatası/zaman aşımı — GEÇİCİ olabilir, tekrar dene.
+                if deneme < 2:
+                    print(f"  {tarih_str}: bağlantı hatası, 15 sn sonra tekrar denenecek...")
+                    time.sleep(15)
+                continue
             fon_sayisi = df_gun["fonKodu"].nunique()
             if fon_sayisi > en_iyi_fon_sayisi:
                 en_iyi_df, en_iyi_fon_sayisi = df_gun, fon_sayisi
