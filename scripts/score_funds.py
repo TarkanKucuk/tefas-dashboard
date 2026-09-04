@@ -661,11 +661,14 @@ document.getElementById('kategori-filter').addEventListener('change', function()
 # Sayfa 3: Hareketler (Günlük / Haftalık / Aylık sekmeler) — açılış sayfası
 # ------------------------------------------------------------------
 
-def build_movers(df, mapping, days):
+def build_movers(df, mapping, days, acik_fon_kodlari=None):
     anchor = df['Tarih'].max()
     cutoff = anchor - pd.Timedelta(days=days)
     records = []
     for fon_kodu, g in df.groupby('Fon Kodu'):
+        # Kapalı (TEFAS'a alım-satıma kapalı) fonlar hareketlere girmez.
+        if acik_fon_kodlari is not None and fon_kodu not in acik_fon_kodlari:
+            continue
         g = g.sort_values('Tarih')
         latest = g.iloc[-1]
         past = g[g['Tarih'] <= cutoff]
@@ -696,11 +699,11 @@ def build_movers(df, mapping, days):
     return movers, anchor
 
 
-def write_hareketler_page(df, mapping):
+def write_hareketler_page(df, mapping, acik_fon_kodlari=None):
     import json
 
     periods = [('gunluk', 1, 'Günlük'), ('haftalik', 7, 'Haftalık'), ('aylik', 30, 'Aylık')]
-    movers_by_key = {key: build_movers(df, mapping, days) for key, days, _ in periods}
+    movers_by_key = {key: build_movers(df, mapping, days, acik_fon_kodlari) for key, days, _ in periods}
     anchor = movers_by_key['gunluk'][1]
 
     def to_records(movers):
@@ -1778,12 +1781,12 @@ FON_LISTELEME_STYLE = """
 .fl-kolonlar-kutu summary { cursor:pointer; color:var(--ink-dim); font-size:13px; }
 #fl-kolonlar { display:flex; flex-wrap:wrap; gap:10px 18px; margin-top:10px; }
 #fl-kolonlar label { font-size:13px; color:var(--ink); display:flex; align-items:center; gap:5px; cursor:pointer; }
-.fl-tablo-sar { overflow-x:auto; margin-top:6px; }
+.fl-tablo-sar { overflow:auto; margin-top:6px; max-height:70vh; }
 #fl-tablo { width:100%; border-collapse:collapse; font-size:13px; white-space:nowrap; }
 #fl-tablo th, #fl-tablo td { padding:7px 10px; border-bottom:1px solid var(--line); }
 #fl-tablo .fl-left { text-align:left; }
 #fl-tablo .fl-right { text-align:right; }
-#fl-tablo th { color:var(--ink-dim); font-weight:600; cursor:pointer; user-select:none; position:sticky; top:0; background:var(--bg); }
+#fl-tablo th { color:var(--ink-dim); font-weight:600; cursor:pointer; user-select:none; position:sticky; top:0; z-index:2; background:var(--bg); box-shadow:inset 0 -1px 0 var(--line); }
 #fl-tablo th.nosort { cursor:default; }
 #fl-tablo tbody tr:hover { background:rgba(255,255,255,0.03); }
 .fl-yildiz { cursor:pointer; font-size:16px; color:var(--amber, #e0b23f); }
@@ -1800,8 +1803,8 @@ FON_LISTELEME_HTML = """
   <div class="fl-satir">
     <label>TEFAS İşlem Durumu
       <select id="fl-durum">
-        <option value="acik" selected>Açık</option>
         <option value="tumu">Tümü</option>
+        <option value="acik" selected>Açık</option>
         <option value="kapali">Kapalı</option>
       </select>
     </label>
@@ -1810,6 +1813,9 @@ FON_LISTELEME_HTML = """
     </label>
     <label>Şemsiye Fon Türü
       <select id="fl-semsiye"><option value="">Tümü</option></select>
+    </label>
+    <label>Kategori
+      <select id="fl-kategori"><option value="">Tümü</option></select>
     </label>
     <label>Risk Değeri
       <select id="fl-risk">
@@ -1821,10 +1827,10 @@ FON_LISTELEME_HTML = """
   </div>
   <div class="fl-satir">
     <label>İki Tarih Arası Getiri — Başlangıç
-      <input type="date" id="fl-t1">
+      <input type="text" id="fl-t1" placeholder="gg/aa/yyyy" autocomplete="off">
     </label>
     <label>Bitiş
-      <input type="date" id="fl-t2">
+      <input type="text" id="fl-t2" placeholder="gg/aa/yyyy" autocomplete="off">
     </label>
     <button class="fl-btn" id="fl-hesapla">Hesapla</button>
     <button class="fl-btn sec" id="fl-normal" style="display:none;">← Normal Görünüme Dön</button>
@@ -1926,12 +1932,13 @@ FON_LISTELEME_JS = """
 
   function uygula(){
     var durum = $('fl-durum').value, pys = $('fl-pys').value,
-        sem = $('fl-semsiye').value, risk = $('fl-risk').value;
+        sem = $('fl-semsiye').value, kat = $('fl-kategori').value, risk = $('fl-risk').value;
     return tumFonlar.filter(function(f){
       if(durum === 'acik' && f.acik !== true) return false;
       if(durum === 'kapali' && f.acik !== false) return false;
       if(pys && f.pys !== pys) return false;
       if(sem && f.semsiye !== sem) return false;
+      if(kat && f.kategori !== kat) return false;
       if(risk && String(f.risk) !== risk) return false;
       return true;
     });
@@ -2139,13 +2146,25 @@ FON_LISTELEME_JS = """
       var semler = Array.from(new Set(tumFonlar.map(function(f){ return f.semsiye; }).filter(Boolean)));
       semler.sort(function(a, b){ return a.localeCompare(b, 'tr'); });
       doldurDropdown('fl-semsiye', semler);
+      var katlar = Array.from(new Set(tumFonlar.map(function(f){ return f.kategori; }).filter(Boolean)));
+      katlar.sort(function(a, b){ return a.localeCompare(b, 'tr'); });
+      doldurDropdown('fl-kategori', katlar);
       kolonSeciciKur();
       if(typeof FL_SON_TARIH === 'string'){
         $('fl-t2').value = FL_SON_TARIH;
         var d1 = new Date(FL_SON_TARIH); d1.setFullYear(d1.getFullYear() - 1);
         $('fl-t1').value = d1.toISOString().slice(0, 10);
       }
-      ['fl-durum', 'fl-pys', 'fl-semsiye', 'fl-risk'].forEach(function(id){
+      // Tarih seçiciler: görünen format gg/aa/yyyy, saklanan değer yyyy-aa-gg
+      // (böylece hesapla() mantığı ISO tarihle çalışmaya devam eder). type="date"
+      // masaüstünde tarayıcı diline göre aa/gg/yyyy gösterebildiği için flatpickr
+      // ile formatı kesinleştiriyoruz.
+      if(typeof flatpickr !== 'undefined'){
+        var fpAyar = { dateFormat:'Y-m-d', altInput:true, altFormat:'d/m/Y', allowInput:true };
+        flatpickr('#fl-t1', fpAyar);
+        flatpickr('#fl-t2', fpAyar);
+      }
+      ['fl-durum', 'fl-pys', 'fl-semsiye', 'fl-kategori', 'fl-risk'].forEach(function(id){
         $(id).addEventListener('change', function(){ sayfa = 1; render(); });
       });
       $('fl-hesapla').addEventListener('click', hesapla);
@@ -2159,12 +2178,18 @@ FON_LISTELEME_JS = """
 
 
 def write_fon_listeleme_page(anchor):
+    flatpickr_head = (
+        '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">'
+        '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/themes/dark.css">'
+        '<script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13"></script>'
+    )
     body = (page_header('fon-listeleme.html', 'Fon Listeleme', anchor)
             + FON_LISTELEME_HTML
             + f'<script>const FL_SON_TARIH="{anchor.date()}";</script>'
             + FON_LISTELEME_JS)
     with open("docs/fon-listeleme.html", "w", encoding="utf-8") as f:
-        f.write(page_shell("FONLARCA — Fon Listeleme", "fon-listeleme.html", body, FON_LISTELEME_STYLE))
+        f.write(page_shell("FONLARCA — Fon Listeleme", "fon-listeleme.html", body,
+                           FON_LISTELEME_STYLE, flatpickr_head))
     print("Fon Listeleme sayfası oluşturuldu: docs/fon-listeleme.html")
 
 
@@ -2211,7 +2236,7 @@ def main():
     res = compute_scores(res)
 
     os.makedirs("docs", exist_ok=True)
-    write_hareketler_page(df, mapping)
+    write_hareketler_page(df, mapping, acik_fon_kodlari)
     write_fon_listeleme_page(anchor)
     write_category_summary(res, anchor)
     write_yeni_fonlar_page(df, mapping, fon_adlari, acik_fon_kodlari)
