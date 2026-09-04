@@ -67,12 +67,19 @@ TUM_KATEGORI_KOLONLARI = [v for k, v in KOLON_MAP.items() if k not in ("fonKodu"
 
 def eksik_tarihleri_bul(hist, tarihler):
     """`tarihler` listesindeki hangi günlerin hâlâ tekrar çekilmesi gerektiğini
-    bulur: hist'te o tarih için hiç satır yoksa, ya da satırlar VAR ama en az
-    biri boşsa (tüm kategorileri NaN), o tarih 'eksik/tamamlanmamış' sayılır
-    ve tekrar çekilir. Bir tarihteki TÜM satırlar zaten doluysa, o tarih
-    atlanır — boşuna tekrar sorulmaz. Bu, veri kalitesi güvenlik ağını
-    bozmadan (hâlâ eksik olan her şey yine denenir) gereksiz TEFAS isteklerini
-    ortadan kaldırır."""
+    bulur: hist'te o tarih için hiç satır yoksa, satırlar VAR ama en az biri
+    boşsa (tüm kategorileri NaN), YA DA o tarihte satırı olan fon sayısı
+    "beklenen" fon sayısından belirgin şekilde azsa (bazı fonlar o gün için
+    HİÇ satır bile almamış demektir), o tarih 'eksik/tamamlanmamış' sayılır.
+
+    ÖNEMLİ DÜZELTME: Önceki hâli sadece "o tarihte VAR OLAN satırlar dolu mu"
+    diye bakıyordu — bir fon o gün için hiç satır almadıysa (TEFAS o fonu o
+    gün hiç döndürmediyse), bu durum hiç yakalanmıyordu ve o gün "tamam"
+    sayılıp bir daha asla tekrar denenmiyordu. Bu yüzden bazı fonlar sürekli
+    belirli günleri kaçırıp asla telafi edemiyordu. Artık "fon sayısı" kontrolü
+    de ekleniyor: son BEKLENEN_PENCERE gün içinde en az bir kez veri vermiş
+    TÜM fonların kümesi "beklenen" kabul edilir; bir tarihte bu kümenin
+    FON_ESIK_ORANI'ndan azı için satır varsa, o tarih eksik sayılır."""
     if hist.empty or "Tarih" not in hist.columns:
         return tarihler
 
@@ -85,11 +92,27 @@ def eksik_tarihleri_bul(hist, tarihler):
     hist_check["_dolu"] = hist_check[mevcut_kolonlar].notna().any(axis=1)
     gun_tam_dolu = hist_check.groupby("Tarih")["_dolu"].all()
 
+    # "Beklenen" fon kümesi: son BEKLENEN_PENCERE gün içinde en az bir kez veri
+    # vermiş tüm fonlar. Bir tarihte bu kümenin çoğu için satır yoksa, o tarih
+    # "genel olarak dolu" görünse bile (var olan satırlar dolu diye) eksik sayılır.
+    BEKLENEN_PENCERE = 15
+    FON_ESIK_ORANI = 0.95
+    son_tarih = hist_check["Tarih"].max()
+    pencere_baslangic = son_tarih - pd.Timedelta(days=BEKLENEN_PENCERE)
+    beklenen_fonlar = set(hist_check[hist_check["Tarih"] >= pencere_baslangic]["Fon Kodu"].unique())
+    beklenen_sayi = len(beklenen_fonlar) if beklenen_fonlar else 0
+    gun_fon_sayisi = hist_check.groupby("Tarih")["Fon Kodu"].nunique()
+
     eksikler = []
     for t in tarihler:
         t_norm = pd.Timestamp(t.date())
         if t_norm not in gun_tam_dolu.index or not gun_tam_dolu.loc[t_norm]:
             eksikler.append(t)
+            continue
+        if beklenen_sayi > 0:
+            mevcut_sayi = gun_fon_sayisi.get(t_norm, 0)
+            if mevcut_sayi < beklenen_sayi * FON_ESIK_ORANI:
+                eksikler.append(t)
     return eksikler
 
 
