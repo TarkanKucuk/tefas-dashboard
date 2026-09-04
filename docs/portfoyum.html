@@ -817,10 +817,15 @@ fetch('data/fon-kartlari/_index.json').then(r => r.ok ? r.json() : []).then(inde
     function go() {
         var raw = input.value.trim();
         if (!raw) return;
-        var kod = raw.split(/[—-]/)[0].replace(/[^A-Za-z]/g, '').toUpperCase();
+        var kod = raw.split(/[—-]/)[0].replace(/[^A-Za-z0-9]/g, '').toUpperCase();
         var match = funds.find(function(f) { return f.kod.toUpperCase() === kod; });
         if (match) window.location.href = 'fon-karti.html?kod=' + match.kod;
     }
+    // 'change' olayı, datalist'ten fareyle seçim yapıldığında bazı tarayıcılarda
+    // güvenilir şekilde tetiklenmiyor (input odaktan çıkmadığı sürece). 'input'
+    // olayı seçimde de yazarken de tetiklenir; go() zaten TAM eşleşme aradığı
+    // için yazarken hiçbir şey olmaz, sadece tam kod yazılınca/seçilince çalışır.
+    input.addEventListener('input', go);
     input.addEventListener('change', go);
     input.addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); go(); } });
 })();
