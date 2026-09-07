@@ -331,6 +331,26 @@ def main():
         except Exception as e:
             print(f"[export] {ACIK_PATH} okunamadı ({e}), açık/kapalı durumu işaretlenmeyecek.")
 
+    # Fonlarca Skoru geçmişi — fon kartındaki skor grafiği için. Kapalı fonlar
+    # zaten skor_gecmisi.parquet'e hiç girmiyor (puanlanmıyorlar), bu yüzden
+    # onlar için sözlükte doğal olarak bir kayıt olmayacak.
+    skor_gecmisi_by_kod = {}
+    SKOR_GECMISI_PATH = "skor_gecmisi.parquet"
+    if os.path.exists(SKOR_GECMISI_PATH):
+        try:
+            sg_df = pd.read_parquet(SKOR_GECMISI_PATH)
+            if not sg_df.empty:
+                sg_df["Tarih"] = pd.to_datetime(sg_df["Tarih"]).dt.normalize()
+                sg_df = sg_df.sort_values(["Fon Kodu", "Tarih"])
+                for kod_g, g in sg_df.groupby("Fon Kodu"):
+                    skor_gecmisi_by_kod[kod_g] = [
+                        {"time": t.strftime("%Y-%m-%d"), "value": round(float(v), 1)}
+                        for t, v in zip(g["Tarih"], g["Kategori Skoru"]) if pd.notna(v)
+                    ]
+                print(f"[export] {len(skor_gecmisi_by_kod)} fon için skor geçmişi yüklendi.")
+        except Exception as e:
+            print(f"[export] {SKOR_GECMISI_PATH} okunamadı ({e}), skor grafiği boş kalacak.")
+
     alloc_all = None
     fon_adlari = {}  # TEFAS'ın kendi 'Fon Unvanı' verisinden isim haritası —
                       # manuel eşleştirme dosyasına bağımlı kalmasın diye
@@ -424,6 +444,7 @@ def main():
                     "StdDev": _rnd(skor_row.get("Skor_StdDev")),
                 },
             },
+            "skor_gecmisi": skor_gecmisi_by_kod.get(kod, []),
         }
 
         with open(os.path.join(OUT_DIR, f"{kod}.json"), "w", encoding="utf-8") as f:
