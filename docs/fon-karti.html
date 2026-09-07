@@ -297,6 +297,17 @@
     <!-- PRICE CHART -->
     <div class="card">
       <h3>Fiyat Grafiği</h3>
+      <div class="mode-tabs" id="chart-range-tabs">
+        <button class="tab" data-range="1h">1 Hafta</button>
+        <button class="tab" data-range="1a">1 Ay</button>
+        <button class="tab" data-range="3a">3 Ay</button>
+        <button class="tab" data-range="6a">6 Ay</button>
+        <button class="tab" data-range="ybb">Yılbaşından İtibaren</button>
+        <button class="tab" data-range="1y">1 Yıl</button>
+        <button class="tab" data-range="3y">3 Yıl</button>
+        <button class="tab" data-range="5y">5 Yıl</button>
+        <button class="tab active" data-range="tumu">Tümü</button>
+      </div>
       <div class="mode-tabs" id="chart-mode-tabs">
         <button class="tab" data-bench="USD">USD</button>
         <button class="tab" data-bench="EUR">EUR</button>
@@ -710,6 +721,7 @@ let fundRawData = [], benchmarksData = {}, currentFundCode = "", fundIndex = [];
 let activeCompares = []; // [{type:'bench'|'fund', key, label, color, rawSeries, series}]
 let plottedSeries = []; // çizilmiş TÜM seriler — temizlik hep buradan yapılır, activeCompares'tan bağımsız
 let lastRebaseFromTime = null;
+let aktifZamanAraligi = 'tumu';
 
 function renderPriceChart(series, benchmarks, fundCode, index){
   fundRawData = series;
@@ -843,7 +855,47 @@ function drawChart(){
 
   rebaseComparePct(); // görünen aralığa göre normalize et (ilk kez tam geçmiş görünüyorsa fonun ilk günüyle aynı sonucu verir)
   renderLegend();
+  zamanAraligiUygula(aktifZamanAraligi); // seçili zaman aralığını yeniden çizimde de koru
 }
+
+function zamanAraligiHesapla(anahtar){
+  if (!fundRawData.length) return null;
+  const to = fundRawData[fundRawData.length - 1].time;
+  const toDate = new Date(to);
+  let fromDate = new Date(toDate);
+  switch(anahtar){
+    case '1h': fromDate.setDate(fromDate.getDate() - 7); break;
+    case '1a': fromDate.setMonth(fromDate.getMonth() - 1); break;
+    case '3a': fromDate.setMonth(fromDate.getMonth() - 3); break;
+    case '6a': fromDate.setMonth(fromDate.getMonth() - 6); break;
+    case 'ybb': fromDate = new Date(Date.UTC(toDate.getUTCFullYear(), 0, 1)); break;
+    case '1y': fromDate.setFullYear(fromDate.getFullYear() - 1); break;
+    case '3y': fromDate.setFullYear(fromDate.getFullYear() - 3); break;
+    case '5y': fromDate.setFullYear(fromDate.getFullYear() - 5); break;
+    default: return null; // 'tumu'
+  }
+  // Fonun ilk verisinden daha geriye gitmeyelim
+  const ilkTarih = new Date(fundRawData[0].time);
+  if (fromDate < ilkTarih) fromDate = ilkTarih;
+  return { from: fromDate.toISOString().slice(0, 10), to: to };
+}
+
+function zamanAraligiUygula(anahtar){
+  aktifZamanAraligi = anahtar;
+  document.querySelectorAll('#chart-range-tabs .tab').forEach(b =>
+    b.classList.toggle('active', b.dataset.range === anahtar));
+  if (!priceChart || !fundRawData.length) return;
+  if (anahtar === 'tumu'){
+    priceChart.timeScale().fitContent();
+    return;
+  }
+  const aralik = zamanAraligiHesapla(anahtar);
+  if (aralik) priceChart.timeScale().setVisibleRange(aralik);
+}
+
+document.querySelectorAll('#chart-range-tabs .tab[data-range]').forEach(btn => {
+  btn.addEventListener('click', () => zamanAraligiUygula(btn.dataset.range));
+});
 
 function renderLegend(){
   const legend = document.getElementById('chart-legend');
