@@ -63,6 +63,59 @@ function kovaryansHesapla(a, b) {
     return toplam / Math.max(1, a.length - 1);
 }
 
+/**
+ * Ledoit-Wolf shrinkage (Ledoit & Wolf, 2004 — "Honey, I Shrunk the Sample
+ * Covariance Matrix", ölçekli birim matris hedefi). Ham örneklem kovaryans
+ * matrisi (S), özellikle az gözlem/çok fon olduğunda gürültülü ve tahmin
+ * hatasına aşırı duyarlı olabiliyor — bu, Monte Carlo optimizasyonunun
+ * gürültüyü "gerçek sinyal" sanıp aşırı yoğunlaşmış ağırlıklar üretmesine
+ * yol açabilir. Bu fonksiyon S'yi, kapalı-form (matris tersi gerektirmeyen)
+ * bir formülle, "ortalama varyans × birim matris" hedefine doğru optimal
+ * oranda büzerek daha sağlam/istikrarlı bir tahmin üretir:
+ *   m_n = iz(S)/p,  d_n² = ‖S - m_n·I‖²_F,
+ *   b_n² = min((1/n²)·Σ_k ‖x_k·x_kᵀ - S‖²_F, d_n²),  a_n² = d_n² - b_n²
+ *   S* = (b_n²/d_n²)·m_n·I + (a_n²/d_n²)·S
+ * getiriMatrisi: {kod: [günlük getiri, ...]}; ortGetiriler ve kovMatris
+ * (S) zaten hesaplanmış olarak gelir — sadece S'yi büzülmüş haliyle geri döner.
+ */
+function ledoitWolfShrinkage(getiriMatrisi, kodlar, ortGetiriler, kovMatris) {
+    const p = kodlar.length;
+    const n = getiriMatrisi[kodlar[0]].length;
+    if (p < 2 || n < 2) return kovMatris;
+
+    let iz = 0;
+    for (let i = 0; i < p; i++) iz += kovMatris[i][i];
+    const m_n = iz / p;
+
+    let d_n2 = 0;
+    for (let i = 0; i < p; i++) {
+        for (let j = 0; j < p; j++) {
+            const hedef = (i === j) ? m_n : 0;
+            const fark = kovMatris[i][j] - hedef;
+            d_n2 += fark * fark;
+        }
+    }
+    if (d_n2 <= 0) return kovMatris; // hedefle zaten örtüşüyor, büzmeye gerek yok
+
+    let b_n2_toplam = 0;
+    for (let k = 0; k < n; k++) {
+        const x_k = kodlar.map((kod, i) => getiriMatrisi[kod][k] - ortGetiriler[i]);
+        for (let i = 0; i < p; i++) {
+            for (let j = 0; j < p; j++) {
+                const fark = (x_k[i] * x_k[j]) - kovMatris[i][j];
+                b_n2_toplam += fark * fark;
+            }
+        }
+    }
+    const b_n2 = Math.min(b_n2_toplam / (n * n), d_n2);
+    const delta = b_n2 / d_n2; // optimal büzme yoğunluğu, 0-1 arası
+
+    return kodlar.map((_, i) => kodlar.map((_, j) => {
+        const hedef = (i === j) ? m_n : 0;
+        return delta * hedef + (1 - delta) * kovMatris[i][j];
+    }));
+}
+
 function portfoyGetiriVeRisk(agirliklar, ortGetiriler, kovMatris) {
     const n = agirliklar.length;
     let getiri = 0;
@@ -157,7 +210,8 @@ function sharpeOptimizasyonuCalistir(kodlar, mevcutAgirliklar, minInputId, maxIn
         getiriMatrisi[k] = ortakTarihler.map(t => harita[t]);
     });
     const ortGetiriler = gecerliKodlar.map(k => ortalama(getiriMatrisi[k]));
-    const kovMatris = gecerliKodlar.map(ki => gecerliKodlar.map(kj => kovaryansHesapla(getiriMatrisi[ki], getiriMatrisi[kj])));
+    const hamKovMatris = gecerliKodlar.map(ki => gecerliKodlar.map(kj => kovaryansHesapla(getiriMatrisi[ki], getiriMatrisi[kj])));
+    const kovMatris = ledoitWolfShrinkage(getiriMatrisi, gecerliKodlar, ortGetiriler, hamKovMatris);
     const gunlukRiskFree = Math.pow(1 + RISK_FREE_RATE_YILLIK, 1 / 252) - 1;
 
     const sonuc = monteCarloOptimize(ortGetiriler, kovMatris, minA, maxA, gunlukRiskFree, 20000);
@@ -1905,6 +1959,7 @@ FON_LISTELEME_STYLE = """
 #fl-tablo th, #fl-tablo td { padding:7px 10px; border-bottom:1px solid var(--line); }
 #fl-tablo .fl-left { text-align:left; }
 #fl-tablo .fl-right { text-align:right; }
+#fl-tablo td.fl-ad { white-space:normal; font-size:11px; max-width:160px; line-height:1.3; }
 #fl-tablo th { color:var(--ink-dim); font-weight:600; cursor:pointer; user-select:none; position:sticky; top:0; z-index:2; background:var(--bg); box-shadow:inset 0 -1px 0 var(--line); }
 #fl-tablo th.nosort { cursor:default; }
 #fl-tablo tbody tr:hover { background:rgba(255,255,255,0.03); }
@@ -2096,7 +2151,7 @@ FON_LISTELEME_JS = """
     if(k.key === 'kod'){
       return '<td class="' + cls + '"><a class="fl-kod-link" href="fon-karti.html?kod=' + f.kod + '">' + f.kod + '</a>' + (f.acik === false ? ' 🔴' : '') + '</td>';
     }
-    if(k.key === 'ad') return '<td class="' + cls + '">' + (f.ad || '') + '</td>';
+    if(k.key === 'ad') return '<td class="' + cls + ' fl-ad">' + (f.ad || '') + '</td>';
     if(k.key === 'kategori') return '<td class="' + cls + '">' + (f.kategori || '—') + '</td>';
     if(k.tip === 'risk'){
       var rv = f.risk;
