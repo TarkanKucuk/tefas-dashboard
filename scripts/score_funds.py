@@ -666,6 +666,53 @@ document.getElementById('kategori-filter').addEventListener('change', function()
 # Sayfa 3: Hareketler (Günlük / Haftalık / Aylık sekmeler) — açılış sayfası
 # ------------------------------------------------------------------
 
+def skor_hareketleri_hesapla(skor_df, mapping, pencereler=(3, 5, 10)):
+    """skor_gecmisi.parquet'ten, her pencere (iş günü) için fonların Kategori
+    Skoru değişimini (delta) ve son `pencere` günün kaçında AYNI YÖNDE hareket
+    ettiğini (trend tutarlılığı) hesaplar. Dönüş: {'3': [...], '5': [...], '10': [...]}."""
+    if skor_df is None or skor_df.empty:
+        return {str(p): [] for p in pencereler}
+
+    skor_df = skor_df.copy()
+    skor_df["Tarih"] = pd.to_datetime(skor_df["Tarih"]).dt.normalize()
+    skor_df = skor_df.sort_values(["Fon Kodu", "Tarih"])
+
+    ad_by_kod = mapping.set_index("Fon Kodu")["Fon Adı"].to_dict() if mapping is not None else {}
+
+    sonuc = {}
+    for pencere in pencereler:
+        kayitlar = []
+        for kod, g in skor_df.groupby("Fon Kodu"):
+            if len(g) < pencere + 1:
+                continue  # bu pencere için yeterli geçmiş yok
+            son = g.iloc[-1]
+            onceki = g.iloc[-(pencere + 1)]
+            onceki_skor, simdiki_skor = onceki["Kategori Skoru"], son["Kategori Skoru"]
+            if pd.isna(onceki_skor) or pd.isna(simdiki_skor):
+                continue
+            degisim = float(simdiki_skor) - float(onceki_skor)
+
+            # Trend tutarlılığı: son `pencere` günün ardışık farklarının kaçı
+            # genel değişimle AYNI yönde (gürültü mü, tutarlı bir trend mi ayırt eder)
+            son_seri = g.tail(pencere + 1)["Kategori Skoru"].values
+            ardisik_farklar = son_seri[1:] - son_seri[:-1]
+            genel_yon = 1 if degisim > 0 else (-1 if degisim < 0 else 0)
+            ayni_yonde = sum(1 for f in ardisik_farklar if genel_yon != 0 and (f > 0) == (genel_yon > 0))
+
+            kayitlar.append({
+                "kod": kod,
+                "ad": kisalt_unvan(ad_by_kod.get(kod, "")),
+                "kat": son["Alt Kategori"],
+                "onceki": round(float(onceki_skor), 1),
+                "simdiki": round(float(simdiki_skor), 1),
+                "degisim": round(degisim, 1),
+                "tutarliPay": int(ayni_yonde),
+                "tutarliPayda": int(pencere),
+            })
+        sonuc[str(pencere)] = kayitlar
+    return sonuc
+
+
 def build_movers(df, mapping, days, acik_fon_kodlari=None):
     anchor = df['Tarih'].max()
     cutoff = anchor - pd.Timedelta(days=days)
@@ -704,8 +751,11 @@ def build_movers(df, mapping, days, acik_fon_kodlari=None):
     return movers, anchor
 
 
-def write_hareketler_page(df, mapping, acik_fon_kodlari=None):
+def write_hareketler_page(df, mapping, acik_fon_kodlari=None, skor_gecmisi_df=None):
     import json
+
+    skor_hareketleri = skor_hareketleri_hesapla(skor_gecmisi_df, mapping)
+    skor_hareketleri_json = json.dumps(skor_hareketleri, ensure_ascii=False)
 
     periods = [('gunluk', 1, 'Günlük'), ('haftalik', 7, 'Haftalık'), ('aylik', 30, 'Aylık')]
     movers_by_key = {key: build_movers(df, mapping, days, acik_fon_kodlari) for key, days, _ in periods}
@@ -737,12 +787,27 @@ def write_hareketler_page(df, mapping, acik_fon_kodlari=None):
         tab_buttons.append(f'<button class="period-tab {active_cls}" onclick="showPeriod(\'{key}\')" id="tab-{key}">{label}</button>')
         panels.append(f'<div class="period-panel {active_cls}" id="panel-{key}"></div>')
 
+    # Skor Hareketleri — ayrı bir ana sekme, içinde kendi 3/5/10 gün alt-sekmeleri var
+    tab_buttons.append('<button class="period-tab" onclick="showPeriod(\'skor\')" id="tab-skor">Skor Hareketleri</button>')
+    panels.append("""
+<div class="period-panel" id="panel-skor">
+    <div class="period-tabs" style="margin-bottom:14px;">
+        <button class="period-tab skor-sub-tab" onclick="showSkorPencere('3')" id="skor-tab-3">3 Gün</button>
+        <button class="period-tab skor-sub-tab active" onclick="showSkorPencere('5')" id="skor-tab-5">5 Gün</button>
+        <button class="period-tab skor-sub-tab" onclick="showSkorPencere('10')" id="skor-tab-10">10 Gün</button>
+    </div>
+    <p style="color:var(--ink-dim); font-size:13px; margin-top:-4px;">
+        Fonun kategori skorunun seçili gün sayısı içindeki değişimi. "Tutarlılık" sütunu, o günlerin kaçında skorun aynı yönde hareket ettiğini gösterir — örn. 4/5, son 5 günün 4'ünde aynı yönde ilerlediğini, gürültüden çok gerçek bir eğilim olabileceğini gösterir.
+    </p>
+    <div id="skor-panel-content"></div>
+</div>""")
+
     category_options = '<option value="">Tüm Kategoriler</option>' + ''.join(
         f'<option value="{k}">{k}</option>' for k in all_categories)
 
     controls = f"""
 <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:18px;">
-    <div class="period-tabs" style="margin-bottom:0;">{''.join(tab_buttons)}</div>
+    <div class="period-tabs" id="ana-period-tabs" style="margin-bottom:0;">{''.join(tab_buttons)}</div>
     <div>
         <label for="categorySelect" style="font-size:13px; color:var(--ink-dim); margin-right:8px;">Kategori:</label>
         <select id="categorySelect" onchange="onCategoryChange()">{category_options}</select>
@@ -754,9 +819,12 @@ def write_hareketler_page(df, mapping, acik_fon_kodlari=None):
     script_js = """
 <script>
 const MOVERS_DATA = __DATA__;
+const SKOR_HAREKETLERI = __SKOR_DATA__;
+let aktifSkorPencere = '5';
 
 function fmtPct(v) { return (v >= 0 ? '+' : '') + v.toFixed(2) + '%'; }
 function fmtNum(v) { return (v >= 0 ? '+' : '') + Math.round(v).toLocaleString('tr-TR'); }
+function fmtSkor(v) { return (v >= 0 ? '+' : '') + v.toFixed(1); }
 function fonLink(kod) { return '<a href="fon-karti.html?kod=' + kod + '" target="_blank">' + kod + '</a>'; }
 
 const METRICS = [
@@ -793,21 +861,67 @@ function renderPanel(periodKey) {
     document.getElementById('panel-' + periodKey).innerHTML = METRICS.map(m => metricCardHtml(m, data)).join('');
 }
 
+function skorTopBottom(data, n) {
+    const desc = [...data].sort((a, b) => b.degisim - a.degisim);
+    const asc = [...data].sort((a, b) => a.degisim - b.degisim);
+    return {top: desc.slice(0, n), bottom: asc.slice(0, n)};
+}
+
+function skorRowsHtml(list, cls) {
+    return list.map(r => '<tr><td>' + fonLink(r.kod) + '</td><td>' + r.ad + '</td><td>' + r.kat + '</td>' +
+        '<td>' + r.onceki.toFixed(1) + '</td><td>' + r.simdiki.toFixed(1) + '</td>' +
+        '<td><span class="score-badge ' + cls + '">' + fmtSkor(r.degisim) + '</span></td>' +
+        '<td>' + r.tutarliPay + '/' + r.tutarliPayda + '</td></tr>').join('');
+}
+
+function renderSkorPanel(pencere) {
+    aktifSkorPencere = pencere;
+    document.querySelectorAll('.skor-sub-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('skor-tab-' + pencere).classList.add('active');
+
+    const cat = document.getElementById('categorySelect').value;
+    let data = SKOR_HAREKETLERI[pencere] || [];
+    if (cat) { data = data.filter(r => r.kat === cat); }
+
+    if (!data.length) {
+        document.getElementById('skor-panel-content').innerHTML =
+            '<p style="color:var(--ink-dim);">Bu pencere için henüz yeterli skor geçmişi yok.</p>';
+        return;
+    }
+
+    const bt = skorTopBottom(data, 25);
+    const baslik = '<tr><th>Kod</th><th>Fon Adı</th><th>Kategori</th><th>Önceki Skor</th><th>Şimdiki Skor</th><th>Değişim</th><th>Tutarlılık</th></tr>';
+    document.getElementById('skor-panel-content').innerHTML =
+        '<div class="kat-cols">' +
+        '<div><h3 class="up">▲ En Çok Yükselen 25</h3><div style="overflow-x:auto;"><table class="mini">' + baslik +
+        skorRowsHtml(bt.top, 'good') + '</table></div></div>' +
+        '<div><h3 class="down">▼ En Çok Düşen 25</h3><div style="overflow-x:auto;"><table class="mini">' + baslik +
+        skorRowsHtml(bt.bottom, 'bad') + '</table></div></div>' +
+        '</div>';
+}
+
+function showSkorPencere(pencere) {
+    renderSkorPanel(pencere);
+}
+
 function showPeriod(key) {
     document.querySelectorAll('.period-panel').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.period-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('#ana-period-tabs .period-tab').forEach(t => t.classList.remove('active'));
     document.getElementById('panel-' + key).classList.add('active');
     document.getElementById('tab-' + key).classList.add('active');
-    renderPanel(key);
+    if (key === 'skor') { renderSkorPanel(aktifSkorPencere); } else { renderPanel(key); }
 }
 
 function onCategoryChange() {
-    document.querySelectorAll('.period-panel.active').forEach(p => renderPanel(p.id.replace('panel-', '')));
+    document.querySelectorAll('.period-panel.active').forEach(p => {
+        const key = p.id.replace('panel-', '');
+        if (key === 'skor') { renderSkorPanel(aktifSkorPencere); } else { renderPanel(key); }
+    });
 }
 
 renderPanel('gunluk');
 </script>"""
-    script_js = script_js.replace("__DATA__", data_json)
+    script_js = script_js.replace("__DATA__", data_json).replace("__SKOR_DATA__", skor_hareketleri_json)
 
     extra_style = """
 #categorySelect { border: 1px solid var(--line); border-radius: 6px; padding: 5px 10px; font-size: 13px; background: var(--panel); color: var(--ink); }
@@ -2240,8 +2354,18 @@ def main():
               f"(kalan {len(res)} açık fon puanlanacak).")
     res = compute_scores(res)
 
+    # Skor Hareketleri (erken uyarı) için geçmiş skor arşivi — dosya henüz
+    # yoksa (ilk çalıştırma öncesi) None kalır, ilgili panel boş gösterilir.
+    skor_gecmisi_df = None
+    SKOR_GECMISI_PATH = "skor_gecmisi.parquet"
+    if os.path.exists(SKOR_GECMISI_PATH):
+        try:
+            skor_gecmisi_df = pd.read_parquet(SKOR_GECMISI_PATH)
+        except Exception as e:
+            print(f"[skor] {SKOR_GECMISI_PATH} okunamadı ({e}), Skor Hareketleri boş gösterilecek.")
+
     os.makedirs("docs", exist_ok=True)
-    write_hareketler_page(df, mapping, acik_fon_kodlari)
+    write_hareketler_page(df, mapping, acik_fon_kodlari, skor_gecmisi_df)
     write_fon_listeleme_page(anchor)
     write_category_summary(res, anchor)
     write_yeni_fonlar_page(df, mapping, fon_adlari, acik_fon_kodlari)
