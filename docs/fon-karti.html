@@ -303,10 +303,9 @@
         <button class="tab" data-range="3a">3 Ay</button>
         <button class="tab" data-range="6a">6 Ay</button>
         <button class="tab" data-range="ybb">Yılbaşından İtibaren</button>
-        <button class="tab" data-range="1y">1 Yıl</button>
+        <button class="tab active" data-range="1y">1 Yıl</button>
         <button class="tab" data-range="3y">3 Yıl</button>
         <button class="tab" data-range="5y">5 Yıl</button>
-        <button class="tab active" data-range="tumu">Tümü</button>
       </div>
       <div class="mode-tabs" id="chart-mode-tabs">
         <button class="tab" data-bench="USD">USD</button>
@@ -726,7 +725,7 @@ let fundRawData = [], benchmarksData = {}, currentFundCode = "", fundIndex = [];
 let activeCompares = []; // [{type:'bench'|'fund', key, label, color, rawSeries, series}]
 let plottedSeries = []; // çizilmiş TÜM seriler — temizlik hep buradan yapılır, activeCompares'tan bağımsız
 let lastRebaseFromTime = null;
-let aktifZamanAraligi = 'tumu';
+let aktifZamanAraligi = '1y';
 
 function renderPriceChart(series, benchmarks, fundCode, index){
   fundRawData = series;
