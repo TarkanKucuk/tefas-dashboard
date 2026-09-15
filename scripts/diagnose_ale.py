@@ -45,9 +45,14 @@ def fiyat_gecmisi_testi():
     try:
         from pytefas import Crawler
         tefas = Crawler()
-        print(f"\n  TEFAS'a doğrudan soruluyor: {FON_KODU}, 01.01.2010 - bugün...")
+        # TEFAS'ın kendi API'si "başlangıç tarihi 5 yıldan eski olamaz" kuralı
+        # koyuyor — 4.5 yıl öncesini kullanarak (güvenlik payıyla) bu sınırın
+        # İÇİNDE kalıyoruz, ama ALE'nin bilinen (17 Temmuz 2026) başlangıcından
+        # ÇOK daha eskiye gidiyoruz — böylece asıl soruyu güvenle test edebiliriz.
+        baslangic = (pd.Timestamp.today() - pd.DateOffset(years=4, months=6)).strftime("%Y-%m-%d")
+        print(f"  TEFAS'a doğrudan soruluyor: {FON_KODU}, {baslangic} - bugün...")
         df = tefas.fetch(
-            start="2010-01-01",
+            start=baslangic,
             end=pd.Timestamp.today().strftime("%Y-%m-%d"),
             columns="info",
             kind="YAT",
@@ -66,7 +71,7 @@ def fiyat_gecmisi_testi():
         try:
             from pytefas import Crawler
             tefas = Crawler()
-            df = tefas.fetch(start="2010-01-01", end="2010-06-01", columns="info", kind="YAT")
+            df = tefas.fetch(start=baslangic, end="2022-06-01", columns="info", kind="YAT")
             print(f"  Örnek çağrı başarılı, {len(df)} satır döndü (fon_kodu filtresi test edilemedi).")
         except Exception as e2:
             print(f"  Filtresiz deneme de başarısız: {e2}")
