@@ -1,0 +1,15 @@
+name: Genel Sorgu Testi (Bir Kerelik)
+on:
+  workflow_dispatch: {}
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Bagimliliklari kur
+        run: pip install -r requirements.txt
+      - name: Genel sorgu hipotezini test et
+        run: python scripts/test_genel_sorgu.py
