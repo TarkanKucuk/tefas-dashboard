@@ -85,6 +85,29 @@ def beklenen_fon_sayisi_hesapla(hist, pencere_gun=15):
     return hist[hist["Tarih"] >= pencere_baslangic]["Fon Kodu"].nunique()
 
 
+def coklu_bos_gunleri_bul(hist, esik_oran=0.5, maks_sayi=10):
+    """GERI_GUN penceresinin (son N gün) DIŞINDA kalmış olsa bile, TEFAS'ın o
+    gün için verinin büyük çoğunluğunu (esik_oran'dan fazlasını) hiç
+    yayınlamadığı (kısmen/eksik geldiği) günleri bulur. Normal koşullarda
+    böyle bir gün, GERI_GUN penceresinin dışına düştüğü an BİR DAHA ASLA
+    tekrar denenmez — bu, buna karşı kalıcı bir güvenlik ağıdır. Her
+    çalıştırmada en fazla `maks_sayi` tanesi (en eskiden başlayarak) tekrar
+    denenir; TEFAS'ın kalıcı olarak eksik bıraktığı bir gün olsa bile bu,
+    her çalıştırmada gereksiz yere çok sayıda sorgu atılmasını önler."""
+    if hist.empty or "Tarih" not in hist.columns:
+        return []
+    mevcut_kolonlar = [c for c in TUM_KATEGORI_KOLONLARI if c in hist.columns]
+    if not mevcut_kolonlar:
+        return []
+    hist_check = hist.copy()
+    hist_check["Tarih"] = pd.to_datetime(hist_check["Tarih"]).dt.normalize()
+    hist_check["_dolu"] = hist_check[mevcut_kolonlar].notna().any(axis=1)
+    gun_ozet = hist_check.groupby("Tarih")["_dolu"].agg(["count", "sum"])
+    gun_ozet["oran"] = gun_ozet["sum"] / gun_ozet["count"]
+    supheli = gun_ozet[gun_ozet["oran"] < esik_oran].index.sort_values()
+    return [t.to_pydatetime() for t in supheli[:maks_sayi]]
+
+
 def eksik_tarihleri_bul(hist, tarihler):
     """`tarihler` listesindeki hangi günlerin hâlâ tekrar çekilmesi gerektiğini
     bulur: hist'te o tarih için hiç satır yoksa, satırlar VAR ama en az biri
@@ -172,6 +195,19 @@ def main():
     atlanan = len(tarihler_hepsi) - len(tarihler)
     if atlanan:
         print(f"{atlanan} gün zaten tam dolu olduğu için atlandı.")
+
+    # GERI_GUN penceresinin (son 20 gün) dışında kalmış olsa bile, TEFAS'ın
+    # kısmen/eksik yayınladığı (çoğunluğu boş) günler varsa, bunları da ekle
+    # — aksi halde pencerenin dışına düştükleri an bir daha asla düzeltilmezler.
+    coklu_bos_gunler = coklu_bos_gunleri_bul(hist)
+    if coklu_bos_gunler:
+        mevcut_tarih_set = {t.date() for t in tarihler}
+        yeni_eklenen = [t for t in coklu_bos_gunler if t.date() not in mevcut_tarih_set]
+        if yeni_eklenen:
+            print(f"GERI_GUN penceresi dışında {len(yeni_eklenen)} 'çoğunlukla boş' geçmiş gün de "
+                  f"tekrar denenecek: {[t.strftime('%d.%m.%Y') for t in yeni_eklenen]}")
+            tarihler = sorted(tarihler + yeni_eklenen)
+
     if not tarihler:
         print("Kontrol edilecek eksik/yeni gün yok — hiçbir istek atılmadı.")
         return
